@@ -1,0 +1,35 @@
+import { Router } from "express"
+import * as ctrl from "../controllers/homework.controller.js"
+import { authenticate } from "../middleware/auth.js"
+import { isStaff } from "../middleware/authorize.js"
+import { validate } from "../middleware/validate.js"
+import {
+  createHomeworkSchema,
+  gradeSubmissionSchema,
+  recordAttemptSchema,
+  startHomeworkSchema,
+  idParamSchema,
+} from "../validators/schemas.js"
+
+const router = Router()
+router.use(authenticate)
+
+// Student-facing
+router.get("/mine", ctrl.myHomework)
+router.post("/start", validate(startHomeworkSchema), ctrl.startHomework)
+router.post("/attempt", validate(recordAttemptSchema), ctrl.recordAttempt)
+
+// Staff
+router.get("/", isStaff, ctrl.listHomework)
+router.post("/", isStaff, validate(createHomeworkSchema), ctrl.createHomework)
+router.get("/submissions", isStaff, ctrl.listSubmissions)
+router.patch(
+  "/submissions/:id",
+  isStaff,
+  validate(gradeSubmissionSchema),
+  ctrl.gradeSubmission,
+)
+router.get("/:id", validate(idParamSchema), ctrl.getHomework)
+router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteHomework)
+
+export default router
