@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema(
     _id: { type: String, default: () => uid("user") },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     name: { type: String, required: true, trim: true },
-    role: { type: String, enum: ["admin", "teacher", "student"], default: "student" },
+    role: {
+      type: String,
+      enum: ["super_admin", "admin", "teacher", "student"],
+      default: "student",
+    },
     passwordHash: { type: String, required: true, select: false },
     isPremium: { type: Boolean, default: false },
     /** Links an auth account to its Student CRM record (for role=student). */

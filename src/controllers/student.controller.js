@@ -1,4 +1,6 @@
 import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
+import { Group } from "../models/Group.js"
 import { Submission } from "../models/Submission.js"
 import { Payment } from "../models/Payment.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -6,8 +8,17 @@ import { ApiError } from "../utils/ApiError.js"
 import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
 
 export const listStudents = asyncHandler(async (_req, res) => {
+  // Only show students. Exclude any CRM record that belongs to a staff account
+  // (super admin / admin / teacher), matched by linked user id or email.
+  const staff = await User.find({ role: { $ne: "student" } }).select("_id email")
+  const staffIds = new Set(staff.map((u) => u._id))
+  const staffEmails = new Set(staff.map((u) => u.email?.toLowerCase()).filter(Boolean))
+
   const students = await Student.find().sort({ joinedAt: -1 })
-  res.json(students)
+  const onlyStudents = students.filter(
+    (s) => !staffIds.has(s._id) && !staffEmails.has(s.email?.toLowerCase()),
+  )
+  res.json(onlyStudents)
 })
 
 export const getStudent = asyncHandler(async (req, res) => {
@@ -48,6 +59,29 @@ export const deleteStudent = asyncHandler(async (req, res) => {
   await Submission.deleteMany({ studentId: student._id })
   await Payment.deleteMany({ studentId: student._id })
   res.json({ ok: true })
+})
+
+/** Group + teacher names for the student's own profile (no group list access). */
+export const getStudentContext = asyncHandler(async (req, res) => {
+  const studentId = req.params.id
+  if (req.user.role === "student" && req.user.studentId !== studentId) {
+    throw ApiError.forbidden()
+  }
+
+  const student = await Student.findById(studentId)
+  if (!student) throw ApiError.notFound("Student not found")
+
+  let groupName = null
+  let teacherName = null
+  if (student.groupId) {
+    const group = await Group.findById(student.groupId)
+    groupName = group?.name ?? null
+    if (group?.teacherId) {
+      const teacher = await User.findById(group.teacherId).select("name")
+      teacherName = teacher?.name ?? null
+    }
+  }
+  res.json({ groupName, teacherName })
 })
 
 /** Derived progress summary used by the student dashboard. */

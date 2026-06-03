@@ -14,6 +14,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
   mongoUri: required("MONGODB_URI"),
+  dbName: process.env.MONGODB_DB ?? "ielts",
   jwt: {
     accessSecret: required("JWT_ACCESS_SECRET"),
     refreshSecret: required("JWT_REFRESH_SECRET"),
@@ -25,6 +26,7 @@ export const env = {
     .map((s) => s.trim())
     .filter(Boolean),
   seed: {
+    superAdminPassword: process.env.SEED_SUPERADMIN_PASSWORD ?? "super123",
     adminPassword: process.env.SEED_ADMIN_PASSWORD ?? "admin123",
     teacherPassword: process.env.SEED_TEACHER_PASSWORD ?? "teacher123",
     studentPassword: process.env.SEED_STUDENT_PASSWORD ?? "student123",

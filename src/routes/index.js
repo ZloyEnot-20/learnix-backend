@@ -7,10 +7,10 @@ import entryTestRoutes from "./entryTest.routes.js"
 import paymentRoutes from "./payment.routes.js"
 import analyticsRoutes from "./analytics.routes.js"
 import testResultRoutes from "./testResult.routes.js"
+import notificationRoutes from "./notification.routes.js"
+import exerciseRoutes from "./exercise.routes.js"
 
 const router = Router()
-
-router.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }))
 
 router.use("/auth", authRoutes)
 router.use("/groups", groupRoutes)
@@ -20,5 +20,7 @@ router.use("/entry-tests", entryTestRoutes)
 router.use("/payments", paymentRoutes)
 router.use("/analytics", analyticsRoutes)
 router.use("/test-results", testResultRoutes)
+router.use("/notifications", notificationRoutes)
+router.use("/exercises", exerciseRoutes)
 
 export default router

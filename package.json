@@ -6,9 +6,13 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
+    "dev": "pm2 start ecosystem.config.cjs --no-daemon --watch",
     "start": "node src/server.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/seed.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs --env production",
+    "pm2:stop": "pm2 stop ielts-backend",
+    "pm2:restart": "pm2 restart ielts-backend",
+    "pm2:logs": "pm2 logs ielts-backend"
   },
   "dependencies": {
     "argon2": "^0.41.1",
@@ -22,8 +26,5 @@
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "zod": "^3.24.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
   }
 }

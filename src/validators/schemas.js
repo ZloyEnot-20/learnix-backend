@@ -207,4 +207,48 @@ export const saveTestResultSchema = {
   }),
 }
 
+// ---------- Exercises catalogue ----------
+const exerciseInput = z.object({
+  id: z.string().min(1).optional(),
+  slug: z.string().min(1).max(200),
+  title: z.string().min(1).max(300),
+  description: z.string().max(2000).optional().default(""),
+  category: z.enum(["grammar", "vocabulary"]).optional().default("grammar"),
+  topic: z.string().min(1).max(200),
+  subtopic: z.string().max(200).optional().default(""),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("easy"),
+  level: z.string().max(40).optional().default(""),
+  type: z.string().min(1).max(60),
+  estimatedTime: z.number().int().nonnegative().optional().default(0),
+  totalQuestions: z.number().int().nonnegative().optional().default(0),
+  passingScore: z.number().int().nonnegative().optional().default(0),
+  tags: z.array(z.string()).optional().default([]),
+  instructions: z.string().max(4000).optional().default(""),
+  tips: z.array(z.string()).optional().default([]),
+  // Question/pair content is type-specific; validated loosely to stay lossless.
+  content: z.record(z.string(), z.any()).optional().default({}),
+})
+
+const topicInput = z.object({
+  slug: z.string().min(1).max(200),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional().default(""),
+  levels: z.string().max(60).optional().default(""),
+  exerciseCount: z.number().int().nonnegative().optional().default(0),
+  questionCount: z.number().int().nonnegative().optional().default(0),
+  totalMinutes: z.number().int().nonnegative().optional().default(0),
+  order: z.number().int().optional(),
+})
+
+export const importCatalogSchema = {
+  body: z.object({
+    topics: z.array(topicInput).max(2000).optional().default([]),
+    exercises: z.array(exerciseInput).max(5000).optional().default([]),
+  }),
+}
+
+export const slugParamSchema = {
+  params: z.object({ slug: z.string().min(1).max(200) }),
+}
+
 export const idParamSchema = { params: idParam }

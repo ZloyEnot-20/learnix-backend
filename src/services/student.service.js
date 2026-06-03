@@ -16,34 +16,19 @@ export async function removeStudentFromGroup(groupId, studentId) {
   )
 }
 
-async function pickDefaultGroupId() {
-  const group = await Group.findOne().sort({ createdAt: 1 })
-  if (group) return group._id
-  const created = await Group.create({ name: "My Group", description: "Default group" })
-  return created._id
-}
-
 /**
- * Ensure a Student CRM record exists for an auth account and is in a group, so
- * that group homework reaches them. Idempotent. Returns the student doc.
+ * Ensure a Student CRM record exists for an auth account. New students are NOT
+ * placed into any group automatically — an admin assigns the group later.
+ * Idempotent. Returns the student doc.
  */
 export async function ensureStudentAccount(account) {
   let student = await Student.findById(account.id)
   if (!student) {
-    const groupId = await pickDefaultGroupId()
     student = await Student.create({
       _id: account.id,
       name: account.name,
       email: account.email,
-      groupId,
     })
-    await addStudentToGroup(groupId, student._id)
-    return student
-  }
-  if (!student.groupId) {
-    const groupId = await pickDefaultGroupId()
-    await addStudentToGroup(groupId, student._id)
-    student = await Student.findById(account.id)
   }
   return student
 }

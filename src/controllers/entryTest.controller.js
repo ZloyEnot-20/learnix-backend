@@ -3,6 +3,7 @@ import { Student } from "../models/Student.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { recomputeStatus } from "../services/entryTest.service.js"
+import { notify } from "../services/notification.service.js"
 import {
   mcLevel,
   readingLevel,
@@ -21,7 +22,8 @@ function serialize(doc) {
 
 /** Ensure the caller can act on this entry test (owner student or staff). */
 function assertAccess(req, doc) {
-  if (req.user.role === "admin" || req.user.role === "teacher") return
+  // Any staff role (super admin / admin / teacher) has full access.
+  if (req.user.role !== "student") return
   const myStudentId = req.user.studentId ?? req.user.id
   if (doc.studentId !== myStudentId) throw ApiError.forbidden()
 }
@@ -61,6 +63,11 @@ export const assignEntryTest = asyncHandler(async (req, res) => {
     studentEmail: student.email,
     assignedBy: req.user.name,
   })
+  await notify(student._id, {
+    type: "entry_test",
+    title: "Entry / placement test assigned",
+    message: "Your tutor assigned a placement test. Open it from your dashboard.",
+  }).catch(() => {})
   res.status(201).json(serialize(doc))
 })
 
@@ -133,5 +140,10 @@ export const gradeWriting = asyncHandler(async (req, res) => {
   doc.writingFeedback = req.body.feedback?.trim() || undefined
   doc.status = recomputeStatus(doc)
   await doc.save()
+  await notify(doc.studentId, {
+    type: "result",
+    title: "Your level has been assessed",
+    message: `Your tutor set your overall level to ${doc.overallLevel}. View your results.`,
+  }).catch(() => {})
   res.json(serialize(doc))
 })

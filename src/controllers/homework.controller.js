@@ -1,8 +1,10 @@
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
 import { Group } from "../models/Group.js"
+import { Student } from "../models/Student.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { notify, notifyMany } from "../services/notification.service.js"
 
 function bandFromAttempt(total, correct) {
   if (!total || total <= 0) return undefined
@@ -18,6 +20,28 @@ export const getHomework = asyncHandler(async (req, res) => {
   const hw = await Homework.findById(req.params.id)
   if (!hw) throw ApiError.notFound("Homework not found")
   res.json(hw)
+})
+
+/**
+ * A homework together with everything needed to render its results in one
+ * round-trip: the assignment, its group, the group's students, and every
+ * submission tied to this homework (submissions are linked directly via
+ * `Submission.homeworkId`).
+ */
+export const getHomeworkDetails = asyncHandler(async (req, res) => {
+  const homework = await Homework.findById(req.params.id)
+  if (!homework) throw ApiError.notFound("Homework not found")
+
+  const [group, submissions] = await Promise.all([
+    Group.findById(homework.groupId),
+    Submission.find({ homeworkId: homework._id }),
+  ])
+  const studentIds = group?.studentIds ?? []
+  const students = studentIds.length
+    ? await Student.find({ _id: { $in: studentIds } })
+    : []
+
+  res.json({ homework, group, students, submissions })
 })
 
 export const createHomework = asyncHandler(async (req, res) => {
@@ -36,6 +60,11 @@ export const createHomework = asyncHandler(async (req, res) => {
     }))
     // Ignore duplicates (unique index on homeworkId+studentId).
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
+    await notifyMany(group.studentIds, {
+      type: "homework",
+      title: `New homework: ${hw.title}`,
+      message: `Your tutor assigned a new task. Due ${new Date(hw.dueAt).toLocaleDateString()}.`,
+    }).catch(() => {})
   }
   res.status(201).json(hw)
 })
@@ -61,6 +90,19 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
   if (patch.score != null && !patch.status) patch.status = "graded"
   const sub = await Submission.findByIdAndUpdate(req.params.id, patch, { new: true })
   if (!sub) throw ApiError.notFound("Submission not found")
+
+  // Notify the student when their work gets a grade or feedback.
+  if (patch.score != null || patch.feedback) {
+    const hw = await Homework.findById(sub.homeworkId)
+    await notify(sub.studentId, {
+      type: "result",
+      title: hw ? `Homework graded: ${hw.title}` : "Homework graded",
+      message:
+        patch.score != null
+          ? `Your tutor scored your work ${Number(patch.score).toFixed(1)}.`
+          : "Your tutor left feedback on your work.",
+    }).catch(() => {})
+  }
   res.json(sub)
 })
 

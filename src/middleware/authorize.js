@@ -11,4 +11,8 @@ export function authorize(...roles) {
   }
 }
 
-export const isStaff = authorize("admin", "teacher")
+/** Anyone who can access the admin panel / staff routes. */
+export const isStaff = authorize("super_admin", "admin", "teacher")
+
+/** Admin-level actions (super admin + admin), excludes teachers. */
+export const isAdmin = authorize("super_admin", "admin")

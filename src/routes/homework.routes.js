@@ -29,6 +29,7 @@ router.patch(
   validate(gradeSubmissionSchema),
   ctrl.gradeSubmission,
 )
+router.get("/:id/details", isStaff, validate(idParamSchema), ctrl.getHomeworkDetails)
 router.get("/:id", validate(idParamSchema), ctrl.getHomework)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteHomework)
 

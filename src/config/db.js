@@ -4,11 +4,14 @@ import { env } from "./env.js"
 mongoose.set("strictQuery", true)
 
 export async function connectDB() {
+  // Works for both mongodb:// and mongodb+srv:// connection strings.
+  // dbName ensures we use a named database even if the URI omits the path.
   await mongoose.connect(env.mongoUri, {
     serverSelectionTimeoutMS: 10_000,
+    dbName: env.dbName,
   })
   // Avoid logging the full URI (it may contain credentials).
-  console.log("[db] connected to MongoDB")
+  console.log(`[db] connected to MongoDB (db: ${mongoose.connection.name})`)
   return mongoose.connection
 }
 
