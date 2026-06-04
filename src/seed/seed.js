@@ -51,16 +51,13 @@ async function seedStudent() {
   console.log(`[seed] created student: ${email}`)
 }
 
-/** Extra (non-CEFR) level folders shown alongside A1–C2. Idempotent upsert. */
-async function seedLevels() {
-  const levels = [
-    { _id: "Advanced", key: "Advanced", label: "Advanced", color: "rose", comingSoon: true, cefr: "C1", order: 100 },
-    { _id: "Expert", key: "Expert", label: "Expert", color: "purple", comingSoon: true, cefr: "C2", order: 101 },
-  ]
-  for (const lvl of levels) {
-    await Level.updateOne({ _id: lvl._id }, { $set: lvl }, { upsert: true })
-  }
-  console.log(`[seed] ensured ${levels.length} extra level folder(s)`)
+/**
+ * Levels are now hard-coded on the frontend (Beginner → Expert). Drop any
+ * leftover dynamic level folders so they no longer surface as duplicates.
+ */
+async function clearExtraLevels() {
+  const { deletedCount } = await Level.deleteMany({})
+  if (deletedCount) console.log(`[seed] removed ${deletedCount} legacy extra level folder(s)`)
 }
 
 /** Upsert the starter vocabulary decks so the DB owns all deck data. */
@@ -79,7 +76,7 @@ async function seed() {
   await connectDB()
   await seedSuperAdmin()
   await seedStudent()
-  await seedLevels()
+  await clearExtraLevels()
   await seedVocabDecks()
 }
 
