@@ -31,6 +31,12 @@ export const env = {
     teacherPassword: process.env.SEED_TEACHER_PASSWORD ?? "teacher123",
     studentPassword: process.env.SEED_STUDENT_PASSWORD ?? "student123",
   },
+  telegram: {
+    // The bot token from @BotFather. Keep it in .env, never in source control.
+    botToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
+    // How often (ms) to push new notifications to linked Telegram chats.
+    pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS ?? 15_000),
+  },
 }
 
 export const isProd = env.nodeEnv === "production"

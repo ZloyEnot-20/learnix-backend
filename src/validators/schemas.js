@@ -76,7 +76,7 @@ export const createHomeworkSchema = {
   body: z.object({
     title: z.string().min(1).max(200),
     description: z.string().max(2000).optional().default(""),
-    subject: z.enum(["reading", "listening", "writing", "speaking", "grammar"]),
+    subject: z.enum(["reading", "listening", "writing", "speaking", "grammar", "vocabulary"]),
     groupId: z.string().min(1),
     dueAt: z.coerce.date(),
     estimatedMinutes: z.number().int().nonnegative().optional().default(0),

@@ -8,7 +8,7 @@ const homeworkSchema = new mongoose.Schema(
     description: { type: String, default: "", trim: true },
     subject: {
       type: String,
-      enum: ["reading", "listening", "writing", "speaking", "grammar"],
+      enum: ["reading", "listening", "writing", "speaking", "grammar", "vocabulary"],
       required: true,
     },
     groupId: { type: String, ref: "Group", required: true },
