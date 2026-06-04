@@ -151,8 +151,9 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   const now = new Date()
 
   const existing = await Submission.findOne({ homeworkId, studentId })
+  let result
   if (!existing) {
-    const created = await Submission.create({
+    result = await Submission.create({
       homeworkId,
       studentId,
       status: "submitted",
@@ -161,13 +162,27 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       submittedAt: now,
       attempt,
     })
-    return res.json(created)
+  } else {
+    existing.status = "submitted"
+    existing.score = score
+    existing.startedAt = existing.startedAt ?? now
+    existing.submittedAt = now
+    existing.attempt = attempt
+    await existing.save()
+    result = existing
   }
-  existing.status = "submitted"
-  existing.score = score
-  existing.startedAt = existing.startedAt ?? now
-  existing.submittedAt = now
-  existing.attempt = attempt
-  await existing.save()
-  res.json(existing)
+
+  // Notify (the student and, via the Telegram bot, their parents) that a task
+  // was completed — this is one of the activities parents subscribe to.
+  const hw = await Homework.findById(homeworkId)
+  await notify(studentId, {
+    type: "result",
+    title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
+    message:
+      typeof score === "number"
+        ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
+        : "Homework submitted.",
+  }).catch(() => {})
+
+  res.json(result)
 })

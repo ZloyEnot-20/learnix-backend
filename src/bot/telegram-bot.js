@@ -1,18 +1,21 @@
 /**
- * Telegram bot for the IELTS / Learnix platform.
+ * Learnix Telegram bot — ota-onalar uchun (parent notifications).
  *
- * Flow:
- *   1. On /start the bot asks the user for their Student ID.
- *   2. The user sends the ID. If it matches a real student, the bot stores the
- *      Telegram chat id on that student record (`telegramId`) and confirms.
- *      If the ID is wrong, the bot asks again (with light brute-force throttling).
- *   3. From then on the bot pushes notifications about newly assigned homework
- *      and graded results, and answers /tasks, /results, /me and /unlink.
+ * G'oya: bot ota-onalarga farzandining BARCHA o'quv faoliyati haqida o'zbek
+ * tilida xabar beradi (yangi vazifalar, yakunlangan ishlar, baholar, eslatmalar).
  *
- * It reuses the same MongoDB + Mongoose models as the API. No extra npm
- * dependency: it talks to the Telegram Bot API over HTTPS via the global fetch.
+ * Oqim:
+ *   1. /start — bot farzandning "O'quvchi ID" sini so'raydi.
+ *   2. ID to'g'ri bo'lsa — chat shu o'quvchiga "ulanadi" (ParentLink saqlanadi).
+ *      Bitta chat bir nechta farzandni kuzatishi mumkin. ID noto'g'ri bo'lsa —
+ *      qayta so'raydi (urinishlar cheklangan).
+ *   3. Keyin bot yangi bildirishnomalarni avtomatik yuboradi va
+ *      /vazifalar, /natijalar, /farzandlarim, /uzish buyruqlariga javob beradi.
  *
- * Run with:  npm run bot   (set TELEGRAM_BOT_TOKEN in .env first)
+ * API bilan bir xil MongoDB/Mongoose modellaridan foydalanadi. Qo'shimcha npm
+ * paketi yo'q — Telegram Bot API bilan global fetch orqali ishlaydi.
+ *
+ * Ishga tushirish:  npm run bot   (avval .env da TELEGRAM_BOT_TOKEN to'ldiring)
  */
 import "../config/mongoose.js"
 import { env } from "../config/env.js"
@@ -21,20 +24,21 @@ import { Student } from "../models/Student.js"
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
 import { Notification } from "../models/Notification.js"
+import { ParentLink } from "../models/ParentLink.js"
 
 const TOKEN = env.telegram.botToken
 const API = `https://api.telegram.org/bot${TOKEN}`
 
-// Accept ids in the platform's `std_<time>_<rand>` shape. Validating the format
-// before hitting the DB avoids needless queries and rejects junk input.
+// Platformaning `std_<time>_<rand>` ko'rinishidagi id. DB ga murojaatdan oldin
+// formatni tekshirish keraksiz so'rovlardan va axlat kiritishdan himoya qiladi.
 const STUDENT_ID_RE = /^std_[a-z0-9]+_[a-z0-9]{3,8}$/i
 
-// Per-chat throttle for failed link attempts (anti-enumeration of student ids).
+// Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (id larni terib topishga qarshi).
 const MAX_ATTEMPTS = 5
 const ATTEMPT_WINDOW_MS = 60_000
 const attempts = new Map() // chatId -> { count, windowStart }
 
-// ─── Telegram API helpers ────────────────────────────────────────────────────
+// ─── Telegram API yordamchilari ──────────────────────────────────────────────
 async function tg(method, body) {
   const res = await fetch(`${API}/${method}`, {
     method: "POST",
@@ -47,12 +51,15 @@ async function tg(method, body) {
 }
 
 function send(chatId, text) {
-  return tg("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }).catch(
-    (err) => console.error("[bot] sendMessage error:", err.message),
-  )
+  return tg("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  }).catch((err) => console.error("[bot] sendMessage error:", err.message))
 }
 
-/** Escape the few characters Telegram's HTML parse mode cares about. */
+/** Telegram HTML parse rejimidagi maxsus belgilarni qochirish. */
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -62,11 +69,9 @@ function esc(value) {
 
 function fmtDate(date) {
   if (!date) return "—"
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
+  const d = new Date(date)
+  const pad = (n) => String(n).padStart(2, "0")
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
 }
 
 const SUBJECT_EMOJI = {
@@ -78,14 +83,22 @@ const SUBJECT_EMOJI = {
   vocabulary: "📝",
 }
 
-const STATUS_LABEL = {
-  pending: "🕓 Not started",
-  in_progress: "⏳ In progress",
-  submitted: "📨 Submitted",
-  graded: "✅ Graded",
+const STATUS_UZ = {
+  pending: "🕓 Boshlanmagan",
+  in_progress: "⏳ Bajarilyapti",
+  submitted: "📨 Topshirilgan",
+  graded: "✅ Baholangan",
 }
 
-// ─── Rate limiting ────────────────────────────────────────────────────────────
+const HELP =
+  "ℹ️ <b>Buyruqlar</b>\n" +
+  "/vazifalar — farzandning joriy vazifalari\n" +
+  "/natijalar — oxirgi natijalar\n" +
+  "/farzandlarim — kuzatilayotgan farzandlar\n" +
+  "/uzish — kuzatuvni to'xtatish\n" +
+  "/yordam — ushbu yordam"
+
+// ─── Cheklov (rate limiting) ──────────────────────────────────────────────────
 function tooManyAttempts(chatId) {
   const now = Date.now()
   const rec = attempts.get(chatId)
@@ -101,11 +114,20 @@ function resetAttempts(chatId) {
   attempts.delete(chatId)
 }
 
-// ─── Message builders ────────────────────────────────────────────────────────
-async function buildTasksMessage(studentId) {
-  const subs = await Submission.find({ studentId }).lean()
-  if (subs.length === 0) return "🎉 You have no assigned tasks right now."
+// ─── Ma'lumotlar ──────────────────────────────────────────────────────────────
+/** Ushbu chat kuzatayotgan barcha farzandlar (link + student). */
+async function getChildren(chatId) {
+  const links = await ParentLink.find({ chatId }).lean()
+  if (links.length === 0) return []
+  const students = await Student.find({ _id: { $in: links.map((l) => l.studentId) } }).lean()
+  const byId = new Map(students.map((s) => [s._id, s]))
+  return links
+    .map((link) => ({ link, student: byId.get(link.studentId) }))
+    .filter((x) => x.student)
+}
 
+async function buildTasksMessage(studentId, childName) {
+  const subs = await Submission.find({ studentId }).lean()
   const hwById = new Map(
     (await Homework.find({ _id: { $in: subs.map((s) => s.homeworkId) } }).lean()).map((h) => [
       h._id,
@@ -118,16 +140,17 @@ async function buildTasksMessage(studentId) {
     .filter((x) => x.hw)
     .sort((a, b) => new Date(a.hw.dueAt) - new Date(b.hw.dueAt))
 
-  if (active.length === 0) return "🎉 No pending tasks — you're all caught up!"
-
+  if (active.length === 0) {
+    return `🎉 <b>${esc(childName)}</b>: hozircha faol vazifalar yo'q.`
+  }
   const lines = active.map(({ sub, hw }) => {
     const emoji = SUBJECT_EMOJI[hw.subject] ?? "📚"
-    return `${emoji} <b>${esc(hw.title)}</b>\n   Due ${fmtDate(hw.dueAt)} · ${STATUS_LABEL[sub.status]}`
+    return `${emoji} <b>${esc(hw.title)}</b>\n   Muddat: ${fmtDate(hw.dueAt)} · ${STATUS_UZ[sub.status]}`
   })
-  return `📋 <b>Your tasks (${active.length})</b>\n\n${lines.join("\n\n")}`
+  return `📋 <b>${esc(childName)} — vazifalar (${active.length})</b>\n\n${lines.join("\n\n")}`
 }
 
-async function buildResultsMessage(studentId) {
+async function buildResultsMessage(studentId, childName) {
   const subs = await Submission.find({
     studentId,
     status: { $in: ["submitted", "graded"] },
@@ -135,8 +158,9 @@ async function buildResultsMessage(studentId) {
     .sort({ submittedAt: -1 })
     .limit(10)
     .lean()
-  if (subs.length === 0) return "📊 No results yet. Finish a task to see your scores here."
-
+  if (subs.length === 0) {
+    return `📊 <b>${esc(childName)}</b>: hali natijalar yo'q.`
+  }
   const hwById = new Map(
     (await Homework.find({ _id: { $in: subs.map((s) => s.homeworkId) } }).lean()).map((h) => [
       h._id,
@@ -145,144 +169,189 @@ async function buildResultsMessage(studentId) {
   )
   const lines = subs.map((s) => {
     const hw = hwById.get(s.homeworkId)
-    const title = hw ? esc(hw.title) : "Homework"
-    const score = typeof s.score === "number" ? `Band ${s.score.toFixed(1)}` : "—"
+    const title = hw ? esc(hw.title) : "Vazifa"
+    const score = typeof s.score === "number" ? `${s.score.toFixed(1)} ball` : "—"
     const acc =
       s.attempt && s.attempt.totalQuestions
-        ? ` · ${s.attempt.correctCount}/${s.attempt.totalQuestions} correct`
+        ? ` · ${s.attempt.correctCount}/${s.attempt.totalQuestions} to'g'ri`
         : ""
-    return `• <b>${title}</b>\n   ${STATUS_LABEL[s.status]} · ${score}${acc}`
+    return `• <b>${title}</b>\n   ${STATUS_UZ[s.status]} · ${score}${acc}`
   })
-  return `📊 <b>Recent results</b>\n\n${lines.join("\n\n")}`
+  return `📊 <b>${esc(childName)} — oxirgi natijalar</b>\n\n${lines.join("\n\n")}`
 }
 
-async function buildSummary(student) {
+async function buildSummary(child) {
   const [tasks, results] = await Promise.all([
-    buildTasksMessage(student._id),
-    buildResultsMessage(student._id),
+    buildTasksMessage(child.student._id, child.student.name),
+    buildResultsMessage(child.student._id, child.student.name),
   ])
   return `${tasks}\n\n${results}`
 }
 
-const HELP =
-  "Commands:\n" +
-  "/tasks — your assigned homework\n" +
-  "/results — your recent scores\n" +
-  "/me — your linked account\n" +
-  "/unlink — disconnect this chat\n" +
-  "/help — show this message"
+/** Bitta bildirishnomadan ota-ona uchun o'zbekcha matn tuzish. */
+function parentNotificationText(childName, note) {
+  // Title odatda "New homework: <nom>" ko'rinishida — nomni ajratib olamiz.
+  const subject = note.title?.includes(":")
+    ? note.title.split(":").slice(1).join(":").trim()
+    : note.title ?? ""
+  const who = `👤 <b>${esc(childName)}</b>`
 
-// ─── Update handling ──────────────────────────────────────────────────────────
+  switch (note.type) {
+    case "homework":
+      return `📋 <b>Yangi vazifa</b>\n${who}\n📚 ${esc(subject)}\nFarzandingizga yangi vazifa berildi.`
+    case "result": {
+      const isCompleted = /complete/i.test(note.title ?? "")
+      const m = (note.message ?? "").match(/(\d(?:\.\d)?)/)
+      const ball = m ? `\n📈 Ball: <b>${m[1]}</b>` : ""
+      const head = isCompleted ? "✅ Vazifa yakunlandi" : "📊 Vazifa baholandi"
+      return `${head}\n${who}\n📚 ${esc(subject)}${ball}`
+    }
+    case "reminder":
+      return `⏰ <b>Eslatma</b>\n${who}\n${esc(subject)}`
+    case "achievement":
+      return `🏆 <b>Yutuq</b>\n${who}\n${esc(subject)}`
+    case "entry_test":
+      return `📝 <b>Kirish testi</b>\n${who}\n${esc(subject)}`
+    default:
+      return `🔔 <b>Xabar</b>\n${who}\n${esc(subject)}`
+  }
+}
+
+// ─── Xabarlarni qayta ishlash ────────────────────────────────────────────────
 async function handleMessage(msg) {
   const chatId = String(msg.chat.id)
   const text = (msg.text ?? "").trim()
   if (!text) return
 
-  const linked = await Student.findOne({ telegramId: chatId })
+  const parentName =
+    [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(" ") || undefined
 
-  // Commands
+  // Buyruqlar
   if (text.startsWith("/")) {
     const cmd = text.split(/\s+/)[0].toLowerCase().replace(/@.*$/, "")
+    const children = await getChildren(chatId)
+
     if (cmd === "/start") {
-      if (linked) {
-        await send(chatId, `👋 Welcome back, <b>${esc(linked.name)}</b>!\n\n${HELP}`)
+      if (children.length > 0) {
+        const names = children.map((c) => `• <b>${esc(c.student.name)}</b>`).join("\n")
+        await send(
+          chatId,
+          `👋 Xush kelibsiz!\n\nSiz kuzatayotgan farzandlar:\n${names}\n\n${HELP}\n\nYana bitta farzandni qo'shish uchun uning O'quvchi ID sini yuboring.`,
+        )
       } else {
         await send(
           chatId,
-          "👋 Welcome to <b>Learnix</b>!\n\nTo receive your homework and results, please send me your <b>Student ID</b> (ask your tutor if you don't know it).",
+          "👋 Assalomu alaykum! Bu <b>Learnix</b> o'quv markazining ota-onalar uchun boti.\n\n" +
+            "Farzandingizning o'qishini kuzatish uchun uning <b>O'quvchi ID</b> raqamini yuboring " +
+            "(ID ni o'qituvchi yoki markaz ma'muriyatidan oling).",
         )
       }
       return
     }
-    if (!linked) {
-      await send(chatId, "🔒 Please link your account first — send me your <b>Student ID</b>.")
+
+    if (cmd === "/yordam") return void send(chatId, HELP)
+
+    if (children.length === 0) {
+      await send(
+        chatId,
+        "🔒 Avval farzandingizni ulang — uning <b>O'quvchi ID</b> raqamini yuboring.",
+      )
       return
     }
-    if (cmd === "/help") return void send(chatId, HELP)
-    if (cmd === "/tasks") return void send(chatId, await buildTasksMessage(linked._id))
-    if (cmd === "/results") return void send(chatId, await buildResultsMessage(linked._id))
-    if (cmd === "/me") {
+
+    if (cmd === "/vazifalar") {
+      for (const c of children) await send(chatId, await buildTasksMessage(c.student._id, c.student.name))
+      return
+    }
+    if (cmd === "/natijalar") {
+      for (const c of children) await send(chatId, await buildResultsMessage(c.student._id, c.student.name))
+      return
+    }
+    if (cmd === "/farzandlarim") {
+      const names = children
+        .map((c) => `• <b>${esc(c.student.name)}</b> — ${fmtDate(c.link.createdAt)} dan beri`)
+        .join("\n")
+      return void send(chatId, `👨‍👩‍👧 <b>Kuzatilayotgan farzandlar</b>\n${names}`)
+    }
+    if (cmd === "/uzish") {
+      await ParentLink.deleteMany({ chatId })
       return void send(
         chatId,
-        `👤 <b>${esc(linked.name)}</b>\nLinked since ${fmtDate(linked.telegramLinkedAt)}`,
+        "🔌 Kuzatuv to'xtatildi. Istalgan vaqtda O'quvchi ID yuborib qayta ulashingiz mumkin.",
       )
     }
-    if (cmd === "/unlink") {
-      linked.telegramId = undefined
-      linked.telegramLinkedAt = undefined
-      linked.telegramLastNotifiedAt = undefined
-      await linked.save()
-      return void send(
-        chatId,
-        "🔌 This chat is now disconnected. Send your Student ID anytime to reconnect.",
-      )
-    }
-    return void send(chatId, `Unknown command.\n\n${HELP}`)
+    return void send(chatId, `❓ Noma'lum buyruq.\n\n${HELP}`)
   }
 
-  // Already linked: nudge towards commands instead of treating text as an id.
-  if (linked) {
-    await send(chatId, `You're already linked, <b>${esc(linked.name)}</b>.\n\n${HELP}`)
-    return
-  }
-
-  // ─── Linking: the text should be a Student ID ─────────────────────────────
+  // ─── Ulanish: matn O'quvchi ID bo'lishi kerak ─────────────────────────────
   if (tooManyAttempts(chatId)) {
-    await send(chatId, "⛔ Too many attempts. Please wait a minute and try again.")
+    await send(chatId, "⛔ Juda ko'p urinish. Iltimos, bir daqiqadan so'ng qayta urinib ko'ring.")
     return
   }
   if (!STUDENT_ID_RE.test(text)) {
     await send(
       chatId,
-      "❌ That doesn't look like a valid Student ID. It looks like <code>std_xxxxx_xxxxx</code>. Please try again.",
+      "❌ Bu O'quvchi ID ga o'xshamaydi. Format: <code>std_xxxxx_xxxxx</code>. Iltimos, qaytadan yuboring.",
     )
     return
   }
 
   const student = await Student.findById(text)
   if (!student) {
-    await send(chatId, "❌ No student found with that ID. Please check it and send it again.")
+    await send(chatId, "❌ Bunday ID bilan o'quvchi topilmadi. Tekshirib, qaytadan yuboring.")
     return
   }
 
-  // Move the link to this chat (a student can only be linked to one chat).
-  await Student.updateMany({ telegramId: chatId }, { $unset: { telegramId: "", telegramLinkedAt: "" } })
-  student.telegramId = chatId
-  student.telegramLinkedAt = new Date()
-  // Start the notification watermark "now" so we don't replay old history;
-  // we send a fresh summary instead.
-  student.telegramLastNotifiedAt = new Date()
-  await student.save()
   resetAttempts(chatId)
+
+  const existing = await ParentLink.findOne({ chatId, studentId: student._id })
+  if (existing) {
+    await send(chatId, `ℹ️ Siz allaqachon <b>${esc(student.name)}</b> ni kuzatyapsiz.`)
+    return
+  }
+
+  // Yangi bildirishnomalardan boshlash uchun "hozir" dan watermark qo'yamiz
+  // (eski tarix qayta yuborilmaydi); o'rniga joriy holatni ko'rsatamiz.
+  await ParentLink.create({
+    chatId,
+    studentId: student._id,
+    parentName,
+    lastNotifiedAt: new Date(),
+  })
 
   await send(
     chatId,
-    `✅ Linked! Hi <b>${esc(student.name)}</b>, you'll now get your homework and results here.\n\n${HELP}`,
+    `✅ Ulandi! Endi siz <b>${esc(student.name)}</b> ning barcha o'quv faoliyati haqida xabar olib turasiz.\n\n${HELP}`,
   )
-  await send(chatId, await buildSummary(student))
+  await send(chatId, await buildSummary({ student }))
 }
 
-// ─── Notification poller ──────────────────────────────────────────────────────
+// ─── Bildirishnoma yuboruvchi (poller) ───────────────────────────────────────
 async function pushPendingNotifications() {
-  const linked = await Student.find({ telegramId: { $exists: true, $ne: null } }).lean()
-  for (const student of linked) {
-    const since = student.telegramLastNotifiedAt ?? student.telegramLinkedAt ?? new Date(0)
-    const notes = await Notification.find({ studentId: student._id, createdAt: { $gt: since } })
+  const links = await ParentLink.find().lean()
+  if (links.length === 0) return
+
+  const students = await Student.find({ _id: { $in: links.map((l) => l.studentId) } }).lean()
+  const nameById = new Map(students.map((s) => [s._id, s.name]))
+
+  for (const link of links) {
+    const since = link.lastNotifiedAt ?? link.createdAt ?? new Date(0)
+    const notes = await Notification.find({ studentId: link.studentId, createdAt: { $gt: since } })
       .sort({ createdAt: 1 })
       .limit(20)
       .lean()
     if (notes.length === 0) continue
 
+    const childName = nameById.get(link.studentId) ?? "Farzand"
     for (const n of notes) {
-      const icon = n.type === "result" ? "📊" : n.type === "homework" ? "📋" : "🔔"
-      await send(student.telegramId, `${icon} <b>${esc(n.title)}</b>\n${esc(n.message)}`)
+      await send(link.chatId, parentNotificationText(childName, n))
     }
     const newest = notes[notes.length - 1].createdAt
-    await Student.updateOne({ _id: student._id }, { telegramLastNotifiedAt: newest })
+    await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: newest })
   }
 }
 
-// ─── Long-polling loop ────────────────────────────────────────────────────────
+// ─── Long-polling tsikli ──────────────────────────────────────────────────────
 let running = true
 let offset = 0
 
