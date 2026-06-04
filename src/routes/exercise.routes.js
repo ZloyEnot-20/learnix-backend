@@ -3,7 +3,11 @@ import * as ctrl from "../controllers/exercise.controller.js"
 import { authenticate } from "../middleware/auth.js"
 import { isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
-import { importCatalogSchema, slugParamSchema } from "../validators/schemas.js"
+import {
+  importCatalogSchema,
+  importVocabSchema,
+  slugParamSchema,
+} from "../validators/schemas.js"
 
 const router = Router()
 router.use(authenticate)
@@ -12,9 +16,12 @@ router.use(authenticate)
 router.get("/", ctrl.listExercises)
 router.get("/topics", ctrl.listTopics)
 router.get("/levels", ctrl.listLevels)
+router.get("/vocab", ctrl.listVocabDecks)
+router.get("/vocab/:slug", validate(slugParamSchema), ctrl.getVocabDeck)
 
 // Staff-only bulk import of the local catalogue into the database.
 router.post("/import", isStaff, validate(importCatalogSchema), ctrl.importCatalog)
+router.post("/vocab/import", isStaff, validate(importVocabSchema), ctrl.importVocabDecks)
 
 router.get("/:slug", validate(slugParamSchema), ctrl.getExercise)
 

@@ -1,6 +1,7 @@
 import { Exercise } from "../models/Exercise.js"
 import { Topic } from "../models/Topic.js"
 import { Level } from "../models/Level.js"
+import { VocabDeck } from "../models/VocabDeck.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 
@@ -45,6 +46,7 @@ function serializeLevel(doc) {
     label: doc.label ?? "",
     color: doc.color ?? "",
     comingSoon: Boolean(doc.comingSoon),
+    cefr: doc.cefr ?? "",
     order: doc.order ?? 0,
   }
 }
@@ -53,6 +55,63 @@ function serializeLevel(doc) {
 export const listLevels = asyncHandler(async (_req, res) => {
   const docs = await Level.find().sort({ order: 1, key: 1 })
   res.json(docs.map(serializeLevel))
+})
+
+function serializeVocabDeck(doc) {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    description: doc.description ?? "",
+    level: doc.level ?? "A1",
+    words: (doc.words ?? []).map((w) => ({
+      id: w.id,
+      term: w.term,
+      partOfSpeech: w.partOfSpeech ?? "noun",
+      definition: w.definition ?? "",
+      example: w.example ?? "",
+      translation: w.translation ?? "",
+      translationUz: w.translationUz ?? "",
+    })),
+  }
+}
+
+/** List all vocabulary decks — available to any authenticated user. */
+export const listVocabDecks = asyncHandler(async (_req, res) => {
+  const docs = await VocabDeck.find().sort({ order: 1, title: 1 })
+  res.json(docs.map(serializeVocabDeck))
+})
+
+export const getVocabDeck = asyncHandler(async (req, res) => {
+  const doc = await VocabDeck.findById(req.params.slug)
+  if (!doc) throw ApiError.notFound("Deck not found")
+  res.json(serializeVocabDeck(doc))
+})
+
+/** Staff-only upsert of vocabulary decks by slug (idempotent). */
+export const importVocabDecks = asyncHandler(async (req, res) => {
+  const { decks = [] } = req.body
+  let written = 0
+  if (decks.length > 0) {
+    const ops = decks.map((d, idx) => ({
+      updateOne: {
+        filter: { _id: d.slug },
+        update: {
+          $set: {
+            slug: d.slug,
+            title: d.title,
+            description: d.description ?? "",
+            level: d.level ?? "A1",
+            words: d.words ?? [],
+            order: d.order ?? idx,
+          },
+        },
+        upsert: true,
+      },
+    }))
+    const result = await VocabDeck.bulkWrite(ops, { ordered: false })
+    written = (result.upsertedCount ?? 0) + (result.modifiedCount ?? 0)
+  }
+  res.json({ ok: true, decksWritten: written })
 })
 
 export const getExercise = asyncHandler(async (req, res) => {

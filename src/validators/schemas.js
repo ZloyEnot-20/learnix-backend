@@ -248,6 +248,31 @@ export const importCatalogSchema = {
   }),
 }
 
+const vocabWordInput = z.object({
+  id: z.string().min(1),
+  term: z.string().min(1),
+  partOfSpeech: z.string().max(40).optional().default("noun"),
+  definition: z.string().max(2000).optional().default(""),
+  example: z.string().max(2000).optional().default(""),
+  translation: z.string().max(2000).optional().default(""),
+  translationUz: z.string().max(2000).optional().default(""),
+})
+
+const vocabDeckInput = z.object({
+  slug: z.string().min(1).max(200),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional().default(""),
+  level: z.string().max(40).optional().default("A1"),
+  words: z.array(vocabWordInput).min(1).max(1000),
+  order: z.number().int().optional(),
+})
+
+export const importVocabSchema = {
+  body: z.object({
+    decks: z.array(vocabDeckInput).max(500).optional().default([]),
+  }),
+}
+
 export const slugParamSchema = {
   params: z.object({ slug: z.string().min(1).max(200) }),
 }

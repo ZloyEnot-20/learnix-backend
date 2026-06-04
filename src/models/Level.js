@@ -13,6 +13,8 @@ const levelSchema = new mongoose.Schema(
     label: { type: String, default: "" },
     color: { type: String, default: "" },
     comingSoon: { type: Boolean, default: false },
+    /** CEFR band shown as the card's top-right badge (e.g. "C1"). */
+    cefr: { type: String, default: "" },
     order: { type: Number, default: 0 },
   },
   { _id: false, timestamps: true },

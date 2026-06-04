@@ -15,6 +15,8 @@ import { hashPassword } from "../utils/password.js"
 import { User } from "../models/User.js"
 import { Student } from "../models/Student.js"
 import { Level } from "../models/Level.js"
+import { VocabDeck } from "../models/VocabDeck.js"
+import { VOCAB_DECKS } from "../content/vocab-decks.js"
 
 async function seedSuperAdmin() {
   const email = env.seed.superAdminEmail
@@ -52,13 +54,26 @@ async function seedStudent() {
 /** Extra (non-CEFR) level folders shown alongside A1–C2. Idempotent upsert. */
 async function seedLevels() {
   const levels = [
-    { _id: "Advanced", key: "Advanced", label: "Advanced", color: "rose", comingSoon: true, order: 100 },
-    { _id: "Expert", key: "Expert", label: "Expert", color: "purple", comingSoon: true, order: 101 },
+    { _id: "Expert", key: "Expert", label: "Expert", color: "purple", comingSoon: true, cefr: "C2", order: 101 },
   ]
   for (const lvl of levels) {
     await Level.updateOne({ _id: lvl._id }, { $set: lvl }, { upsert: true })
   }
-  console.log(`[seed] ensured ${levels.length} extra levels (Advanced, Expert)`)
+  // Remove the legacy "Advanced" extra level — C1 already shows as "Advanced".
+  await Level.deleteOne({ _id: "Advanced" })
+  console.log(`[seed] ensured ${levels.length} extra level(s) (Expert); removed legacy Advanced`)
+}
+
+/** Upsert the starter vocabulary decks so the DB owns all deck data. */
+async function seedVocabDecks() {
+  for (const deck of VOCAB_DECKS) {
+    await VocabDeck.updateOne(
+      { _id: deck.slug },
+      { $set: { ...deck } },
+      { upsert: true },
+    )
+  }
+  console.log(`[seed] ensured ${VOCAB_DECKS.length} vocabulary decks`)
 }
 
 async function seed() {
@@ -66,6 +81,7 @@ async function seed() {
   await seedSuperAdmin()
   await seedStudent()
   await seedLevels()
+  await seedVocabDecks()
 }
 
 seed()
