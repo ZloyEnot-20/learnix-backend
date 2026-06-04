@@ -5,16 +5,31 @@ import { Submission } from "../models/Submission.js"
 import { Payment } from "../models/Payment.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
-import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
+import {
+  addStudentToGroup,
+  removeStudentFromGroup,
+  syncStudentProfile,
+} from "../services/student.service.js"
 
 export const listStudents = asyncHandler(async (_req, res) => {
-  // Only show students. Exclude any CRM record that belongs to a staff account
-  // (super admin / admin / teacher), matched by linked user id or email.
-  const staff = await User.find({ role: { $ne: "student" } }).select("_id email")
+  const users = await User.find().select("_id email role name studentId")
+  const staff = users.filter((u) => u.role !== "student")
   const staffIds = new Set(staff.map((u) => u._id))
   const staffEmails = new Set(staff.map((u) => u.email?.toLowerCase()).filter(Boolean))
 
+  // For every student account: ensure a CRM record exists and mirrors the auth
+  // account's current name/email. This guarantees the list is complete (no
+  // orphaned logins) and never shows a stale name after the account changes.
+  for (const u of users.filter((u) => u.role === "student")) {
+    const student = await syncStudentProfile(u)
+    if (u.studentId !== student._id) {
+      u.studentId = student._id
+      await u.save()
+    }
+  }
+
   const students = await Student.find().sort({ joinedAt: -1 })
+  // Exclude CRM records that belong to a staff account (matched by id or email).
   const onlyStudents = students.filter(
     (s) => !staffIds.has(s._id) && !staffEmails.has(s.email?.toLowerCase()),
   )
@@ -58,6 +73,12 @@ export const deleteStudent = asyncHandler(async (req, res) => {
   await Student.deleteOne({ _id: student._id })
   await Submission.deleteMany({ studentId: student._id })
   await Payment.deleteMany({ studentId: student._id })
+  // Also remove the linked login account so the student is fully gone and is
+  // not re-created by the listStudents backfill on the next load.
+  await User.deleteMany({
+    role: "student",
+    $or: [{ _id: student._id }, { studentId: student._id }],
+  })
   res.json({ ok: true })
 })
 

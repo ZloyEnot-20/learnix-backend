@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword } from "../utils/password.js"
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
 import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { ensureStudentAccount } from "../services/student.service.js"
+import { ensureStudentAccount, syncStudentProfile } from "../services/student.service.js"
 
 function tokensFor(user) {
   return {
@@ -49,14 +49,13 @@ export const login = asyncHandler(async (req, res) => {
   const ok = user ? await verifyPassword(user.passwordHash, password) : false
   if (!user || !ok) throw ApiError.unauthorized("Invalid email or password")
 
-  if (user.role === "student" && !user.studentId) {
-    const student = await ensureStudentAccount({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-    })
-    user.studentId = student._id
-    await user.save()
+  if (user.role === "student") {
+    // Keep the CRM record in sync with the auth account on every login.
+    const student = await syncStudentProfile(user)
+    if (user.studentId !== student._id) {
+      user.studentId = student._id
+      await user.save()
+    }
   }
 
   res.json({ user: user.toSafeJSON(), ...tokensFor(user) })

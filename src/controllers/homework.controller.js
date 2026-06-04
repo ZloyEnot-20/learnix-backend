@@ -64,6 +64,12 @@ export const createHomework = asyncHandler(async (req, res) => {
       type: "homework",
       title: `New homework: ${hw.title}`,
       message: `Your tutor assigned a new task. Due ${new Date(hw.dueAt).toLocaleDateString()}.`,
+      data: {
+        homeworkTitle: hw.title,
+        subject: hw.subject,
+        dueAt: hw.dueAt,
+        status: "pending",
+      },
     }).catch(() => {})
   }
   res.status(201).json(hw)
@@ -101,6 +107,12 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
         patch.score != null
           ? `Your tutor scored your work ${Number(patch.score).toFixed(1)}.`
           : "Your tutor left feedback on your work.",
+      data: {
+        homeworkTitle: hw?.title,
+        subject: hw?.subject,
+        status: "graded",
+        score: patch.score != null ? Number(patch.score) : undefined,
+      },
     }).catch(() => {})
   }
   res.json(sub)
@@ -151,6 +163,9 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   const now = new Date()
 
   const existing = await Submission.findOne({ homeworkId, studentId })
+  // Already-finished submissions must not re-trigger the completion notification
+  // (avoids duplicate Telegram messages on re-submit or a double request).
+  const alreadyDone = !!existing && ["submitted", "graded"].includes(existing.status)
   let result
   if (!existing) {
     result = await Submission.create({
@@ -172,6 +187,8 @@ export const recordAttempt = asyncHandler(async (req, res) => {
     result = existing
   }
 
+  if (alreadyDone) return res.json(result)
+
   // Notify (the student and, via the Telegram bot, their parents) that a task
   // was completed — this is one of the activities parents subscribe to.
   const hw = await Homework.findById(homeworkId)
@@ -182,6 +199,15 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       typeof score === "number"
         ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
         : "Homework submitted.",
+    data: {
+      homeworkTitle: hw?.title,
+      subject: hw?.subject,
+      dueAt: hw?.dueAt,
+      status: "submitted",
+      correctCount: attempt.correctCount,
+      totalQuestions: attempt.totalQuestions,
+      score: typeof score === "number" ? score : undefined,
+    },
   }).catch(() => {})
 
   res.json(result)

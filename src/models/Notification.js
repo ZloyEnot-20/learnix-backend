@@ -12,6 +12,12 @@ const notificationSchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     message: { type: String, default: "" },
+    // Tuzilgan qo'shimcha ma'lumot (bot ota-onaga tushunarli matn tuzishi uchun):
+    // { homeworkTitle, subject, dueAt, status, correctCount, totalQuestions, score }.
+    data: { type: mongoose.Schema.Types.Mixed, default: {} },
+    // Telegramga yetkazilgan chat id lar — bir xabar bir chatga bir marta yuboriladi
+    // (dublikatlarni oldini olish: darhol yuborish + zaxira reconcile uchun).
+    deliveredChatIds: { type: [String], default: [] },
     read: { type: Boolean, default: false },
   },
   { _id: false, timestamps: true },

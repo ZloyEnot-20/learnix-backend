@@ -5,17 +5,15 @@
  * tilida xabar beradi (yangi vazifalar, yakunlangan ishlar, baholar, eslatmalar).
  *
  * Oqim:
- *   1. /start — bot farzandning "O'quvchi ID" sini so'raydi.
- *   2. ID to'g'ri bo'lsa — chat shu o'quvchiga "ulanadi" (ParentLink saqlanadi).
- *      Bitta chat bir nechta farzandni kuzatishi mumkin. ID noto'g'ri bo'lsa —
- *      qayta so'raydi (urinishlar cheklangan).
- *   3. Keyin bot yangi bildirishnomalarni avtomatik yuboradi va
- *      /vazifalar, /natijalar, /farzandlarim, /uzish buyruqlariga javob beradi.
+ *   1. /start — bot markaz bergan bir martalik "taklif kodini" so'raydi.
+ *   2. Kod to'g'ri va amal qilsa — chat shu o'quvchiga "ulanadi" (ParentLink) va
+ *      kod ishlatilgan deb belgilanadi. Bitta chat bir nechta farzandni
+ *      kuzatishi mumkin. Kod noto'g'ri bo'lsa — qayta so'raydi (cheklov bilan).
+ *   3. Bildirishnomalar ESA backend tomonidan DARHOL yuboriladi (notify() →
+ *      telegram.service). Bu bot faqat zaxira sifatida vaqti-vaqti bilan
+ *      yuborilmay qolgan xabarlarni yetkazadi (reconcilePending, idempotent).
  *
- * API bilan bir xil MongoDB/Mongoose modellaridan foydalanadi. Qo'shimcha npm
- * paketi yo'q — Telegram Bot API bilan global fetch orqali ishlaydi.
- *
- * Ishga tushirish:  npm run bot   (avval .env da TELEGRAM_BOT_TOKEN to'ldiring)
+ * Ishga tushirish:  npm run dev (pm2)  yoki  npm run bot
  */
 import "../config/mongoose.js"
 import { env } from "../config/env.js"
@@ -23,80 +21,52 @@ import { connectDB, disconnectDB } from "../config/db.js"
 import { Student } from "../models/Student.js"
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
-import { Notification } from "../models/Notification.js"
 import { ParentLink } from "../models/ParentLink.js"
+import { BotInvite, normaliseInviteCode } from "../models/BotInvite.js"
+import {
+  tg,
+  sendMessage,
+  esc,
+  fmtDate,
+  card,
+  SUBJECT_EMOJI,
+  STATUS_UZ,
+  reconcilePending,
+} from "../services/telegram.service.js"
 
 const TOKEN = env.telegram.botToken
-const API = `https://api.telegram.org/bot${TOKEN}`
 
-// Platformaning `std_<time>_<rand>` ko'rinishidagi id. DB ga murojaatdan oldin
-// formatni tekshirish keraksiz so'rovlardan va axlat kiritishdan himoya qiladi.
-const STUDENT_ID_RE = /^std_[a-z0-9]+_[a-z0-9]{3,8}$/i
+// Bir martalik taklif kodi: 8 ta belgi (harf/raqam). Ota-ona o'quvchi ID sini
+// emas, balki markaz bergan kodni yuboradi — bu xavfsizroq.
+const INVITE_CODE_RE = /^[A-Z0-9]{8}$/
 
-// Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (id larni terib topishga qarshi).
+// Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (kodlarni terib topishga qarshi).
 const MAX_ATTEMPTS = 5
 const ATTEMPT_WINDOW_MS = 60_000
 const attempts = new Map() // chatId -> { count, windowStart }
 
-// ─── Telegram API yordamchilari ──────────────────────────────────────────────
-async function tg(method, body) {
-  const res = await fetch(`${API}/${method}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  })
-  const data = await res.json()
-  if (!data.ok) throw new Error(`Telegram ${method} failed: ${data.description}`)
-  return data.result
+// Buyruq javoblari uchun: yuborish xatosi botni yiqitmasligi kerak.
+function send(chatId, text, extra = {}) {
+  return sendMessage(chatId, text, extra).catch((err) =>
+    console.error("[bot] sendMessage error:", err.message),
+  )
 }
 
-function send(chatId, text) {
-  return tg("sendMessage", {
-    chat_id: chatId,
-    text,
-    parse_mode: "HTML",
-    disable_web_page_preview: true,
-  }).catch((err) => console.error("[bot] sendMessage error:", err.message))
+// Telefon raqamini so'rash uchun bir martalik tugma (faqat o'z kontaktini ulashadi).
+const CONTACT_KEYBOARD = {
+  keyboard: [[{ text: "📱 Telefon raqamni ulashish", request_contact: true }]],
+  resize_keyboard: true,
+  one_time_keyboard: true,
 }
-
-/** Telegram HTML parse rejimidagi maxsus belgilarni qochirish. */
-function esc(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-}
-
-function fmtDate(date) {
-  if (!date) return "—"
-  const d = new Date(date)
-  const pad = (n) => String(n).padStart(2, "0")
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
-}
-
-const SUBJECT_EMOJI = {
-  reading: "📖",
-  listening: "🎧",
-  writing: "✍️",
-  speaking: "🗣️",
-  grammar: "🔤",
-  vocabulary: "📝",
-}
-
-const STATUS_UZ = {
-  pending: "🕓 Boshlanmagan",
-  in_progress: "⏳ Bajarilyapti",
-  submitted: "📨 Topshirilgan",
-  graded: "✅ Baholangan",
-}
+const REMOVE_KEYBOARD = { remove_keyboard: true }
 
 const HELP =
-  "ℹ️ <b>Buyruqlar</b>\n" +
-  "/vazifalar — farzandning joriy vazifalari\n" +
+  "<b>Buyruqlar</b>\n" +
+  "/vazifalar — joriy vazifalar\n" +
   "/natijalar — oxirgi natijalar\n" +
-  "/farzandlarim — kuzatilayotgan farzandlar\n" +
+  "/farzandlarim — farzandlar ro'yxati\n" +
   "/uzish — kuzatuvni to'xtatish\n" +
-  "/yordam — ushbu yordam"
+  "/yordam — yordam"
 
 // ─── Cheklov (rate limiting) ──────────────────────────────────────────────────
 function tooManyAttempts(chatId) {
@@ -140,14 +110,18 @@ async function buildTasksMessage(studentId, childName) {
     .filter((x) => x.hw)
     .sort((a, b) => new Date(a.hw.dueAt) - new Date(b.hw.dueAt))
 
+  const header = `📋 <b>Vazifalar</b> · ${esc(childName)}`
   if (active.length === 0) {
-    return `🎉 <b>${esc(childName)}</b>: hozircha faol vazifalar yo'q.`
+    return card(header, ["", "Faol vazifa yo'q ✅"])
   }
-  const lines = active.map(({ sub, hw }) => {
+  const items = active.map(({ sub, hw }) => {
     const emoji = SUBJECT_EMOJI[hw.subject] ?? "📚"
-    return `${emoji} <b>${esc(hw.title)}</b>\n   Muddat: ${fmtDate(hw.dueAt)} · ${STATUS_UZ[sub.status]}`
+    return card(`${emoji} <b>${esc(hw.title)}</b>`, [
+      `${STATUS_UZ[sub.status]}`,
+      `🗓 ${fmtDate(hw.dueAt)} gacha`,
+    ])
   })
-  return `📋 <b>${esc(childName)} — vazifalar (${active.length})</b>\n\n${lines.join("\n\n")}`
+  return `${header}\n\n${items.join("\n\n")}`
 }
 
 async function buildResultsMessage(studentId, childName) {
@@ -158,8 +132,9 @@ async function buildResultsMessage(studentId, childName) {
     .sort({ submittedAt: -1 })
     .limit(10)
     .lean()
+  const header = `📊 <b>Natijalar</b> · ${esc(childName)}`
   if (subs.length === 0) {
-    return `📊 <b>${esc(childName)}</b>: hali natijalar yo'q.`
+    return card(header, ["", "Hali natija yo'q"])
   }
   const hwById = new Map(
     (await Homework.find({ _id: { $in: subs.map((s) => s.homeworkId) } }).lean()).map((h) => [
@@ -167,17 +142,17 @@ async function buildResultsMessage(studentId, childName) {
       h,
     ]),
   )
-  const lines = subs.map((s) => {
+  const items = subs.map((s) => {
     const hw = hwById.get(s.homeworkId)
     const title = hw ? esc(hw.title) : "Vazifa"
-    const score = typeof s.score === "number" ? `${s.score.toFixed(1)} ball` : "—"
+    const score = typeof s.score === "number" ? `Ball: <b>${s.score.toFixed(1)}</b>` : null
     const acc =
       s.attempt && s.attempt.totalQuestions
-        ? ` · ${s.attempt.correctCount}/${s.attempt.totalQuestions} to'g'ri`
-        : ""
-    return `• <b>${title}</b>\n   ${STATUS_UZ[s.status]} · ${score}${acc}`
+        ? `To'g'ri javoblar: ${s.attempt.correctCount}/${s.attempt.totalQuestions}`
+        : null
+    return card(`<b>${title}</b>`, [STATUS_UZ[s.status], score, acc])
   })
-  return `📊 <b>${esc(childName)} — oxirgi natijalar</b>\n\n${lines.join("\n\n")}`
+  return `${header}\n\n${items.join("\n\n")}`
 }
 
 async function buildSummary(child) {
@@ -188,41 +163,34 @@ async function buildSummary(child) {
   return `${tasks}\n\n${results}`
 }
 
-/** Bitta bildirishnomadan ota-ona uchun o'zbekcha matn tuzish. */
-function parentNotificationText(childName, note) {
-  // Title odatda "New homework: <nom>" ko'rinishida — nomni ajratib olamiz.
-  const subject = note.title?.includes(":")
-    ? note.title.split(":").slice(1).join(":").trim()
-    : note.title ?? ""
-  const who = `👤 <b>${esc(childName)}</b>`
-
-  switch (note.type) {
-    case "homework":
-      return `📋 <b>Yangi vazifa</b>\n${who}\n📚 ${esc(subject)}\nFarzandingizga yangi vazifa berildi.`
-    case "result": {
-      const isCompleted = /complete/i.test(note.title ?? "")
-      const m = (note.message ?? "").match(/(\d(?:\.\d)?)/)
-      const ball = m ? `\n📈 Ball: <b>${m[1]}</b>` : ""
-      const head = isCompleted ? "✅ Vazifa yakunlandi" : "📊 Vazifa baholandi"
-      return `${head}\n${who}\n📚 ${esc(subject)}${ball}`
-    }
-    case "reminder":
-      return `⏰ <b>Eslatma</b>\n${who}\n${esc(subject)}`
-    case "achievement":
-      return `🏆 <b>Yutuq</b>\n${who}\n${esc(subject)}`
-    case "entry_test":
-      return `📝 <b>Kirish testi</b>\n${who}\n${esc(subject)}`
-    default:
-      return `🔔 <b>Xabar</b>\n${who}\n${esc(subject)}`
-  }
-}
-
 // ─── Xabarlarni qayta ishlash ────────────────────────────────────────────────
 async function handleMessage(msg) {
   const chatId = String(msg.chat.id)
+
+  // Ota-ona telefon raqamini ulashganda — barcha ulanishlarga saqlaymiz.
+  if (msg.contact) {
+    // Faqat foydalanuvchining o'z kontakti qabul qilinadi (boshqa odamniki emas).
+    if (msg.contact.user_id && String(msg.contact.user_id) !== String(msg.from?.id)) {
+      return void send(chatId, "❗️ Iltimos, faqat <b>o'z</b> telefon raqamingizni ulashing.", {
+        reply_markup: CONTACT_KEYBOARD,
+      })
+    }
+    const phone = msg.contact.phone_number
+    const res = await ParentLink.updateMany({ chatId }, { phone })
+    if (!res.matchedCount) {
+      return void send(chatId, "Avval taklif kodini yuborib, farzandingizni ulang.", {
+        reply_markup: REMOVE_KEYBOARD,
+      })
+    }
+    return void send(chatId, "✅ Rahmat! Telefon raqamingiz saqlandi.", {
+      reply_markup: REMOVE_KEYBOARD,
+    })
+  }
+
   const text = (msg.text ?? "").trim()
   if (!text) return
 
+  const username = msg.from?.username ? `@${msg.from.username}` : undefined
   const parentName =
     [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(" ") || undefined
 
@@ -233,17 +201,28 @@ async function handleMessage(msg) {
 
     if (cmd === "/start") {
       if (children.length > 0) {
-        const names = children.map((c) => `• <b>${esc(c.student.name)}</b>`).join("\n")
+        const names = children.map((c) => `• ${esc(c.student.name)}`).join("\n")
         await send(
           chatId,
-          `👋 Xush kelibsiz!\n\nSiz kuzatayotgan farzandlar:\n${names}\n\n${HELP}\n\nYana bitta farzandni qo'shish uchun uning O'quvchi ID sini yuboring.`,
+          card("👋 <b>Xush kelibsiz!</b>", [
+            "",
+            "Kuzatilayotgan farzandlar:",
+            names,
+            "",
+            "Yana farzand qo'shish — taklif kodini yuboring.",
+            "",
+            HELP,
+          ]),
         )
       } else {
         await send(
           chatId,
-          "👋 Assalomu alaykum! Bu <b>Learnix</b> o'quv markazining ota-onalar uchun boti.\n\n" +
-            "Farzandingizning o'qishini kuzatish uchun uning <b>O'quvchi ID</b> raqamini yuboring " +
-            "(ID ni o'qituvchi yoki markaz ma'muriyatidan oling).",
+          card("👋 <b>Learnix — ota-onalar boti</b>", [
+            "",
+            "Farzandingiz faoliyatini kuzatish uchun markaz bergan <b>taklif kodini</b> yuboring.",
+            "",
+            "Kod 8 ta belgidan iborat, masalan: <code>QK7M2P9D</code>",
+          ]),
         )
       }
       return
@@ -254,51 +233,68 @@ async function handleMessage(msg) {
     if (children.length === 0) {
       await send(
         chatId,
-        "🔒 Avval farzandingizni ulang — uning <b>O'quvchi ID</b> raqamini yuboring.",
+        "🔒 Avval farzandingizni ulang — markaz bergan <b>taklif kodini</b> yuboring.",
       )
       return
     }
 
     if (cmd === "/vazifalar") {
-      for (const c of children) await send(chatId, await buildTasksMessage(c.student._id, c.student.name))
+      for (const c of children)
+        await send(chatId, await buildTasksMessage(c.student._id, c.student.name))
       return
     }
     if (cmd === "/natijalar") {
-      for (const c of children) await send(chatId, await buildResultsMessage(c.student._id, c.student.name))
+      for (const c of children)
+        await send(chatId, await buildResultsMessage(c.student._id, c.student.name))
       return
     }
     if (cmd === "/farzandlarim") {
       const names = children
-        .map((c) => `• <b>${esc(c.student.name)}</b> — ${fmtDate(c.link.createdAt)} dan beri`)
-        .join("\n")
-      return void send(chatId, `👨‍👩‍👧 <b>Kuzatilayotgan farzandlar</b>\n${names}`)
+        .map((c) => `• <b>${esc(c.student.name)}</b>\n  ${fmtDate(c.link.createdAt)} dan beri`)
+        .join("\n\n")
+      return void send(chatId, card("👨‍👩‍👧 <b>Farzandlar</b>", ["", names]))
     }
     if (cmd === "/uzish") {
       await ParentLink.deleteMany({ chatId })
       return void send(
         chatId,
-        "🔌 Kuzatuv to'xtatildi. Istalgan vaqtda O'quvchi ID yuborib qayta ulashingiz mumkin.",
+        card("🔌 <b>Kuzatuv to'xtatildi</b>", ["", "Qayta ulanish uchun taklif kodini yuboring."]),
       )
     }
     return void send(chatId, `❓ Noma'lum buyruq.\n\n${HELP}`)
   }
 
-  // ─── Ulanish: matn O'quvchi ID bo'lishi kerak ─────────────────────────────
+  // ─── Ulanish: matn bir martalik taklif kodi bo'lishi kerak ────────────────
   if (tooManyAttempts(chatId)) {
     await send(chatId, "⛔ Juda ko'p urinish. Iltimos, bir daqiqadan so'ng qayta urinib ko'ring.")
     return
   }
-  if (!STUDENT_ID_RE.test(text)) {
+  const code = normaliseInviteCode(text)
+  if (!INVITE_CODE_RE.test(code)) {
     await send(
       chatId,
-      "❌ Bu O'quvchi ID ga o'xshamaydi. Format: <code>std_xxxxx_xxxxx</code>. Iltimos, qaytadan yuboring.",
+      "❌ Bu taklif kodiga o'xshamaydi. Kod 8 ta belgidan iborat (masalan: <code>QK7M2P9D</code>). Iltimos, qaytadan yuboring.",
     )
     return
   }
 
-  const student = await Student.findById(text)
+  const invite = await BotInvite.findOne({ code })
+  if (!invite) {
+    await send(chatId, "❌ Bunday taklif kodi topilmadi. Tekshirib, qaytadan yuboring.")
+    return
+  }
+  if (invite.usedAt) {
+    await send(chatId, "⚠️ Bu kod allaqachon ishlatilgan. Markazdan yangi kod so'rang.")
+    return
+  }
+  if (new Date(invite.expiresAt).getTime() < Date.now()) {
+    await send(chatId, "⌛ Bu kodning muddati tugagan. Markazdan yangi kod so'rang.")
+    return
+  }
+
+  const student = await Student.findById(invite.studentId)
   if (!student) {
-    await send(chatId, "❌ Bunday ID bilan o'quvchi topilmadi. Tekshirib, qaytadan yuboring.")
+    await send(chatId, "❌ Bu kodga bog'langan o'quvchi topilmadi. Markazga murojaat qiling.")
     return
   }
 
@@ -316,39 +312,26 @@ async function handleMessage(msg) {
     chatId,
     studentId: student._id,
     parentName,
+    username,
     lastNotifiedAt: new Date(),
   })
+  // Kodni bir martalik qilib belgilash.
+  invite.usedAt = new Date()
+  invite.usedByChatId = chatId
+  invite.parentName = parentName ?? null
+  await invite.save()
 
   await send(
     chatId,
-    `✅ Ulandi! Endi siz <b>${esc(student.name)}</b> ning barcha o'quv faoliyati haqida xabar olib turasiz.\n\n${HELP}`,
+    card("✅ <b>Ulandi</b>", [
+      "",
+      `Endi siz <b>${esc(student.name)}</b> faoliyatini kuzatasiz.`,
+      "",
+      "Markaz siz bilan bog'lana olishi uchun telefon raqamingizni ulashing 👇",
+    ]),
+    { reply_markup: CONTACT_KEYBOARD },
   )
   await send(chatId, await buildSummary({ student }))
-}
-
-// ─── Bildirishnoma yuboruvchi (poller) ───────────────────────────────────────
-async function pushPendingNotifications() {
-  const links = await ParentLink.find().lean()
-  if (links.length === 0) return
-
-  const students = await Student.find({ _id: { $in: links.map((l) => l.studentId) } }).lean()
-  const nameById = new Map(students.map((s) => [s._id, s.name]))
-
-  for (const link of links) {
-    const since = link.lastNotifiedAt ?? link.createdAt ?? new Date(0)
-    const notes = await Notification.find({ studentId: link.studentId, createdAt: { $gt: since } })
-      .sort({ createdAt: 1 })
-      .limit(20)
-      .lean()
-    if (notes.length === 0) continue
-
-    const childName = nameById.get(link.studentId) ?? "Farzand"
-    for (const n of notes) {
-      await send(link.chatId, parentNotificationText(childName, n))
-    }
-    const newest = notes[notes.length - 1].createdAt
-    await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: newest })
-  }
 }
 
 // ─── Long-polling tsikli ──────────────────────────────────────────────────────
@@ -383,13 +366,16 @@ async function main() {
   const me = await tg("getMe", {})
   console.log(`[bot] started as @${me.username}`)
 
-  const notifTimer = setInterval(() => {
-    pushPendingNotifications().catch((err) => console.error("[bot] poller error:", err.message))
-  }, env.telegram.pollIntervalMs)
+  // Bildirishnomalar backend tomonidan DARHOL yuboriladi. Bu yerda faqat zaxira:
+  // ishga tushganda va vaqti-vaqti bilan yuborilmay qolganlarini yetkazamiz.
+  reconcilePending().catch((err) => console.error("[bot] reconcile error:", err.message))
+  const reconcileTimer = setInterval(() => {
+    reconcilePending().catch((err) => console.error("[bot] reconcile error:", err.message))
+  }, env.telegram.reconcileIntervalMs)
 
   const shutdown = async () => {
     running = false
-    clearInterval(notifTimer)
+    clearInterval(reconcileTimer)
     await disconnectDB().catch(() => {})
     console.log("[bot] stopped")
     process.exit(0)

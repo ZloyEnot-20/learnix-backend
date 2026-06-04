@@ -43,16 +43,14 @@ Then point `MONGODB_URI` at it (default `mongodb://127.0.0.1:27017/ielts`).
 | `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | long random strings |
 | `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL` | token lifetimes (`15m`, `30d`) |
 | `CORS_ORIGINS` | comma-separated allowed frontend origins |
-| `SEED_*_PASSWORD` | passwords for the seeded demo accounts |
+| `SEED_SUPERADMIN_EMAIL` / `SEED_SUPERADMIN_PASSWORD` | bootstrap super-admin login |
 
-### Demo accounts (after `npm run seed`)
+### Bootstrap account (after `npm run seed`)
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Super Admin | `superadmin@ielts.com` | `SEED_SUPERADMIN_PASSWORD` (default `super123`) |
-| Admin | `admin@ielts.com` | `SEED_ADMIN_PASSWORD` (default `admin123`) |
-| Teacher | `teacher@ielts.com` | `SEED_TEACHER_PASSWORD` (default `teacher123`) |
-| Student | `student@ielts.com` | `SEED_STUDENT_PASSWORD` (default `student123`) |
+`npm run seed` creates a single **super admin** from `SEED_SUPERADMIN_EMAIL` /
+`SEED_SUPERADMIN_PASSWORD`. There are no demo/mock users — sign in as the super
+admin and create real groups, students and staff from the admin panel. Students
+can also self-register from the app.
 
 ## Production with PM2
 

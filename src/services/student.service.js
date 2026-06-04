@@ -32,3 +32,27 @@ export async function ensureStudentAccount(account) {
   }
   return student
 }
+
+/**
+ * Ensure the linked Student CRM record exists and mirrors the auth account's
+ * name/email. The auth account is the source of truth for a student's own
+ * name/email, so editing the user propagates to the admin list and the parent
+ * Telegram notifications (which read from the Student record). Idempotent.
+ */
+export async function syncStudentProfile(user) {
+  let student = user.studentId ? await Student.findById(user.studentId) : null
+  if (!student) student = await Student.findById(user._id)
+  if (!student) {
+    return Student.create({ _id: user._id, name: user.name, email: user.email })
+  }
+  // The Student schema trims/lowercases, so compare against normalised values
+  // to avoid redundant writes on every read.
+  const name = (user.name ?? "").trim()
+  const email = (user.email ?? "").trim().toLowerCase()
+  if (student.name !== name || student.email !== email) {
+    student.name = name
+    student.email = email
+    await student.save()
+  }
+  return student
+}

@@ -9,6 +9,7 @@ import analyticsRoutes from "./analytics.routes.js"
 import testResultRoutes from "./testResult.routes.js"
 import notificationRoutes from "./notification.routes.js"
 import exerciseRoutes from "./exercise.routes.js"
+import botInviteRoutes from "./botInvite.routes.js"
 
 const router = Router()
 
@@ -22,5 +23,6 @@ router.use("/analytics", analyticsRoutes)
 router.use("/test-results", testResultRoutes)
 router.use("/notifications", notificationRoutes)
 router.use("/exercises", exerciseRoutes)
+router.use("/bot", botInviteRoutes)
 
 export default router

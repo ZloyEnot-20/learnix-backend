@@ -26,16 +26,20 @@ export const env = {
     .map((s) => s.trim())
     .filter(Boolean),
   seed: {
+    // Bootstrap super-admin credentials (used only by `npm run seed`).
+    // Provide real values via env; the defaults are for first local run only.
+    superAdminEmail: process.env.SEED_SUPERADMIN_EMAIL ?? "superadmin@ielts.com",
     superAdminPassword: process.env.SEED_SUPERADMIN_PASSWORD ?? "super123",
-    adminPassword: process.env.SEED_ADMIN_PASSWORD ?? "admin123",
-    teacherPassword: process.env.SEED_TEACHER_PASSWORD ?? "teacher123",
+    // Demo student account used by the quick-login button on the sign-in page.
+    studentEmail: process.env.SEED_STUDENT_EMAIL ?? "student@ielts.com",
     studentPassword: process.env.SEED_STUDENT_PASSWORD ?? "student123",
   },
   telegram: {
     // The bot token from @BotFather. Keep it in .env, never in source control.
     botToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
-    // How often (ms) to push new notifications to linked Telegram chats.
-    pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS ?? 15_000),
+    // Notifications are pushed immediately on creation (notify() → telegram.service).
+    // This interval is only a fallback reconcile for anything that failed to send.
+    reconcileIntervalMs: Number(process.env.TELEGRAM_RECONCILE_INTERVAL_MS ?? 60_000),
   },
 }
 

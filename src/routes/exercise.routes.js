@@ -11,6 +11,7 @@ router.use(authenticate)
 // Read paths — available to any authenticated user (students included).
 router.get("/", ctrl.listExercises)
 router.get("/topics", ctrl.listTopics)
+router.get("/levels", ctrl.listLevels)
 
 // Staff-only bulk import of the local catalogue into the database.
 router.post("/import", isStaff, validate(importCatalogSchema), ctrl.importCatalog)

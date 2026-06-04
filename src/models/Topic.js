@@ -15,6 +15,8 @@ const topicSchema = new mongoose.Schema(
     exerciseCount: { type: Number, default: 0, min: 0 },
     questionCount: { type: Number, default: 0, min: 0 },
     totalMinutes: { type: Number, default: 0, min: 0 },
+    /** Preset colour id used to tint the folder's CEFR level on the catalogue. */
+    color: { type: String, default: "" },
     /** Display order — lower comes first. */
     order: { type: Number, default: 0 },
   },

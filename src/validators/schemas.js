@@ -216,7 +216,7 @@ const exerciseInput = z.object({
   category: z.enum(["grammar", "vocabulary"]).optional().default("grammar"),
   topic: z.string().min(1).max(200),
   subtopic: z.string().max(200).optional().default(""),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("easy"),
+  difficulty: z.enum(["easy", "medium", "hard", "mixed"]).optional().default("easy"),
   level: z.string().max(40).optional().default(""),
   type: z.string().min(1).max(60),
   estimatedTime: z.number().int().nonnegative().optional().default(0),
@@ -237,6 +237,7 @@ const topicInput = z.object({
   exerciseCount: z.number().int().nonnegative().optional().default(0),
   questionCount: z.number().int().nonnegative().optional().default(0),
   totalMinutes: z.number().int().nonnegative().optional().default(0),
+  color: z.string().max(40).optional().default(""),
   order: z.number().int().optional(),
 })
 
@@ -252,3 +253,11 @@ export const slugParamSchema = {
 }
 
 export const idParamSchema = { params: idParam }
+
+// ---------- Telegram bot invites ----------
+export const createInviteSchema = {
+  body: z.object({
+    studentId: z.string().min(1),
+    ttlHours: z.number().int().positive().max(24 * 30).optional(),
+  }),
+}

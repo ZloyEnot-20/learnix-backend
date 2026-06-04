@@ -1,5 +1,6 @@
 import { Exercise } from "../models/Exercise.js"
 import { Topic } from "../models/Topic.js"
+import { Level } from "../models/Level.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 
@@ -18,6 +19,7 @@ function serializeTopic(doc) {
     exerciseCount: doc.exerciseCount,
     questionCount: doc.questionCount,
     totalMinutes: doc.totalMinutes,
+    color: doc.color ?? "",
     order: doc.order,
   }
 }
@@ -35,6 +37,22 @@ export const listExercises = asyncHandler(async (req, res) => {
 export const listTopics = asyncHandler(async (_req, res) => {
   const docs = await Topic.find().sort({ order: 1, title: 1 })
   res.json(docs.map(serializeTopic))
+})
+
+function serializeLevel(doc) {
+  return {
+    key: doc.key,
+    label: doc.label ?? "",
+    color: doc.color ?? "",
+    comingSoon: Boolean(doc.comingSoon),
+    order: doc.order ?? 0,
+  }
+}
+
+/** List extra (non-CEFR) level folders shown alongside A1–C2. */
+export const listLevels = asyncHandler(async (_req, res) => {
+  const docs = await Level.find().sort({ order: 1, key: 1 })
+  res.json(docs.map(serializeLevel))
 })
 
 export const getExercise = asyncHandler(async (req, res) => {
@@ -64,6 +82,7 @@ export const importCatalog = asyncHandler(async (req, res) => {
             exerciseCount: t.exerciseCount ?? 0,
             questionCount: t.questionCount ?? 0,
             totalMinutes: t.totalMinutes ?? 0,
+            color: t.color ?? "",
             order: t.order ?? idx,
           },
         },
