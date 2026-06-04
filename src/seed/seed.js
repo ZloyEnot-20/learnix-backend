@@ -54,14 +54,13 @@ async function seedStudent() {
 /** Extra (non-CEFR) level folders shown alongside A1–C2. Idempotent upsert. */
 async function seedLevels() {
   const levels = [
+    { _id: "Advanced", key: "Advanced", label: "Advanced", color: "rose", comingSoon: true, cefr: "C1", order: 100 },
     { _id: "Expert", key: "Expert", label: "Expert", color: "purple", comingSoon: true, cefr: "C2", order: 101 },
   ]
   for (const lvl of levels) {
     await Level.updateOne({ _id: lvl._id }, { $set: lvl }, { upsert: true })
   }
-  // Remove the legacy "Advanced" extra level — C1 already shows as "Advanced".
-  await Level.deleteOne({ _id: "Advanced" })
-  console.log(`[seed] ensured ${levels.length} extra level(s) (Expert); removed legacy Advanced`)
+  console.log(`[seed] ensured ${levels.length} extra level folder(s)`)
 }
 
 /** Upsert the starter vocabulary decks so the DB owns all deck data. */
