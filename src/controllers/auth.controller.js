@@ -1,10 +1,10 @@
 import { User } from "../models/User.js"
-import { Student } from "../models/Student.js"
 import { hashPassword, verifyPassword } from "../utils/password.js"
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
 import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { ensureStudentAccount, syncStudentProfile } from "../services/student.service.js"
+import { ensureLoginField } from "../services/student.service.js"
+import { normalizeLogin } from "../utils/login.js"
 
 function tokensFor(user) {
   return {
@@ -17,46 +17,33 @@ export const register = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body
   const normalized = email.toLowerCase()
 
-  const existing = await User.findOne({ email: normalized })
+  const existing = await User.findOne({ $or: [{ email: normalized }, { login: normalized }] })
   if (existing) throw ApiError.conflict("Email is already registered")
 
   const passwordHash = await hashPassword(password)
   const user = await User.create({
+    login: normalized,
     email: normalized,
     name,
     role: "student",
     passwordHash,
   })
 
-  // New self-registered users are students: create their CRM record + group.
-  const student = await ensureStudentAccount({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  })
-  user.studentId = student._id
-  await user.save()
-
   res.status(201).json({ user: user.toSafeJSON(), ...tokensFor(user) })
 })
 
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body
-  const normalized = email.toLowerCase()
+  const { login, password } = req.body
+  const identifier = normalizeLogin(login)
 
-  const user = await User.findOne({ email: normalized }).select("+passwordHash")
-  // Always run a verification to reduce user-enumeration timing differences.
+  const user = await User.findOne({
+    $or: [{ login: identifier }, { email: identifier }],
+  }).select("+passwordHash")
+
   const ok = user ? await verifyPassword(user.passwordHash, password) : false
-  if (!user || !ok) throw ApiError.unauthorized("Invalid email or password")
+  if (!user || !ok) throw ApiError.unauthorized("Invalid login or password")
 
-  if (user.role === "student") {
-    // Keep the CRM record in sync with the auth account on every login.
-    const student = await syncStudentProfile(user)
-    if (user.studentId !== student._id) {
-      user.studentId = student._id
-      await user.save()
-    }
-  }
+  if (!user.login && user.email) await ensureLoginField(user)
 
   res.json({ user: user.toSafeJSON(), ...tokensFor(user) })
 })

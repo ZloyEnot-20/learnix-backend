@@ -11,7 +11,7 @@
 import { env } from "../config/env.js"
 import { Notification } from "../models/Notification.js"
 import { ParentLink } from "../models/ParentLink.js"
-import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
 import { Submission } from "../models/Submission.js"
 import { Homework } from "../models/Homework.js"
 
@@ -219,7 +219,7 @@ export async function deliverNotification(note) {
   const links = await ParentLink.find({ studentId: note.studentId }).lean()
   if (links.length === 0) return
 
-  const student = await Student.findById(note.studentId).lean()
+  const student = await User.findOne({ _id: note.studentId, role: "student" }).lean()
   const childName = student?.name ?? "Farzand"
 
   await Promise.all(
@@ -245,7 +245,10 @@ export async function reconcilePending(limitPerLink = 20) {
   const links = await ParentLink.find().lean()
   if (links.length === 0) return
 
-  const students = await Student.find({ _id: { $in: links.map((l) => l.studentId) } }).lean()
+  const students = await User.find({
+    _id: { $in: links.map((l) => l.studentId) },
+    role: "student",
+  }).lean()
   const nameById = new Map(students.map((s) => [s._id, s.name]))
 
   for (const link of links) {

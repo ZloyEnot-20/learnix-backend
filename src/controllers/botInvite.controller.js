@@ -1,6 +1,7 @@
 import { BotInvite, generateInviteCode } from "../models/BotInvite.js"
 import { ParentLink } from "../models/ParentLink.js"
-import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
+import { findStudentById } from "../services/student.service.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 
@@ -31,7 +32,7 @@ function serialize(inv) {
 /** Staff: create a one-time invite code for a student. */
 export const createInvite = asyncHandler(async (req, res) => {
   const { studentId, ttlHours } = req.body
-  const student = await Student.findById(studentId)
+  const student = await findStudentById(studentId)
   if (!student) throw ApiError.notFound("Student not found")
 
   const hours = Math.min(Math.max(Number(ttlHours) || DEFAULT_TTL_HOURS, 1), MAX_TTL_HOURS)

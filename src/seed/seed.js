@@ -13,18 +13,18 @@ import { connectDB, disconnectDB } from "../config/db.js"
 import { env } from "../config/env.js"
 import { hashPassword } from "../utils/password.js"
 import { User } from "../models/User.js"
-import { Student } from "../models/Student.js"
 import { Level } from "../models/Level.js"
 import { VocabDeck } from "../models/VocabDeck.js"
 import { VOCAB_DECKS } from "../content/vocab-decks.js"
 
 async function seedSuperAdmin() {
   const email = env.seed.superAdminEmail
-  if (await User.findOne({ email })) {
+  if (await User.findOne({ $or: [{ email }, { login: email }] })) {
     console.log(`[seed] super admin already exists: ${email}`)
     return
   }
   await User.create({
+    login: email,
     email,
     name: "Super Admin",
     role: "super_admin",
@@ -36,17 +36,16 @@ async function seedSuperAdmin() {
 
 async function seedStudent() {
   const email = env.seed.studentEmail
-  if (await User.findOne({ email })) {
+  if (await User.findOne({ $or: [{ email }, { login: email }] })) {
     console.log(`[seed] student already exists: ${email}`)
     return
   }
-  const student = await Student.create({ name: "Student", email })
   await User.create({
+    login: email,
     email,
     name: "Student",
     role: "student",
     passwordHash: await hashPassword(env.seed.studentPassword),
-    studentId: student._id,
   })
   console.log(`[seed] created student: ${email}`)
 }

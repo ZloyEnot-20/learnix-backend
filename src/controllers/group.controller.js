@@ -1,5 +1,5 @@
 import { Group } from "../models/Group.js"
-import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
@@ -35,7 +35,7 @@ export const updateGroup = asyncHandler(async (req, res) => {
 export const deleteGroup = asyncHandler(async (req, res) => {
   const group = await Group.findByIdAndDelete(req.params.id)
   if (!group) throw ApiError.notFound("Group not found")
-  await Student.updateMany({ groupId: group._id }, { $unset: { groupId: "" } })
+  await User.updateMany({ role: "student", groupId: group._id }, { $unset: { groupId: "" } })
   res.json({ ok: true })
 })
 

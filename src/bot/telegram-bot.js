@@ -18,7 +18,7 @@
 import "../config/mongoose.js"
 import { env } from "../config/env.js"
 import { connectDB, disconnectDB } from "../config/db.js"
-import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
 import { ParentLink } from "../models/ParentLink.js"
@@ -89,7 +89,10 @@ function resetAttempts(chatId) {
 async function getChildren(chatId) {
   const links = await ParentLink.find({ chatId }).lean()
   if (links.length === 0) return []
-  const students = await Student.find({ _id: { $in: links.map((l) => l.studentId) } }).lean()
+  const students = await User.find({
+    _id: { $in: links.map((l) => l.studentId) },
+    role: "student",
+  }).lean()
   const byId = new Map(students.map((s) => [s._id, s]))
   return links
     .map((link) => ({ link, student: byId.get(link.studentId) }))
@@ -292,7 +295,7 @@ async function handleMessage(msg) {
     return
   }
 
-  const student = await Student.findById(invite.studentId)
+  const student = await User.findOne({ _id: invite.studentId, role: "student" })
   if (!student) {
     await send(chatId, "❌ Bu kodga bog'langan o'quvchi topilmadi. Markazga murojaat qiling.")
     return

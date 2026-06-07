@@ -1,7 +1,7 @@
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
 import { Group } from "../models/Group.js"
-import { Student } from "../models/Student.js"
+import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { notify, notifyMany } from "../services/notification.service.js"
@@ -38,10 +38,15 @@ export const getHomeworkDetails = asyncHandler(async (req, res) => {
   ])
   const studentIds = group?.studentIds ?? []
   const students = studentIds.length
-    ? await Student.find({ _id: { $in: studentIds } })
+    ? await User.find({ _id: { $in: studentIds }, role: "student" })
     : []
 
-  res.json({ homework, group, students, submissions })
+  res.json({
+    homework,
+    group,
+    students: students.map((s) => s.toStudentJSON()),
+    submissions,
+  })
 })
 
 export const createHomework = asyncHandler(async (req, res) => {

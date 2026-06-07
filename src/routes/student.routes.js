@@ -6,6 +6,7 @@ import { validate } from "../middleware/validate.js"
 import {
   createStudentSchema,
   updateStudentSchema,
+  loginSuggestionsSchema,
   idParamSchema,
 } from "../validators/schemas.js"
 
@@ -13,6 +14,7 @@ const router = Router()
 router.use(authenticate)
 
 // Listing/creating students is staff-only.
+router.get("/login-suggestions", isStaff, validate(loginSuggestionsSchema), ctrl.loginSuggestions)
 router.get("/", isStaff, ctrl.listStudents)
 router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 

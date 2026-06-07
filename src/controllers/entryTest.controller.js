@@ -1,5 +1,5 @@
 import { EntryTest } from "../models/EntryTest.js"
-import { Student } from "../models/Student.js"
+import { findStudentById } from "../services/student.service.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { recomputeStatus } from "../services/entryTest.service.js"
@@ -48,7 +48,7 @@ export const myEntryTest = asyncHandler(async (req, res) => {
 })
 
 export const assignEntryTest = asyncHandler(async (req, res) => {
-  const student = await Student.findById(req.body.studentId)
+  const student = await findStudentById(req.body.studentId)
   if (!student) throw ApiError.notFound("Student not found")
 
   const active = await EntryTest.findOne({
@@ -60,7 +60,7 @@ export const assignEntryTest = asyncHandler(async (req, res) => {
   const doc = await EntryTest.create({
     studentId: student._id,
     studentName: student.name,
-    studentEmail: student.email,
+    studentEmail: student.email ?? "",
     assignedBy: req.user.name,
   })
   await notify(student._id, {

@@ -22,7 +22,7 @@ export const registerSchema = {
 
 export const loginSchema = {
   body: z.object({
-    email: z.string().email().max(254),
+    login: z.string().min(1).max(64),
     password: z.string().min(1).max(128),
   }),
 }
@@ -56,11 +56,18 @@ export const groupMemberSchema = {
 }
 
 // ---------- Student ----------
+const uzPhone = z.string().max(20).optional()
+
 export const createStudentSchema = {
   body: z.object({
     name: z.string().min(1).max(120),
-    email: z.string().email().max(254),
-    phone: z.string().max(40).optional(),
+    login: z
+      .string()
+      .min(3)
+      .max(32)
+      .regex(/^[a-z0-9._-]+$/, "Login may only contain lowercase letters, digits, . _ -"),
+    email: z.string().email().max(254).optional(),
+    phone: uzPhone,
     groupId: z.string().optional(),
     monthlyFee: z.number().nonnegative().optional(),
     notes: z.string().max(1000).optional(),
@@ -69,6 +76,9 @@ export const createStudentSchema = {
 export const updateStudentSchema = {
   params: idParam,
   body: createStudentSchema.body.partial(),
+}
+export const loginSuggestionsSchema = {
+  query: z.object({ name: z.string().min(1).max(120) }),
 }
 
 // ---------- Homework ----------

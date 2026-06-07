@@ -25,9 +25,10 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
   req.user = {
     id: user._id,
     role: user.role,
-    studentId: user.studentId,
+    studentId: user.role === "student" ? user._id : undefined,
     name: user.name,
     email: user.email,
+    login: user.login ?? user.email,
   }
   next()
 })

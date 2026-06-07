@@ -1,95 +1,131 @@
-import { Student } from "../models/Student.js"
 import { User } from "../models/User.js"
 import { Group } from "../models/Group.js"
 import { Submission } from "../models/Submission.js"
 import { Payment } from "../models/Payment.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { hashPassword } from "../utils/password.js"
 import {
   addStudentToGroup,
   removeStudentFromGroup,
-  syncStudentProfile,
+  ensureLoginField,
+  findStudentById,
 } from "../services/student.service.js"
+import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 
 export const listStudents = asyncHandler(async (_req, res) => {
-  const users = await User.find().select("_id email role name studentId")
-  const staff = users.filter((u) => u.role !== "student")
-  const staffIds = new Set(staff.map((u) => u._id))
-  const staffEmails = new Set(staff.map((u) => u.email?.toLowerCase()).filter(Boolean))
-
-  // For every student account: ensure a CRM record exists and mirrors the auth
-  // account's current name/email. This guarantees the list is complete (no
-  // orphaned logins) and never shows a stale name after the account changes.
-  for (const u of users.filter((u) => u.role === "student")) {
-    const student = await syncStudentProfile(u)
-    if (u.studentId !== student._id) {
-      u.studentId = student._id
-      await u.save()
-    }
+  const users = await User.find({ role: "student" }).sort({ joinedAt: -1 })
+  for (const u of users) {
+    if (!u.login && u.email) await ensureLoginField(u)
   }
+  res.json(users.map((u) => u.toStudentJSON()))
+})
 
-  const students = await Student.find().sort({ joinedAt: -1 })
-  // Exclude CRM records that belong to a staff account (matched by id or email).
-  const onlyStudents = students.filter(
-    (s) => !staffIds.has(s._id) && !staffEmails.has(s.email?.toLowerCase()),
-  )
-  res.json(onlyStudents)
+export const loginSuggestions = asyncHandler(async (req, res) => {
+  const name = String(req.query.name ?? "").trim()
+  if (!name) return res.json([])
+  const suggestions = await suggestLogins(name)
+  res.json(suggestions)
 })
 
 export const getStudent = asyncHandler(async (req, res) => {
-  const student = await Student.findById(req.params.id)
+  const student = await findStudentById(req.params.id)
   if (!student) throw ApiError.notFound("Student not found")
-  // Students may only read their own record.
-  if (req.user.role === "student" && req.user.studentId !== student._id) {
+  if (req.user.role === "student" && req.user.id !== student._id) {
     throw ApiError.forbidden()
   }
-  res.json(student)
+  res.json(student.toStudentJSON())
 })
 
 export const createStudent = asyncHandler(async (req, res) => {
-  const student = await Student.create(req.body)
-  if (student.groupId) await addStudentToGroup(student.groupId, student._id)
-  res.status(201).json(student)
+  const { name, login, email, phone, groupId, monthlyFee, notes } = req.body
+  const normalizedLogin = normalizeLogin(login)
+  if (!normalizedLogin) throw ApiError.badRequest("Login is required")
+
+  const taken = await User.findOne({
+    $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
+  })
+  if (taken) throw ApiError.conflict("Login is already taken")
+
+  if (email) {
+    const normalizedEmail = email.toLowerCase()
+    const emailTaken = await User.findOne({ email: normalizedEmail })
+    if (emailTaken) throw ApiError.conflict("Email is already registered")
+  }
+
+  const plainPassword = generatePassword()
+  const passwordHash = await hashPassword(plainPassword)
+
+  const user = await User.create({
+    login: normalizedLogin,
+    name: name.trim(),
+    email: email?.trim().toLowerCase() || undefined,
+    phone: phone?.trim() || undefined,
+    role: "student",
+    passwordHash,
+    groupId: groupId || undefined,
+    monthlyFee,
+    notes: notes?.trim() || undefined,
+  })
+
+  if (groupId) await addStudentToGroup(groupId, user._id)
+
+  res.status(201).json({
+    student: user.toStudentJSON(),
+    credentials: { login: user.login, password: plainPassword },
+  })
 })
 
 export const updateStudent = asyncHandler(async (req, res) => {
-  const prev = await Student.findById(req.params.id)
+  const prev = await findStudentById(req.params.id)
   if (!prev) throw ApiError.notFound("Student not found")
 
-  const nextGroup = req.body.groupId
-  const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  const patch = { ...req.body }
+  if (patch.login !== undefined) {
+    const normalizedLogin = normalizeLogin(patch.login)
+    if (!normalizedLogin) throw ApiError.badRequest("Login is required")
+    const taken = await User.findOne({
+      _id: { $ne: prev._id },
+      $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
+    })
+    if (taken) throw ApiError.conflict("Login is already taken")
+    patch.login = normalizedLogin
+  }
+  if (patch.email !== undefined && patch.email) {
+    const normalizedEmail = patch.email.toLowerCase()
+    const emailTaken = await User.findOne({ _id: { $ne: prev._id }, email: normalizedEmail })
+    if (emailTaken) throw ApiError.conflict("Email is already registered")
+    patch.email = normalizedEmail
+  }
+
+  const nextGroup = patch.groupId
+  const student = await User.findByIdAndUpdate(prev._id, patch, { new: true })
 
   if (nextGroup !== undefined && nextGroup !== prev.groupId) {
     if (prev.groupId) await removeStudentFromGroup(prev.groupId, student._id)
     if (nextGroup) await addStudentToGroup(nextGroup, student._id)
   }
-  res.json(student)
+  res.json(student.toStudentJSON())
 })
 
 export const deleteStudent = asyncHandler(async (req, res) => {
-  const student = await Student.findById(req.params.id)
+  const student = await findStudentById(req.params.id)
   if (!student) throw ApiError.notFound("Student not found")
   if (student.groupId) await removeStudentFromGroup(student.groupId, student._id)
-  await Student.deleteOne({ _id: student._id })
+  await User.deleteOne({ _id: student._id })
   await Submission.deleteMany({ studentId: student._id })
   await Payment.deleteMany({ studentId: student._id })
-  // Also remove the linked login account so the student is fully gone and is
-  // not re-created by the listStudents backfill on the next load.
-  await User.deleteMany({
-    role: "student",
-    $or: [{ _id: student._id }, { studentId: student._id }],
-  })
   res.json({ ok: true })
 })
 
 /** Group + teacher names for the student's own profile (no group list access). */
 export const getStudentContext = asyncHandler(async (req, res) => {
   const studentId = req.params.id
-  if (req.user.role === "student" && req.user.studentId !== studentId) {
+  if (req.user.role === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
 
-  const student = await Student.findById(studentId)
+  const student = await findStudentById(studentId)
   if (!student) throw ApiError.notFound("Student not found")
 
   let groupName = null
@@ -108,7 +144,7 @@ export const getStudentContext = asyncHandler(async (req, res) => {
 /** Derived progress summary used by the student dashboard. */
 export const getStudentProgress = asyncHandler(async (req, res) => {
   const studentId = req.params.id
-  if (req.user.role === "student" && req.user.studentId !== studentId) {
+  if (req.user.role === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
 
