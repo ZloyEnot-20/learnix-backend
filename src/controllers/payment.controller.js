@@ -1,6 +1,9 @@
 import { Payment } from "../models/Payment.js"
+import { User } from "../models/User.js"
+import { Group } from "../models/Group.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { recordAudit } from "../services/audit.service.js"
 
 export const listPayments = asyncHandler(async (req, res) => {
   const filter = {}
@@ -12,18 +15,61 @@ export const listPayments = asyncHandler(async (req, res) => {
 
 export const createPayment = asyncHandler(async (req, res) => {
   const payment = await Payment.create(req.body)
+  const [student, group] = await Promise.all([
+    payment.studentId ? User.findById(payment.studentId).select("name") : null,
+    payment.groupId ? Group.findById(payment.groupId).select("name") : null,
+  ])
+
+  await recordAudit({
+    req,
+    action: "create",
+    category: "payments",
+    targetType: "payment",
+    targetId: payment._id,
+    targetLabel: `${payment.amount}`,
+    details: {
+      studentId: payment.studentId,
+      studentName: student?.name ?? null,
+      groupId: payment.groupId,
+      groupName: group?.name ?? null,
+      status: payment.status,
+      amount: payment.amount,
+    },
+  })
+
   res.status(201).json(payment)
 })
 
 export const updatePayment = asyncHandler(async (req, res) => {
   const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true })
   if (!payment) throw ApiError.notFound("Payment not found")
+
+  await recordAudit({
+    req,
+    action: "update",
+    category: "payments",
+    targetType: "payment",
+    targetId: payment._id,
+    targetLabel: `${payment.amount}`,
+    details: { patch: req.body },
+  })
+
   res.json(payment)
 })
 
 export const deletePayment = asyncHandler(async (req, res) => {
   const payment = await Payment.findByIdAndDelete(req.params.id)
   if (!payment) throw ApiError.notFound("Payment not found")
+
+  await recordAudit({
+    req,
+    action: "delete",
+    category: "payments",
+    targetType: "payment",
+    targetId: payment._id,
+    targetLabel: `${payment.amount}`,
+  })
+
   res.json({ ok: true })
 })
 

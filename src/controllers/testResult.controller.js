@@ -1,10 +1,20 @@
 import { TestResult } from "../models/TestResult.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { recordTestActivity } from "../services/activity.service.js"
 
 export const saveTestResult = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const result = await TestResult.create({ ...req.body, studentId })
+
+  await recordTestActivity({
+    studentId,
+    testType: result.testType,
+    bandScore: result.bandScore,
+    totalCorrect: result.totalCorrect,
+    totalQuestions: result.totalQuestions,
+  })
+
   res.status(201).json(result)
 })
 

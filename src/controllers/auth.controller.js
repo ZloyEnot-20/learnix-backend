@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ensureLoginField } from "../services/student.service.js"
 import { normalizeLogin } from "../utils/login.js"
+import { recordAudit } from "../services/audit.service.js"
 
 function tokensFor(user) {
   return {
@@ -44,6 +45,16 @@ export const login = asyncHandler(async (req, res) => {
   if (!user || !ok) throw ApiError.unauthorized("Invalid login or password")
 
   if (!user.login && user.email) await ensureLoginField(user)
+
+  await recordAudit({
+    req,
+    actor: { id: user._id, name: user.name, role: user.role },
+    action: "login",
+    category: "auth",
+    targetType: "user",
+    targetId: user._id,
+    targetLabel: user.name,
+  })
 
   res.json({ user: user.toSafeJSON(), ...tokensFor(user) })
 })

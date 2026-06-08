@@ -1,21 +1,111 @@
+import { StudentActivity } from "../models/StudentActivity.js"
 import { ExerciseEvent } from "../models/ExerciseEvent.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { ApiError } from "../utils/ApiError.js"
+import {
+  recordExerciseActivity,
+  recordVocabActivity,
+  buildStudentSummary,
+} from "../services/activity.service.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : 0
 }
 
+function resolveStudentId(req) {
+  if (req.user.role === "student") return req.user.id
+  if (req.params.studentId) return req.params.studentId
+  if (req.query.studentId) return String(req.query.studentId)
+  return null
+}
+
 /** Record one finished grammar-exercise attempt. */
 export const recordEvent = asyncHandler(async (req, res) => {
   const studentId = req.user.id
-  const event = await ExerciseEvent.create({ ...req.body, studentId })
+  const { source, homeworkId, controlWorkId, durationSeconds, ...body } = req.body
+
+  const event = await ExerciseEvent.create({ ...body, studentId })
+
+  await recordExerciseActivity({
+    studentId,
+    source: source ?? (homeworkId ? "homework" : controlWorkId ? "control_work" : "game"),
+    subject: "grammar",
+    contextId: homeworkId ?? controlWorkId,
+    topic: body.topic,
+    subtopic: body.subtopic,
+    slug: body.slug,
+    title: body.title,
+    type: body.type,
+    correctCount: body.correctCount,
+    totalQuestions: body.totalQuestions,
+    timedOut: body.timedOut,
+    durationSeconds,
+  })
+
   res.status(201).json({ id: event._id })
+})
+
+/** Record vocabulary quiz completion + words learned. */
+export const recordVocab = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { deckSlug, deckTitle, correct, total, source, words } = req.body
+
+  await recordVocabActivity({
+    studentId,
+    deckSlug,
+    deckTitle,
+    correct,
+    total,
+    source: source ?? "game",
+    words,
+  })
+
+  res.status(201).json({ ok: true })
+})
+
+/** List student activity events (staff or own). */
+export const listActivity = asyncHandler(async (req, res) => {
+  const studentId = resolveStudentId(req)
+  if (!studentId) throw ApiError.badRequest("studentId is required")
+  if (req.user.role === "student" && studentId !== req.user.id) {
+    throw ApiError.forbidden()
+  }
+
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
+  const skip = (page - 1) * limit
+
+  const filter = { studentId }
+  if (req.query.category && req.query.category !== "all") filter.category = req.query.category
+  if (req.query.eventType && req.query.eventType !== "all") filter.eventType = req.query.eventType
+
+  const [items, total] = await Promise.all([
+    StudentActivity.find(filter).sort({ at: -1 }).skip(skip).limit(limit),
+    StudentActivity.countDocuments(filter),
+  ])
+
+  res.json({
+    items: items.map((d) => d.toJSON()),
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit) || 1,
+  })
+})
+
+/** Aggregated analytics summary for one student. */
+export const studentSummary = asyncHandler(async (req, res) => {
+  const studentId = req.params.studentId ?? req.user.id
+  if (req.user.role === "student" && studentId !== req.user.id) {
+    throw ApiError.forbidden()
+  }
+  const summary = await buildStudentSummary(studentId)
+  res.json(summary)
 })
 
 /** Aggregate events into a topic → subtopic → exercise tree. */
 export const topicStats = asyncHandler(async (req, res) => {
   const filter = {}
-  // Students only see their own analytics; staff see everything.
   if (req.user.role === "student") {
     filter.studentId = req.user.id
   } else if (req.query.studentId) {

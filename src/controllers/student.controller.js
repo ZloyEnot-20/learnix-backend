@@ -14,6 +14,7 @@ import {
 } from "../services/student.service.js"
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 import { computeStudentLevel } from "../services/gamification.service.js"
+import { recordAudit } from "../services/audit.service.js"
 
 export const listStudents = asyncHandler(async (_req, res) => {
   const users = await User.find({ role: "student" }).sort({ joinedAt: -1 })
@@ -72,9 +73,25 @@ export const createStudent = asyncHandler(async (req, res) => {
 
   if (groupId) await addStudentToGroup(groupId, user._id)
 
+  let groupName = null
+  if (groupId) {
+    const g = await Group.findById(groupId).select("name")
+    groupName = g?.name ?? null
+  }
+
   // The password is delivered to the student via the Telegram bot once they
   // enter this one-time confirmation code, so it isn't surfaced to staff.
   const { code, expiresAt } = await createStudentClaim(user._id, plainPassword)
+
+  await recordAudit({
+    req,
+    action: "create",
+    category: "students",
+    targetType: "student",
+    targetId: user._id,
+    targetLabel: user.name,
+    details: { login: user.login, groupId: groupId ?? null, groupName },
+  })
 
   res.status(201).json({
     student: user.toStudentJSON(),
@@ -92,6 +109,16 @@ export const regenerateClaim = asyncHandler(async (req, res) => {
   await student.save()
 
   const { code, expiresAt } = await createStudentClaim(student._id, plainPassword)
+
+  await recordAudit({
+    req,
+    action: "regenerate_claim",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+  })
+
   res.json({ login: student.login, code, expiresAt })
 })
 
@@ -128,16 +155,57 @@ export const updateStudent = asyncHandler(async (req, res) => {
     if (prev.groupId) await removeStudentFromGroup(prev.groupId, student._id)
     if (nextGroup) await addStudentToGroup(nextGroup, student._id)
   }
+
+  const auditDetails = {}
+  if (nextGroup !== undefined && nextGroup !== prev.groupId) {
+    const [fromGroup, toGroup] = await Promise.all([
+      prev.groupId ? Group.findById(prev.groupId).select("name") : null,
+      nextGroup ? Group.findById(nextGroup).select("name") : null,
+    ])
+    auditDetails.groupChange = {
+      fromGroupId: prev.groupId ?? null,
+      fromGroupName: fromGroup?.name ?? null,
+      toGroupId: nextGroup ?? null,
+      toGroupName: toGroup?.name ?? null,
+    }
+  }
+
+  await recordAudit({
+    req,
+    action: "update",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+    details: Object.keys(auditDetails).length ? auditDetails : null,
+  })
+
   res.json(student.toStudentJSON())
 })
 
 export const deleteStudent = asyncHandler(async (req, res) => {
   const student = await findStudentById(req.params.id)
   if (!student) throw ApiError.notFound("Student not found")
+  let groupName = null
+  if (student.groupId) {
+    const g = await Group.findById(student.groupId).select("name")
+    groupName = g?.name ?? null
+  }
   if (student.groupId) await removeStudentFromGroup(student.groupId, student._id)
   await User.deleteOne({ _id: student._id })
   await Submission.deleteMany({ studentId: student._id })
   await Payment.deleteMany({ studentId: student._id })
+
+  await recordAudit({
+    req,
+    action: "delete",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+    details: groupName ? { groupName } : null,
+  })
+
   res.json({ ok: true })
 })
 

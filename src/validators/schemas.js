@@ -231,6 +231,31 @@ export const recordEventSchema = {
     correctCount: z.number().int().nonnegative(),
     totalQuestions: z.number().int().nonnegative(),
     timedOut: z.boolean().optional(),
+    source: z.enum(["game", "homework", "control_work"]).optional(),
+    homeworkId: z.string().optional(),
+    controlWorkId: z.string().optional(),
+    durationSeconds: z.number().int().nonnegative().optional(),
+  }),
+}
+
+export const recordVocabSchema = {
+  body: z.object({
+    deckSlug: z.string().min(1),
+    deckTitle: z.string().min(1),
+    correct: z.number().int().nonnegative(),
+    total: z.number().int().positive(),
+    source: z.enum(["game", "homework"]).optional(),
+    words: z
+      .array(
+        z.object({
+          term: z.string().min(1),
+          partOfSpeech: z.string().optional(),
+          definition: z.string().optional(),
+          deckSlug: z.string().optional(),
+          deckTitle: z.string().optional(),
+        }),
+      )
+      .optional(),
   }),
 }
 
@@ -317,6 +342,106 @@ export const slugParamSchema = {
 }
 
 export const idParamSchema = { params: idParam }
+
+const controlSectionSubject = z.enum([
+  "vocabulary",
+  "grammar",
+  "reading",
+  "listening",
+  "writing",
+])
+
+const controlSectionConfig = z.object({
+  mode: z.enum(["manual", "mix"]).optional(),
+  topicSlugs: z.array(z.string().min(1)).optional(),
+  exerciseSlugs: z.array(z.string().min(1)).optional(),
+  deckSlugs: z.array(z.string().min(1)).optional(),
+  mixCount: z.number().int().positive().max(50).optional(),
+  testId: z.string().min(1).max(200).optional(),
+  testTitle: z.string().max(200).optional(),
+})
+
+export const createControlWorkSchema = {
+  body: z.object({
+    title: z.string().min(1).max(200),
+    description: z.string().max(2000).optional().default(""),
+    groupId: z.string().min(1),
+    dueAt: z.coerce.date(),
+    timeLimitMinutes: z.number().int().positive().optional(),
+    createdBy: z.string().max(120).optional(),
+    sectionOrder: z.array(controlSectionSubject).min(1).max(5),
+    sections: z
+      .object({
+        vocabulary: controlSectionConfig.optional(),
+        grammar: controlSectionConfig.optional(),
+        reading: controlSectionConfig.optional(),
+        listening: controlSectionConfig.optional(),
+        writing: controlSectionConfig.optional(),
+      })
+      .optional()
+      .default({}),
+  }),
+}
+
+export const startControlWorkSchema = {
+  body: z.object({ controlWorkId: z.string().min(1) }),
+}
+
+export const completeControlWorkStepSchema = {
+  body: z.object({
+    controlWorkId: z.string().min(1),
+    stepIndex: z.number().int().nonnegative(),
+    attempt: z.object({
+      totalQuestions: z.number().int().nonnegative(),
+      correctCount: z.number().int().nonnegative(),
+      durationSeconds: z.number().int().nonnegative().optional(),
+      timedOut: z.boolean().optional(),
+      answeredCount: z.number().int().nonnegative().optional(),
+      mistakes: z
+        .array(
+          z.object({
+            questionId: z.number(),
+            prompt: z.string(),
+            userAnswer: z.string(),
+            correctAnswer: z.string(),
+            explanation: z.string().optional(),
+          }),
+        )
+        .optional()
+        .default([]),
+    }),
+  }),
+}
+
+export const reportControlWorkViolationSchema = {
+  body: z.object({
+    controlWorkId: z.string().min(1),
+    reason: z.string().max(120).optional(),
+  }),
+}
+
+// ---------- Staff users (org admin) ----------
+const staffRole = z.enum(["admin", "teacher"])
+const staffRoleSuper = z.enum(["super_admin", "admin", "teacher"])
+
+export const createUserSchema = {
+  body: z.object({
+    name: z.string().min(1).max(120),
+    login: z.string().min(1).max(64),
+    email: optionalEmail,
+    role: staffRoleSuper,
+  }),
+}
+
+export const updateUserSchema = {
+  params: idParam,
+  body: z.object({
+    name: z.string().min(1).max(120).optional(),
+    login: z.string().min(1).max(64).optional(),
+    email: optionalEmail,
+    role: staffRoleSuper.optional(),
+  }),
+}
 
 // ---------- Telegram bot invites ----------
 export const createInviteSchema = {

@@ -3,6 +3,7 @@ import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
+import { recordAudit } from "../services/audit.service.js"
 
 export const listGroups = asyncHandler(async (_req, res) => {
   const groups = await Group.find().sort({ createdAt: -1 })
@@ -23,12 +24,33 @@ export const createGroup = asyncHandler(async (req, res) => {
     teacherId,
     studentIds: req.body.studentIds ?? [],
   })
+
+  await recordAudit({
+    req,
+    action: "create",
+    category: "groups",
+    targetType: "group",
+    targetId: group._id,
+    targetLabel: group.name,
+  })
+
   res.status(201).json(group)
 })
 
 export const updateGroup = asyncHandler(async (req, res) => {
   const group = await Group.findByIdAndUpdate(req.params.id, req.body, { new: true })
   if (!group) throw ApiError.notFound("Group not found")
+
+  await recordAudit({
+    req,
+    action: "update",
+    category: "groups",
+    targetType: "group",
+    targetId: group._id,
+    targetLabel: group.name,
+    details: { patch: req.body },
+  })
+
   res.json(group)
 })
 
@@ -36,19 +58,63 @@ export const deleteGroup = asyncHandler(async (req, res) => {
   const group = await Group.findByIdAndDelete(req.params.id)
   if (!group) throw ApiError.notFound("Group not found")
   await User.updateMany({ role: "student", groupId: group._id }, { $unset: { groupId: "" } })
+
+  await recordAudit({
+    req,
+    action: "delete",
+    category: "groups",
+    targetType: "group",
+    targetId: group._id,
+    targetLabel: group.name,
+  })
+
   res.json({ ok: true })
 })
 
 export const addMember = asyncHandler(async (req, res) => {
   const group = await Group.findById(req.params.id)
   if (!group) throw ApiError.notFound("Group not found")
+  const student = await User.findOne({ _id: req.body.studentId, role: "student" }).select("name")
   await addStudentToGroup(group._id, req.body.studentId)
+
+  await recordAudit({
+    req,
+    action: "add_member",
+    category: "groups",
+    targetType: "group",
+    targetId: group._id,
+    targetLabel: group.name,
+    details: {
+      studentId: req.body.studentId,
+      studentName: student?.name ?? null,
+      groupId: group._id,
+      groupName: group.name,
+    },
+  })
+
   res.json(await Group.findById(group._id))
 })
 
 export const removeMember = asyncHandler(async (req, res) => {
   const group = await Group.findById(req.params.id)
   if (!group) throw ApiError.notFound("Group not found")
+  const student = await User.findOne({ _id: req.body.studentId, role: "student" }).select("name")
   await removeStudentFromGroup(group._id, req.body.studentId)
+
+  await recordAudit({
+    req,
+    action: "remove_member",
+    category: "groups",
+    targetType: "group",
+    targetId: group._id,
+    targetLabel: group.name,
+    details: {
+      studentId: req.body.studentId,
+      studentName: student?.name ?? null,
+      groupId: group._id,
+      groupName: group.name,
+    },
+  })
+
   res.json(await Group.findById(group._id))
 })

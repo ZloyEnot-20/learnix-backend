@@ -39,6 +39,56 @@ export function sendMessage(chatId, text, extra = {}) {
   })
 }
 
+// ─── Doimiy pastki menyu (reply keyboard) ─────────────────────────────────────
+export const BTN_STUDENT = "👨‍🎓 Men o'quvchiman"
+export const BTN_PARENT = "👨‍👩‍👧 Men ota-onaman"
+export const BTN_TASKS = "📋 Vazifalar"
+export const BTN_RESULTS = "📊 Natijalar"
+export const BTN_CHILDREN = "👨‍👩‍👧 Farzandlarim"
+export const BTN_HELP = "ℹ️ Yordam"
+export const BTN_CONTACT = "📱 Telefon raqamni ulashish"
+
+/** Yangi foydalanuvchi — rol tanlash + yordam. */
+export const ROLE_KEYBOARD = {
+  keyboard: [
+    [{ text: BTN_STUDENT }],
+    [{ text: BTN_PARENT }],
+    [{ text: BTN_HELP }],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+}
+
+/** Ulangan ota-ona — navigatsiya + telefon ulashish. */
+export const MENU_KEYBOARD = {
+  keyboard: [
+    [{ text: BTN_TASKS }, { text: BTN_RESULTS }],
+    [{ text: BTN_CHILDREN }, { text: BTN_HELP }],
+    [{ text: BTN_CONTACT, request_contact: true }],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+}
+
+export const MENU_BUTTONS = {
+  [BTN_TASKS]: "/vazifalar",
+  [BTN_RESULTS]: "/natijalar",
+  [BTN_CHILDREN]: "/farzandlarim",
+  [BTN_HELP]: "/yordam",
+}
+
+/** Chat holatiga qarab doimiy klaviaturani qaytaradi. */
+export async function getKeyboardForChat(chatId) {
+  const linked = await ParentLink.exists({ chatId: String(chatId) })
+  return linked ? MENU_KEYBOARD : ROLE_KEYBOARD
+}
+
+/** Xabar yuboradi va doimiy menyuni biriktiradi (agar boshqa markup berilmagan bo'lsa). */
+export async function sendMessageWithMenu(chatId, text, extra = {}) {
+  const markup = extra.reply_markup ?? (await getKeyboardForChat(chatId))
+  return sendMessage(chatId, text, { ...extra, reply_markup: markup })
+}
+
 // ─── Matn yordamchilari ─────────────────────────────────────────────────────────
 export function esc(value) {
   return String(value ?? "")
@@ -200,7 +250,9 @@ async function deliverToChat(chatId, childName, note) {
   )
   if (claim.modifiedCount !== 1) return // boshqa jarayon allaqachon yubordi
   try {
-    await sendMessage(chatId, await composeMessage(childName, note))
+    await sendMessage(chatId, await composeMessage(childName, note), {
+      reply_markup: await getKeyboardForChat(chatId),
+    })
   } catch (err) {
     // Yuborilmadi — keyingi reconcile qayta urinishi uchun belgini qaytaramiz.
     await Notification.updateOne({ _id: note._id }, { $pull: { deliveredChatIds: chatId } }).catch(

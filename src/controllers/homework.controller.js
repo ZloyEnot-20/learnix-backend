@@ -5,6 +5,12 @@ import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { notify, notifyMany } from "../services/notification.service.js"
+import { recordAudit } from "../services/audit.service.js"
+import {
+  recordIntegrityEvent,
+  recordHomeworkSubmit,
+  recordVocabActivity,
+} from "../services/activity.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -40,6 +46,17 @@ async function failForCheating(sub, homeworkId, studentId, reason, at = new Date
   await sub.save()
 
   const hw = await Homework.findById(homeworkId)
+  await recordIntegrityEvent({
+    studentId,
+    source: "homework",
+    contextId: homeworkId,
+    contextLabel: hw?.title,
+    subject: hw?.subject,
+    eventType: "integrity.cheating",
+    reason: reason ?? "unknown",
+    violationCount: sub.violationCount ?? 0,
+  })
+
   await notify(studentId, {
     type: "result",
     title: hw ? `Homework failed: ${hw.title}` : "Homework failed",
@@ -127,6 +144,21 @@ export const createHomework = asyncHandler(async (req, res) => {
       },
     }).catch(() => {})
   }
+
+  await recordAudit({
+    req,
+    action: "create",
+    category: "homework",
+    targetType: "homework",
+    targetId: hw._id,
+    targetLabel: hw.title,
+    details: {
+      groupId: hw.groupId,
+      groupName: group?.name ?? null,
+      subject: hw.subject,
+    },
+  })
+
   res.status(201).json(hw)
 })
 
@@ -134,6 +166,16 @@ export const deleteHomework = asyncHandler(async (req, res) => {
   const hw = await Homework.findByIdAndDelete(req.params.id)
   if (!hw) throw ApiError.notFound("Homework not found")
   await Submission.deleteMany({ homeworkId: hw._id })
+
+  await recordAudit({
+    req,
+    action: "delete",
+    category: "homework",
+    targetType: "homework",
+    targetId: hw._id,
+    targetLabel: hw.title,
+  })
+
   res.json({ ok: true })
 })
 
@@ -306,9 +348,27 @@ export const reportViolation = asyncHandler(async (req, res) => {
     sub.status = "paused"
     sub.pausedAt = now
     sub.pauseUsed = true
+    sub.violationCount = (sub.violationCount ?? 0) + 1
+    sub.integrityStatus = "cheating_suspicion"
     await sub.save()
+
+    const hw = await Homework.findById(homeworkId)
+    await recordIntegrityEvent({
+      studentId,
+      source: "homework",
+      contextId: homeworkId,
+      contextLabel: hw?.title,
+      subject: hw?.subject,
+      eventType: "integrity.violation",
+      reason: reason ?? "unknown",
+      violationCount: sub.violationCount,
+    })
+
     return res.json({ action: "pause", submission: sub, pauseUsed: true })
   }
+
+  sub.violationCount = (sub.violationCount ?? 0) + 1
+  await sub.save()
 
   return res.json(await failForCheating(sub, homeworkId, studentId, reason, now))
 })
@@ -350,9 +410,29 @@ export const recordAttempt = asyncHandler(async (req, res) => {
 
   if (alreadyDone) return res.json(result)
 
+  const hw = await Homework.findById(homeworkId)
+  await recordHomeworkSubmit({
+    studentId,
+    homeworkId,
+    homeworkTitle: hw?.title,
+    subject: hw?.subject,
+    attempt,
+    score,
+  })
+
+  if (hw?.subject === "vocabulary") {
+    await recordVocabActivity({
+      studentId,
+      deckSlug: hw.exerciseSlug ?? hw._id,
+      deckTitle: hw.title,
+      correct: attempt.correctCount,
+      total: attempt.totalQuestions,
+      source: "homework",
+    })
+  }
+
   // Notify (the student and, via the Telegram bot, their parents) that a task
   // was completed — this is one of the activities parents subscribe to.
-  const hw = await Homework.findById(homeworkId)
   await notify(studentId, {
     type: "result",
     title: hw ? `Homework completed: ${hw.title}` : "Homework completed",

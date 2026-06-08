@@ -26,13 +26,18 @@ import { BotInvite, normaliseInviteCode } from "../models/BotInvite.js"
 import { StudentClaim } from "../models/StudentClaim.js"
 import {
   tg,
-  sendMessage,
+  sendMessageWithMenu,
   esc,
   fmtDate,
   card,
   SUBJECT_EMOJI,
   STATUS_UZ,
   reconcilePending,
+  BTN_STUDENT,
+  BTN_PARENT,
+  BTN_CONTACT,
+  BTN_HELP,
+  MENU_BUTTONS,
 } from "../services/telegram.service.js"
 
 const TOKEN = env.telegram.botToken
@@ -49,52 +54,17 @@ const ROLE_STUDENT = "student"
 const ROLE_PARENT = "parent"
 const pendingRole = new Map() // chatId -> "student" | "parent"
 
-const BTN_STUDENT = "👨‍🎓 Men o'quvchiman"
-const BTN_PARENT = "👨‍👩‍👧 Men ota-onaman"
-const ROLE_KEYBOARD = {
-  keyboard: [[{ text: BTN_STUDENT }], [{ text: BTN_PARENT }]],
-  resize_keyboard: true,
-  one_time_keyboard: true,
-}
-
 // Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (kodlarni terib topishga qarshi).
 const MAX_ATTEMPTS = 5
 const ATTEMPT_WINDOW_MS = 60_000
 const attempts = new Map() // chatId -> { count, windowStart }
 
 // Buyruq javoblari uchun: yuborish xatosi botni yiqitmasligi kerak.
+// Har bir javobda doimiy pastki menyu biriktiriladi.
 function send(chatId, text, extra = {}) {
-  return sendMessage(chatId, text, extra).catch((err) =>
+  return sendMessageWithMenu(chatId, text, extra).catch((err) =>
     console.error("[bot] sendMessage error:", err.message),
   )
-}
-
-// Telefon raqamini so'rash uchun bir martalik tugma (faqat o'z kontaktini ulashadi).
-const CONTACT_KEYBOARD = {
-  keyboard: [[{ text: "📱 Telefon raqamni ulashish", request_contact: true }]],
-  resize_keyboard: true,
-  one_time_keyboard: true,
-}
-const REMOVE_KEYBOARD = { remove_keyboard: true }
-
-// Farzand ulangach pastda turadigan doimiy navigatsiya menyusi.
-const BTN_TASKS = "📋 Vazifalar"
-const BTN_RESULTS = "📊 Natijalar"
-const BTN_CHILDREN = "👨‍👩‍👧 Farzandlarim"
-const BTN_HELP = "ℹ️ Yordam"
-const MENU_KEYBOARD = {
-  keyboard: [
-    [{ text: BTN_TASKS }, { text: BTN_RESULTS }],
-    [{ text: BTN_CHILDREN }, { text: BTN_HELP }],
-  ],
-  resize_keyboard: true,
-}
-// Menyu tugmasi matnini tegishli buyruqqa moslash.
-const MENU_BUTTONS = {
-  [BTN_TASKS]: "/vazifalar",
-  [BTN_RESULTS]: "/natijalar",
-  [BTN_CHILDREN]: "/farzandlarim",
-  [BTN_HELP]: "/yordam",
 }
 
 const HELP =
@@ -186,7 +156,6 @@ async function redeemStudentClaim(chatId, rawCode) {
       "",
       "Saytga shu login va parol bilan kiring. Parolni hech kimga bermang.",
     ]),
-    { reply_markup: REMOVE_KEYBOARD },
   )
 }
 
@@ -265,20 +234,14 @@ async function handleMessage(msg) {
   if (msg.contact) {
     // Faqat foydalanuvchining o'z kontakti qabul qilinadi (boshqa odamniki emas).
     if (msg.contact.user_id && String(msg.contact.user_id) !== String(msg.from?.id)) {
-      return void send(chatId, "❗️ Iltimos, faqat <b>o'z</b> telefon raqamingizni ulashing.", {
-        reply_markup: CONTACT_KEYBOARD,
-      })
+      return void send(chatId, "❗️ Iltimos, faqat <b>o'z</b> telefon raqamingizni ulashing.")
     }
     const phone = msg.contact.phone_number
     const res = await ParentLink.updateMany({ chatId }, { phone })
     if (!res.matchedCount) {
-      return void send(chatId, "Avval taklif kodini yuborib, farzandingizni ulang.", {
-        reply_markup: REMOVE_KEYBOARD,
-      })
+      return void send(chatId, "Avval taklif kodini yuborib, farzandingizni ulang.")
     }
-    return void send(chatId, "✅ Rahmat! Telefon raqamingiz saqlandi.", {
-      reply_markup: MENU_KEYBOARD,
-    })
+    return void send(chatId, "✅ Rahmat! Telefon raqamingiz saqlandi.")
   }
 
   let text = (msg.text ?? "").trim()
@@ -310,7 +273,6 @@ async function handleMessage(msg) {
             "Pastdagi menyudan foydalaning 👇",
             "Yana farzand qo'shish uchun yangi taklif kodini yuboring.",
           ]),
-          { reply_markup: MENU_KEYBOARD },
         )
       } else {
         await send(
@@ -322,7 +284,6 @@ async function handleMessage(msg) {
             `${BTN_STUDENT} — kirish login va parolingizni olasiz.`,
             `${BTN_PARENT} — farzandingiz faoliyatini kuzatasiz.`,
           ]),
-          { reply_markup: ROLE_KEYBOARD },
         )
       }
       return
@@ -359,7 +320,6 @@ async function handleMessage(msg) {
       return void send(
         chatId,
         card("🔌 <b>Kuzatuv to'xtatildi</b>", ["", "Qayta ulanish uchun taklif kodini yuboring."]),
-        { reply_markup: REMOVE_KEYBOARD },
       )
     }
     return void send(chatId, `❓ Noma'lum buyruq.\n\n${HELP}`)
@@ -464,11 +424,10 @@ async function handleMessage(msg) {
       "",
       `Endi siz <b>${esc(student.name)}</b> faoliyatini kuzatasiz.`,
       "",
-      "Markaz siz bilan bog'lana olishi uchun telefon raqamingizni ulashing 👇",
+      `Telefon raqamingizni ulashish uchun pastdagi «${BTN_CONTACT}» tugmasini bosing 👇`,
     ]),
-    { reply_markup: CONTACT_KEYBOARD },
   )
-  await send(chatId, await buildSummary({ student }), { reply_markup: MENU_KEYBOARD })
+  await send(chatId, await buildSummary({ student }))
 }
 
 // ─── Long-polling tsikli ──────────────────────────────────────────────────────
@@ -502,6 +461,17 @@ async function main() {
   await connectDB()
   const me = await tg("getMe", {})
   console.log(`[bot] started as @${me.username}`)
+
+  await tg("setMyCommands", {
+    commands: [
+      { command: "start", description: "Botni ishga tushirish" },
+      { command: "vazifalar", description: "Joriy vazifalar" },
+      { command: "natijalar", description: "Oxirgi natijalar" },
+      { command: "farzandlarim", description: "Farzandlar ro'yxati" },
+      { command: "yordam", description: "Yordam" },
+      { command: "uzish", description: "Kuzatuvni to'xtatish" },
+    ],
+  }).catch((err) => console.warn("[bot] setMyCommands:", err.message))
 
   // Bildirishnomalar backend tomonidan DARHOL yuboriladi. Bu yerda faqat zaxira:
   // ishga tushganda va vaqti-vaqti bilan yuborilmay qolganlarini yetkazamiz.

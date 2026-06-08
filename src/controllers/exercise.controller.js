@@ -4,6 +4,7 @@ import { Level } from "../models/Level.js"
 import { VocabDeck } from "../models/VocabDeck.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { recordAudit } from "../services/audit.service.js"
 
 /** Reconstruct the client `GrammarExercise` shape from a stored doc. */
 function serializeExercise(doc) {
@@ -111,6 +112,16 @@ export const importVocabDecks = asyncHandler(async (req, res) => {
     const result = await VocabDeck.bulkWrite(ops, { ordered: false })
     written = (result.upsertedCount ?? 0) + (result.modifiedCount ?? 0)
   }
+
+  await recordAudit({
+    req,
+    action: "import_vocab",
+    category: "exercises",
+    targetType: "vocab",
+    targetLabel: `${decks.length} deck(s)`,
+    details: { decksWritten: written },
+  })
+
   res.json({ ok: true, decksWritten: written })
 })
 
@@ -182,6 +193,18 @@ export const importCatalog = asyncHandler(async (req, res) => {
     const result = await Exercise.bulkWrite(ops, { ordered: false })
     exercisesWritten = (result.upsertedCount ?? 0) + (result.modifiedCount ?? 0)
   }
+
+  await recordAudit({
+    req,
+    action: "import_catalog",
+    category: "exercises",
+    targetType: "catalog",
+    targetLabel: `${topics.length} topics, ${exercises.length} exercises`,
+    details: {
+      topics: { received: topics.length, written: topicsWritten },
+      exercises: { received: exercises.length, written: exercisesWritten },
+    },
+  })
 
   res.json({
     ok: true,
