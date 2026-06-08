@@ -6,9 +6,59 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { notify, notifyMany } from "../services/notification.service.js"
 
+/** Max time a student may stay paused before resume counts as cheating. */
+const PAUSE_MAX_SECONDS = 30 * 60
+
 function bandFromAttempt(total, correct) {
   if (!total || total <= 0) return undefined
   return Math.round((correct / total) * 9 * 2) / 2
+}
+
+/** Move the running segment into elapsedSeconds and clear sessionStartedAt. */
+function freezeActiveTime(sub, at = new Date()) {
+  if (!sub.sessionStartedAt) return 0
+  const delta = Math.floor((at.getTime() - sub.sessionStartedAt.getTime()) / 1000)
+  sub.elapsedSeconds = (sub.elapsedSeconds ?? 0) + Math.max(0, delta)
+  sub.sessionStartedAt = null
+  return delta
+}
+
+async function failForCheating(sub, homeworkId, studentId, reason, at = new Date()) {
+  freezeActiveTime(sub, at)
+  sub.integrityStatus = "cheating_detected"
+  sub.status = "submitted"
+  sub.score = 0
+  sub.submittedAt = at
+  sub.startedAt = sub.startedAt ?? at
+  sub.attempt = {
+    totalQuestions: 0,
+    correctCount: 0,
+    failedDueToCheating: true,
+    cheatingReason: reason ?? "unknown",
+    mistakes: [],
+  }
+  await sub.save()
+
+  const hw = await Homework.findById(homeworkId)
+  await notify(studentId, {
+    type: "result",
+    title: hw ? `Homework failed: ${hw.title}` : "Homework failed",
+    message: "Submission flagged as cheating detected.",
+    data: {
+      homeworkTitle: hw?.title,
+      subject: hw?.subject,
+      status: "submitted",
+      integrityStatus: "cheating_detected",
+      score: 0,
+    },
+  }).catch(() => {})
+
+  return {
+    action: "fail",
+    violationCount: sub.violationCount ?? 0,
+    integrityStatus: "cheating_detected",
+    submission: sub,
+  }
 }
 
 export const listHomework = asyncHandler(async (_req, res) => {
@@ -138,27 +188,129 @@ export const myHomework = asyncHandler(async (req, res) => {
   res.json(entries)
 })
 
+/** Begin or resume an active homework session (timer runs only while sessionStartedAt is set). */
 export const startHomework = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { homeworkId } = req.body
-  const existing = await Submission.findOne({ homeworkId, studentId })
   const now = new Date()
 
-  if (!existing) {
-    const created = await Submission.create({
+  let sub = await Submission.findOne({ homeworkId, studentId })
+
+  if (!sub) {
+    sub = await Submission.create({
       homeworkId,
       studentId,
       status: "in_progress",
       startedAt: now,
+      sessionStartedAt: now,
+      elapsedSeconds: 0,
+      pauseUsed: false,
     })
-    return res.json(created)
+    return res.json(sub)
   }
-  if (["submitted", "graded"].includes(existing.status)) return res.json(existing)
 
-  existing.status = "in_progress"
-  existing.startedAt = existing.startedAt ?? now
-  await existing.save()
-  res.json(existing)
+  if (
+    sub.integrityStatus === "cheating_detected" ||
+    sub.attempt?.failedDueToCheating ||
+    ["submitted", "graded"].includes(sub.status)
+  ) {
+    return res.json(sub)
+  }
+
+  if (sub.status === "paused" && sub.pausedAt) {
+    const pausedFor = Math.floor((now.getTime() - sub.pausedAt.getTime()) / 1000)
+    if (pausedFor > PAUSE_MAX_SECONDS) {
+      await failForCheating(sub, homeworkId, studentId, "pause_expired", now)
+      return res.json(sub)
+    }
+  }
+
+  // Orphan active segment — fold into elapsed before starting a new one.
+  if (sub.sessionStartedAt) {
+    freezeActiveTime(sub, now)
+  }
+
+  sub.status = "in_progress"
+  sub.startedAt = sub.startedAt ?? now
+  sub.sessionStartedAt = now
+  sub.pausedAt = undefined
+  await sub.save()
+  res.json(sub)
+})
+
+export const pauseHomework = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { homeworkId } = req.body
+  const now = new Date()
+
+  const sub = await Submission.findOne({ homeworkId, studentId })
+  if (!sub) throw ApiError.notFound("Submission not found")
+
+  if (sub.integrityStatus === "cheating_detected" || sub.attempt?.failedDueToCheating) {
+    return res.json({ action: "fail", submission: sub, pauseUsed: true })
+  }
+  if (["submitted", "graded"].includes(sub.status)) {
+    return res.json({ action: "already_done", submission: sub, pauseUsed: sub.pauseUsed ?? false })
+  }
+
+  freezeActiveTime(sub, now)
+  sub.status = "paused"
+  sub.pausedAt = now
+  sub.pauseUsed = true
+  await sub.save()
+
+  return res.json({ action: "paused", submission: sub, pauseUsed: true })
+})
+
+export const reportViolation = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { homeworkId, reason } = req.body
+  const now = new Date()
+
+  const sub = await Submission.findOne({ homeworkId, studentId })
+  if (!sub) {
+    return res.json({
+      action: "pause",
+      pauseUsed: true,
+      submission: await Submission.create({
+        homeworkId,
+        studentId,
+        status: "paused",
+        startedAt: now,
+        pausedAt: now,
+        elapsedSeconds: 0,
+        pauseUsed: true,
+      }),
+    })
+  }
+
+  if (sub.integrityStatus === "cheating_detected" || sub.attempt?.failedDueToCheating) {
+    return res.json({
+      action: "fail",
+      pauseUsed: true,
+      integrityStatus: "cheating_detected",
+      submission: sub,
+    })
+  }
+  if (["submitted", "graded"].includes(sub.status)) {
+    return res.json({
+      action: "already_done",
+      pauseUsed: sub.pauseUsed ?? false,
+      submission: sub,
+    })
+  }
+
+  // First leave: graceful pause (same as the Pause button).
+  if (!sub.pauseUsed) {
+    freezeActiveTime(sub, now)
+    sub.status = "paused"
+    sub.pausedAt = now
+    sub.pauseUsed = true
+    await sub.save()
+    return res.json({ action: "pause", submission: sub, pauseUsed: true })
+  }
+
+  return res.json(await failForCheating(sub, homeworkId, studentId, reason, now))
 })
 
 export const recordAttempt = asyncHandler(async (req, res) => {
@@ -183,11 +335,15 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       attempt,
     })
   } else {
+    freezeActiveTime(existing, now)
     existing.status = "submitted"
     existing.score = score
     existing.startedAt = existing.startedAt ?? now
     existing.submittedAt = now
-    existing.attempt = attempt
+    existing.attempt = {
+      ...attempt,
+      durationSeconds: attempt.durationSeconds ?? existing.elapsedSeconds ?? 0,
+    }
     await existing.save()
     result = existing
   }

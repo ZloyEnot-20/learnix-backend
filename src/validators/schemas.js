@@ -56,7 +56,26 @@ export const groupMemberSchema = {
 }
 
 // ---------- Student ----------
-const uzPhone = z.string().max(20).optional()
+/** Treat missing, null, or blank strings as undefined (optional field). */
+function optionalBlankString(max) {
+  return z.preprocess(
+    (val) => {
+      if (val === undefined || val === null) return undefined
+      const trimmed = String(val).trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    },
+    z.string().max(max).optional(),
+  )
+}
+
+const optionalEmail = z.preprocess(
+  (val) => {
+    if (val === undefined || val === null) return undefined
+    const trimmed = String(val).trim()
+    return trimmed.length > 0 ? trimmed.toLowerCase() : undefined
+  },
+  z.string().email().max(254).optional(),
+)
 
 export const createStudentSchema = {
   body: z.object({
@@ -66,8 +85,8 @@ export const createStudentSchema = {
       .min(3)
       .max(32)
       .regex(/^[a-z0-9._-]+$/, "Login may only contain lowercase letters, digits, . _ -"),
-    email: z.string().email().max(254).optional(),
-    phone: uzPhone,
+    email: optionalEmail,
+    phone: optionalBlankString(20),
     groupId: z.string().optional(),
     monthlyFee: z.number().nonnegative().optional(),
     notes: z.string().max(1000).optional(),
@@ -101,7 +120,7 @@ export const gradeSubmissionSchema = {
   body: z.object({
     score: z.number().min(0).max(9).optional(),
     feedback: z.string().max(2000).optional(),
-    status: z.enum(["pending", "in_progress", "submitted", "graded"]).optional(),
+    status: z.enum(["pending", "in_progress", "paused", "submitted", "graded"]).optional(),
   }),
 }
 
@@ -132,6 +151,16 @@ export const recordAttemptSchema = {
 
 export const startHomeworkSchema = {
   body: z.object({ homeworkId: z.string().min(1) }),
+}
+
+export const reportViolationSchema = {
+  body: z.object({
+    homeworkId: z.string().min(1),
+    reason: z
+      .enum(["app_background", "network_lost", "navigation", "unknown"])
+      .optional()
+      .default("unknown"),
+  }),
 }
 
 // ---------- Entry test ----------

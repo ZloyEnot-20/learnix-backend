@@ -14,16 +14,12 @@ export function createApp() {
   const app = express()
 
   app.disable("x-powered-by")
-  app.use(helmet())
   app.use(
-    cors({
-      // Allow all origins. The request origin is reflected back (instead of "*")
-      // so it stays compatible with `credentials`. Auth uses Bearer tokens, not
-      // cookies, so reflecting any origin does not expose session cookies.
-      origin: true,
-      credentials: true,
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
     }),
   )
+  app.use(cors())
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
 

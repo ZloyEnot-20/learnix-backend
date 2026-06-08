@@ -7,6 +7,7 @@ import {
   createHomeworkSchema,
   gradeSubmissionSchema,
   recordAttemptSchema,
+  reportViolationSchema,
   startHomeworkSchema,
   idParamSchema,
 } from "../validators/schemas.js"
@@ -17,6 +18,8 @@ router.use(authenticate)
 // Student-facing
 router.get("/mine", ctrl.myHomework)
 router.post("/start", validate(startHomeworkSchema), ctrl.startHomework)
+router.post("/pause", validate(startHomeworkSchema), ctrl.pauseHomework)
+router.post("/violation", validate(reportViolationSchema), ctrl.reportViolation)
 router.post("/attempt", validate(recordAttemptSchema), ctrl.recordAttempt)
 
 // Staff

@@ -110,11 +110,15 @@ export const updateStudent = asyncHandler(async (req, res) => {
     if (taken) throw ApiError.conflict("Login is already taken")
     patch.login = normalizedLogin
   }
-  if (patch.email !== undefined && patch.email) {
-    const normalizedEmail = patch.email.toLowerCase()
-    const emailTaken = await User.findOne({ _id: { $ne: prev._id }, email: normalizedEmail })
-    if (emailTaken) throw ApiError.conflict("Email is already registered")
-    patch.email = normalizedEmail
+  if (patch.email !== undefined) {
+    const normalizedEmail = patch.email?.trim()?.toLowerCase()
+    if (!normalizedEmail) {
+      patch.email = undefined
+    } else {
+      const emailTaken = await User.findOne({ _id: { $ne: prev._id }, email: normalizedEmail })
+      if (emailTaken) throw ApiError.conflict("Email is already registered")
+      patch.email = normalizedEmail
+    }
   }
 
   const nextGroup = patch.groupId

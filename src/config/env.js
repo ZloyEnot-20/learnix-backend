@@ -21,10 +21,6 @@ export const env = {
     accessTtl: process.env.JWT_ACCESS_TTL ?? "15m",
     refreshTtl: process.env.JWT_REFRESH_TTL ?? "30d",
   },
-  corsOrigins: (process.env.CORS_ORIGINS ?? "http://localhost:3000")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
   seed: {
     // Bootstrap super-admin credentials (used only by `npm run seed`).
     // Provide real values via env; the defaults are for first local run only.

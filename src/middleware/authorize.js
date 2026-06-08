@@ -16,3 +16,6 @@ export const isStaff = authorize("super_admin", "admin", "teacher")
 
 /** Admin-level actions (super admin + admin), excludes teachers. */
 export const isAdmin = authorize("super_admin", "admin")
+
+/** Platform-level actions (content import, etc.). */
+export const isSuperAdmin = authorize("super_admin")

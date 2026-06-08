@@ -20,6 +20,8 @@ const attemptSchema = new mongoose.Schema(
     mistakes: { type: [mistakeSchema], default: [] },
     timedOut: Boolean,
     answeredCount: Number,
+    failedDueToCheating: Boolean,
+    cheatingReason: String,
   },
   { _id: false },
 )
@@ -31,11 +33,24 @@ const submissionSchema = new mongoose.Schema(
     studentId: { type: String, ref: "User", required: true, index: true },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "submitted", "graded"],
+      enum: ["pending", "in_progress", "paused", "submitted", "graded"],
       default: "pending",
     },
+    integrityStatus: {
+      type: String,
+      enum: ["ok", "cheating_suspicion", "cheating_detected"],
+      default: "ok",
+    },
+    violationCount: { type: Number, default: 0 },
     score: { type: Number },
     startedAt: { type: Date },
+    /** Wall-clock when the current active segment began; null while paused. */
+    sessionStartedAt: { type: Date },
+    /** Accumulated active seconds (timer frozen while paused). */
+    elapsedSeconds: { type: Number, default: 0 },
+    /** Student used their one-time pause / graceful exit. */
+    pauseUsed: { type: Boolean, default: false },
+    pausedAt: { type: Date },
     submittedAt: { type: Date },
     feedback: { type: String },
     attempt: { type: attemptSchema },
