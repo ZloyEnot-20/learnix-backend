@@ -4,7 +4,7 @@ import { uid } from "../utils/ids.js"
 const notificationSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("ntf") },
-    studentId: { type: String, ref: "Student", required: true, index: true },
+    studentId: { type: String, ref: "User", required: true, index: true },
     type: {
       type: String,
       enum: ["homework", "result", "reminder", "achievement", "system", "entry_test"],

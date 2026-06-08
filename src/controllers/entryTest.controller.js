@@ -24,7 +24,7 @@ function serialize(doc) {
 function assertAccess(req, doc) {
   // Any staff role (super admin / admin / teacher) has full access.
   if (req.user.role !== "student") return
-  const myStudentId = req.user.studentId ?? req.user.id
+  const myStudentId = req.user.id
   if (doc.studentId !== myStudentId) throw ApiError.forbidden()
 }
 
@@ -42,7 +42,7 @@ export const getEntryTest = asyncHandler(async (req, res) => {
 
 /** The active entry test for the authenticated student (or by id for staff). */
 export const myEntryTest = asyncHandler(async (req, res) => {
-  const studentId = req.user.studentId ?? req.user.id
+  const studentId = req.user.id
   const doc = await EntryTest.findOne({ studentId }).sort({ assignedAt: -1 })
   res.json(doc ? serialize(doc) : null)
 })

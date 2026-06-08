@@ -13,7 +13,7 @@ const exerciseEventSchema = new mongoose.Schema(
     correctCount: { type: Number, default: 0 },
     totalQuestions: { type: Number, default: 0 },
     timedOut: { type: Boolean, default: false },
-    studentId: { type: String, ref: "Student", index: true },
+    studentId: { type: String, ref: "User", index: true },
     at: { type: Date, default: Date.now },
   },
   { _id: false },

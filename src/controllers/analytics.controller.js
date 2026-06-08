@@ -7,7 +7,7 @@ function pct(correct, total) {
 
 /** Record one finished grammar-exercise attempt. */
 export const recordEvent = asyncHandler(async (req, res) => {
-  const studentId = req.user.studentId ?? req.user.id
+  const studentId = req.user.id
   const event = await ExerciseEvent.create({ ...req.body, studentId })
   res.status(201).json({ id: event._id })
 })
@@ -17,7 +17,7 @@ export const topicStats = asyncHandler(async (req, res) => {
   const filter = {}
   // Students only see their own analytics; staff see everything.
   if (req.user.role === "student") {
-    filter.studentId = req.user.studentId ?? req.user.id
+    filter.studentId = req.user.id
   } else if (req.query.studentId) {
     filter.studentId = req.query.studentId
   }

@@ -23,7 +23,7 @@ const botInviteSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("inv") },
     code: { type: String, required: true, unique: true, index: true },
-    studentId: { type: String, ref: "Student", required: true, index: true },
+    studentId: { type: String, ref: "User", required: true, index: true },
     createdBy: { type: String, default: "System" },
     expiresAt: { type: Date, required: true },
     // One-time use: set when a parent redeems the code via the bot.

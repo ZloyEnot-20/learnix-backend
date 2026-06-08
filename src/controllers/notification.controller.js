@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 
 function studentIdOf(req) {
-  return req.user.studentId ?? req.user.id
+  return req.user.id
 }
 
 /** Notifications for the authenticated student, newest first. */

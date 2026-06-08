@@ -23,6 +23,7 @@ import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
 import { ParentLink } from "../models/ParentLink.js"
 import { BotInvite, normaliseInviteCode } from "../models/BotInvite.js"
+import { StudentClaim } from "../models/StudentClaim.js"
 import {
   tg,
   sendMessage,
@@ -39,6 +40,22 @@ const TOKEN = env.telegram.botToken
 // Bir martalik taklif kodi: 8 ta belgi (harf/raqam). Ota-ona o'quvchi ID sini
 // emas, balki markaz bergan kodni yuboradi — bu xavfsizroq.
 const INVITE_CODE_RE = /^[A-Z0-9]{8}$/
+// O'quvchi tasdiqlash kodi: 6 xonali raqam (markaz bergan bir martalik kod).
+const CLAIM_CODE_RE = /^\d{6}$/
+
+// Foydalanuvchi /start dan keyin tanlagan rol (o'quvchi yoki ota-ona).
+// Kodni qaysi oqimda qabul qilishni aniqlash uchun ishlatiladi.
+const ROLE_STUDENT = "student"
+const ROLE_PARENT = "parent"
+const pendingRole = new Map() // chatId -> "student" | "parent"
+
+const BTN_STUDENT = "👨‍🎓 Men o'quvchiman"
+const BTN_PARENT = "👨‍👩‍👧 Men ota-onaman"
+const ROLE_KEYBOARD = {
+  keyboard: [[{ text: BTN_STUDENT }], [{ text: BTN_PARENT }]],
+  resize_keyboard: true,
+  one_time_keyboard: true,
+}
 
 // Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (kodlarni terib topishga qarshi).
 const MAX_ATTEMPTS = 5
@@ -59,6 +76,26 @@ const CONTACT_KEYBOARD = {
   one_time_keyboard: true,
 }
 const REMOVE_KEYBOARD = { remove_keyboard: true }
+
+// Farzand ulangach pastda turadigan doimiy navigatsiya menyusi.
+const BTN_TASKS = "📋 Vazifalar"
+const BTN_RESULTS = "📊 Natijalar"
+const BTN_CHILDREN = "👨‍👩‍👧 Farzandlarim"
+const BTN_HELP = "ℹ️ Yordam"
+const MENU_KEYBOARD = {
+  keyboard: [
+    [{ text: BTN_TASKS }, { text: BTN_RESULTS }],
+    [{ text: BTN_CHILDREN }, { text: BTN_HELP }],
+  ],
+  resize_keyboard: true,
+}
+// Menyu tugmasi matnini tegishli buyruqqa moslash.
+const MENU_BUTTONS = {
+  [BTN_TASKS]: "/vazifalar",
+  [BTN_RESULTS]: "/natijalar",
+  [BTN_CHILDREN]: "/farzandlarim",
+  [BTN_HELP]: "/yordam",
+}
 
 const HELP =
   "<b>Buyruqlar</b>\n" +
@@ -97,6 +134,60 @@ async function getChildren(chatId) {
   return links
     .map((link) => ({ link, student: byId.get(link.studentId) }))
     .filter((x) => x.student)
+}
+
+/**
+ * O'quvchi 6 xonali tasdiqlash kodini kiritganda — uning login/parolini yuboradi.
+ * Kod bir martalik: ishlatilgach belgilanadi va vaqtinchalik parol o'chiriladi.
+ */
+async function redeemStudentClaim(chatId, rawCode) {
+  const code = String(rawCode ?? "").replace(/\D/g, "")
+  if (!CLAIM_CODE_RE.test(code)) {
+    await send(
+      chatId,
+      "❌ Bu 6 xonali kodga o'xshamaydi. Markaz bergan kodni yuboring (masalan: <code>048213</code>).",
+    )
+    return
+  }
+
+  const claim = await StudentClaim.findOne({ code, usedAt: null }).select("+password")
+  if (!claim) {
+    await send(chatId, "❌ Bunday kod topilmadi yoki allaqachon ishlatilgan. Markazga murojaat qiling.")
+    return
+  }
+  if (new Date(claim.expiresAt).getTime() < Date.now()) {
+    await send(chatId, "⌛ Bu kodning muddati tugagan. Markazdan yangi kod so'rang.")
+    return
+  }
+
+  const student = await User.findOne({ _id: claim.studentId, role: "student" }).lean()
+  if (!student) {
+    await send(chatId, "❌ Bu kodga bog'langan o'quvchi topilmadi. Markazga murojaat qiling.")
+    return
+  }
+
+  const password = claim.password
+  // Bir martalik: kodni ishlatilgan deb belgilaymiz va parolni o'chiramiz.
+  claim.usedAt = new Date()
+  claim.usedByChatId = chatId
+  claim.password = null
+  await claim.save()
+
+  resetAttempts(chatId)
+  pendingRole.delete(chatId)
+
+  await send(
+    chatId,
+    card("🔑 <b>Kirish ma'lumotlaringiz</b>", [
+      "",
+      `👤 ${esc(student.name)}`,
+      `Login: <code>${esc(student.login)}</code>`,
+      `Parol: <code>${esc(password)}</code>`,
+      "",
+      "Saytga shu login va parol bilan kiring. Parolni hech kimga bermang.",
+    ]),
+    { reply_markup: REMOVE_KEYBOARD },
+  )
 }
 
 async function buildTasksMessage(studentId, childName) {
@@ -186,12 +277,15 @@ async function handleMessage(msg) {
       })
     }
     return void send(chatId, "✅ Rahmat! Telefon raqamingiz saqlandi.", {
-      reply_markup: REMOVE_KEYBOARD,
+      reply_markup: MENU_KEYBOARD,
     })
   }
 
-  const text = (msg.text ?? "").trim()
+  let text = (msg.text ?? "").trim()
   if (!text) return
+
+  // Pastdagi navigatsiya tugmalari — tegishli buyruqqa aylantiramiz.
+  if (MENU_BUTTONS[text]) text = MENU_BUTTONS[text]
 
   const username = msg.from?.username ? `@${msg.from.username}` : undefined
   const parentName =
@@ -203,6 +297,7 @@ async function handleMessage(msg) {
     const children = await getChildren(chatId)
 
     if (cmd === "/start") {
+      pendingRole.delete(chatId)
       if (children.length > 0) {
         const names = children.map((c) => `• ${esc(c.student.name)}`).join("\n")
         await send(
@@ -212,20 +307,22 @@ async function handleMessage(msg) {
             "Kuzatilayotgan farzandlar:",
             names,
             "",
-            "Yana farzand qo'shish — taklif kodini yuboring.",
-            "",
-            HELP,
+            "Pastdagi menyudan foydalaning 👇",
+            "Yana farzand qo'shish uchun yangi taklif kodini yuboring.",
           ]),
+          { reply_markup: MENU_KEYBOARD },
         )
       } else {
         await send(
           chatId,
-          card("👋 <b>Learnix — ota-onalar boti</b>", [
+          card("👋 <b>Learnix botiga xush kelibsiz!</b>", [
             "",
-            "Farzandingiz faoliyatini kuzatish uchun markaz bergan <b>taklif kodini</b> yuboring.",
+            "Siz kimsiz? Quyidan tanlang 👇",
             "",
-            "Kod 8 ta belgidan iborat, masalan: <code>QK7M2P9D</code>",
+            `${BTN_STUDENT} — kirish login va parolingizni olasiz.`,
+            `${BTN_PARENT} — farzandingiz faoliyatini kuzatasiz.`,
           ]),
+          { reply_markup: ROLE_KEYBOARD },
         )
       }
       return
@@ -262,16 +359,52 @@ async function handleMessage(msg) {
       return void send(
         chatId,
         card("🔌 <b>Kuzatuv to'xtatildi</b>", ["", "Qayta ulanish uchun taklif kodini yuboring."]),
+        { reply_markup: REMOVE_KEYBOARD },
       )
     }
     return void send(chatId, `❓ Noma'lum buyruq.\n\n${HELP}`)
   }
 
-  // ─── Ulanish: matn bir martalik taklif kodi bo'lishi kerak ────────────────
+  // ─── Rolni tanlash (o'quvchi yoki ota-ona) ────────────────────────────────
+  if (text === BTN_STUDENT) {
+    pendingRole.set(chatId, ROLE_STUDENT)
+    await send(
+      chatId,
+      card("👨‍🎓 <b>O'quvchi</b>", [
+        "",
+        "Markaz bergan <b>6 xonali kodni</b> yuboring (masalan: <code>048213</code>).",
+        "Kodni tasdiqlasangiz — login va parolingizni yuboraman.",
+      ]),
+    )
+    return
+  }
+  if (text === BTN_PARENT) {
+    pendingRole.set(chatId, ROLE_PARENT)
+    await send(
+      chatId,
+      card("👨‍👩‍👧 <b>Ota-ona</b>", [
+        "",
+        "Markaz bergan <b>8 xonali taklif kodini</b> yuboring (masalan: <code>QK7M2P9D</code>).",
+      ]),
+    )
+    return
+  }
+
+  // ─── Kodni qabul qilish (rolga yoki format bo'yicha) ──────────────────────
   if (tooManyAttempts(chatId)) {
     await send(chatId, "⛔ Juda ko'p urinish. Iltimos, bir daqiqadan so'ng qayta urinib ko'ring.")
     return
   }
+
+  const role = pendingRole.get(chatId)
+  const looksLikeClaim = CLAIM_CODE_RE.test(text.replace(/\D/g, "")) && text.replace(/\D/g, "") === text.replace(/\s/g, "")
+
+  // O'quvchi kodi: rol tanlangan bo'lsa yoki matn 6 xonali raqam bo'lsa.
+  if (role === ROLE_STUDENT || (!role && looksLikeClaim)) {
+    await redeemStudentClaim(chatId, text)
+    return
+  }
+
   const code = normaliseInviteCode(text)
   if (!INVITE_CODE_RE.test(code)) {
     await send(
@@ -302,6 +435,7 @@ async function handleMessage(msg) {
   }
 
   resetAttempts(chatId)
+  pendingRole.delete(chatId)
 
   const existing = await ParentLink.findOne({ chatId, studentId: student._id })
   if (existing) {
@@ -334,7 +468,7 @@ async function handleMessage(msg) {
     ]),
     { reply_markup: CONTACT_KEYBOARD },
   )
-  await send(chatId, await buildSummary({ student }))
+  await send(chatId, await buildSummary({ student }), { reply_markup: MENU_KEYBOARD })
 }
 
 // ─── Long-polling tsikli ──────────────────────────────────────────────────────

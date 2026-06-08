@@ -1,5 +1,6 @@
 import { BotInvite, generateInviteCode } from "../models/BotInvite.js"
 import { ParentLink } from "../models/ParentLink.js"
+import { StudentClaim } from "../models/StudentClaim.js"
 import { User } from "../models/User.js"
 import { findStudentById } from "../services/student.service.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -94,4 +95,32 @@ export const removeSubscriber = asyncHandler(async (req, res) => {
   const link = await ParentLink.findByIdAndDelete(req.params.id)
   if (!link) throw ApiError.notFound("Subscriber not found")
   res.json({ ok: true })
+})
+
+/** Derived status for a student confirmation code. */
+function claimStatus(claim) {
+  if (claim.usedAt) return "used"
+  if (new Date(claim.expiresAt).getTime() < Date.now()) return "expired"
+  return "active"
+}
+
+/**
+ * Staff: list a student's confirmation codes (used to deliver their login +
+ * password via the bot). The plaintext password is never returned.
+ */
+export const listClaims = asyncHandler(async (req, res) => {
+  const filter = {}
+  if (req.query.studentId) filter.studentId = req.query.studentId
+  const claims = await StudentClaim.find(filter).sort({ createdAt: -1 }).limit(200)
+  res.json(
+    claims.map((c) => ({
+      id: c._id,
+      studentId: c.studentId,
+      code: c.code,
+      expiresAt: c.expiresAt,
+      usedAt: c.usedAt,
+      createdAt: c.createdAt,
+      status: claimStatus(c),
+    })),
+  )
 })

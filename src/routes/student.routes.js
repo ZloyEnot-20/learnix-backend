@@ -21,9 +21,11 @@ router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 // A student can read their own record + progress (ownership checked in ctrl).
 router.get("/:id", validate(idParamSchema), ctrl.getStudent)
 router.get("/:id/progress", validate(idParamSchema), ctrl.getStudentProgress)
+router.get("/:id/level", validate(idParamSchema), ctrl.getStudentLevel)
 router.get("/:id/context", validate(idParamSchema), ctrl.getStudentContext)
 
 router.patch("/:id", isStaff, validate(updateStudentSchema), ctrl.updateStudent)
+router.post("/:id/claim", isStaff, validate(idParamSchema), ctrl.regenerateClaim)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteStudent)
 
 export default router

@@ -10,8 +10,10 @@ import {
   removeStudentFromGroup,
   ensureLoginField,
   findStudentById,
+  createStudentClaim,
 } from "../services/student.service.js"
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
+import { computeStudentLevel } from "../services/gamification.service.js"
 
 export const listStudents = asyncHandler(async (_req, res) => {
   const users = await User.find({ role: "student" }).sort({ joinedAt: -1 })
@@ -70,10 +72,27 @@ export const createStudent = asyncHandler(async (req, res) => {
 
   if (groupId) await addStudentToGroup(groupId, user._id)
 
+  // The password is delivered to the student via the Telegram bot once they
+  // enter this one-time confirmation code, so it isn't surfaced to staff.
+  const { code, expiresAt } = await createStudentClaim(user._id, plainPassword)
+
   res.status(201).json({
     student: user.toStudentJSON(),
-    credentials: { login: user.login, password: plainPassword },
+    confirmation: { login: user.login, code, expiresAt },
   })
+})
+
+/** Staff: (re)generate a fresh confirmation code + password for a student. */
+export const regenerateClaim = asyncHandler(async (req, res) => {
+  const student = await findStudentById(req.params.id)
+  if (!student) throw ApiError.notFound("Student not found")
+
+  const plainPassword = generatePassword()
+  student.passwordHash = await hashPassword(plainPassword)
+  await student.save()
+
+  const { code, expiresAt } = await createStudentClaim(student._id, plainPassword)
+  res.json({ login: student.login, code, expiresAt })
 })
 
 export const updateStudent = asyncHandler(async (req, res) => {
@@ -139,6 +158,16 @@ export const getStudentContext = asyncHandler(async (req, res) => {
     }
   }
   res.json({ groupName, teacherName })
+})
+
+/** Gamification level/points summary for a student. */
+export const getStudentLevel = asyncHandler(async (req, res) => {
+  const studentId = req.params.id
+  if (req.user.role === "student" && req.user.id !== studentId) {
+    throw ApiError.forbidden()
+  }
+  const summary = await computeStudentLevel(studentId)
+  res.json(summary)
 })
 
 /** Derived progress summary used by the student dashboard. */

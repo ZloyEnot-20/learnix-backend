@@ -14,7 +14,7 @@ const parentLinkSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("plink") },
     chatId: { type: String, required: true, index: true },
-    studentId: { type: String, ref: "Student", required: true, index: true },
+    studentId: { type: String, ref: "User", required: true, index: true },
     parentName: { type: String, trim: true },
     // Telegramdan olingan (agar mavjud bo'lsa): @username va kontakt orqali telefon.
     username: { type: String, trim: true, default: null },

@@ -16,4 +16,7 @@ router.delete("/invites/:id", isStaff, validate(idParamSchema), ctrl.revokeInvit
 router.get("/subscribers", isStaff, ctrl.listSubscribers)
 router.delete("/subscribers/:id", isStaff, validate(idParamSchema), ctrl.removeSubscriber)
 
+// Student confirmation codes (login/password delivery via the bot).
+router.get("/claims", isStaff, ctrl.listClaims)
+
 export default router

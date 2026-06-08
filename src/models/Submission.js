@@ -28,7 +28,7 @@ const submissionSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("sub") },
     homeworkId: { type: String, ref: "Homework", required: true, index: true },
-    studentId: { type: String, ref: "Student", required: true, index: true },
+    studentId: { type: String, ref: "User", required: true, index: true },
     status: {
       type: String,
       enum: ["pending", "in_progress", "submitted", "graded"],

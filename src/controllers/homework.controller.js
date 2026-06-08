@@ -127,7 +127,7 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 
 /** Homework assigned to the authenticated student, with their submission. */
 export const myHomework = asyncHandler(async (req, res) => {
-  const studentId = req.user.studentId ?? req.user.id
+  const studentId = req.user.id
   const subs = await Submission.find({ studentId })
   const ids = subs.map((s) => s.homeworkId)
   const hw = await Homework.find({ _id: { $in: ids } })
@@ -139,7 +139,7 @@ export const myHomework = asyncHandler(async (req, res) => {
 })
 
 export const startHomework = asyncHandler(async (req, res) => {
-  const studentId = req.user.studentId ?? req.user.id
+  const studentId = req.user.id
   const { homeworkId } = req.body
   const existing = await Submission.findOne({ homeworkId, studentId })
   const now = new Date()
@@ -162,7 +162,7 @@ export const startHomework = asyncHandler(async (req, res) => {
 })
 
 export const recordAttempt = asyncHandler(async (req, res) => {
-  const studentId = req.user.studentId ?? req.user.id
+  const studentId = req.user.id
   const { homeworkId, attempt } = req.body
   const score = bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
   const now = new Date()
