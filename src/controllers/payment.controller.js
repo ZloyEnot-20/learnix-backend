@@ -80,6 +80,29 @@ export const markPaid = asyncHandler(async (req, res) => {
     { new: true },
   )
   if (!payment) throw ApiError.notFound("Payment not found")
+
+  const [student, group] = await Promise.all([
+    payment.studentId ? User.findById(payment.studentId).select("name") : null,
+    payment.groupId ? Group.findById(payment.groupId).select("name") : null,
+  ])
+
+  await recordAudit({
+    req,
+    action: "mark_paid",
+    category: "payments",
+    targetType: "payment",
+    targetId: payment._id,
+    targetLabel: `${payment.amount}`,
+    details: {
+      studentId: payment.studentId,
+      studentName: student?.name ?? null,
+      groupId: payment.groupId,
+      groupName: group?.name ?? null,
+      amount: payment.amount,
+      periodLabel: payment.periodLabel,
+    },
+  })
+
   res.json(payment)
 })
 
@@ -90,6 +113,30 @@ export const markUnpaid = asyncHandler(async (req, res) => {
   payment.status = overdue ? "overdue" : "pending"
   payment.paidDate = undefined
   await payment.save()
+
+  const [student, group] = await Promise.all([
+    payment.studentId ? User.findById(payment.studentId).select("name") : null,
+    payment.groupId ? Group.findById(payment.groupId).select("name") : null,
+  ])
+
+  await recordAudit({
+    req,
+    action: "mark_unpaid",
+    category: "payments",
+    targetType: "payment",
+    targetId: payment._id,
+    targetLabel: `${payment.amount}`,
+    details: {
+      studentId: payment.studentId,
+      studentName: student?.name ?? null,
+      groupId: payment.groupId,
+      groupName: group?.name ?? null,
+      amount: payment.amount,
+      periodLabel: payment.periodLabel,
+      newStatus: payment.status,
+    },
+  })
+
   res.json(payment)
 })
 

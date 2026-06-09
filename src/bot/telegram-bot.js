@@ -18,6 +18,7 @@
 import "../config/mongoose.js"
 import { env } from "../config/env.js"
 import { connectDB, disconnectDB } from "../config/db.js"
+import { connectPlatformDB, disconnectPlatformDB } from "../config/platformDb.js"
 import { User } from "../models/User.js"
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
@@ -35,10 +36,12 @@ import {
   reconcilePending,
   BTN_STUDENT,
   BTN_PARENT,
+  BTN_ORG,
   BTN_CONTACT,
   BTN_HELP,
   MENU_BUTTONS,
 } from "../services/telegram.service.js"
+import { redeemOwnerClaim } from "../services/ownerClaim.service.js"
 
 const TOKEN = env.telegram.botToken
 
@@ -52,7 +55,8 @@ const CLAIM_CODE_RE = /^\d{6}$/
 // Kodni qaysi oqimda qabul qilishni aniqlash uchun ishlatiladi.
 const ROLE_STUDENT = "student"
 const ROLE_PARENT = "parent"
-const pendingRole = new Map() // chatId -> "student" | "parent"
+const ROLE_ORG = "organization"
+const pendingRole = new Map() // chatId -> "student" | "parent" | "organization"
 
 // Muvaffaqiyatsiz ulanish urinishlari uchun cheklov (kodlarni terib topishga qarshi).
 const MAX_ATTEMPTS = 5
@@ -283,6 +287,7 @@ async function handleMessage(msg) {
             "",
             `${BTN_STUDENT} — kirish login va parolingizni olasiz.`,
             `${BTN_PARENT} — farzandingiz faoliyatini kuzatasiz.`,
+            `${BTN_ORG} — tashkilot egasi sifatida login va parol olasiz.`,
           ]),
         )
       }
@@ -349,6 +354,18 @@ async function handleMessage(msg) {
     )
     return
   }
+  if (text === BTN_ORG) {
+    pendingRole.set(chatId, ROLE_ORG)
+    await send(
+      chatId,
+      card("🏢 <b>Tashkilot</b>", [
+        "",
+        "Platforma bergan <b>6 xonali tasdiqlash kodini</b> yuboring (masalan: <code>048213</code>).",
+        "Kodni tasdiqlasangiz — tashkilot login va parolingizni yuboraman.",
+      ]),
+    )
+    return
+  }
 
   // ─── Kodni qabul qilish (rolga yoki format bo'yicha) ──────────────────────
   if (tooManyAttempts(chatId)) {
@@ -357,10 +374,34 @@ async function handleMessage(msg) {
   }
 
   const role = pendingRole.get(chatId)
-  const looksLikeClaim = CLAIM_CODE_RE.test(text.replace(/\D/g, "")) && text.replace(/\D/g, "") === text.replace(/\s/g, "")
+  const digitsOnly = text.replace(/\D/g, "")
+  const looksLikeClaim =
+    CLAIM_CODE_RE.test(digitsOnly) && digitsOnly === text.replace(/\s/g, "")
 
-  // O'quvchi kodi: rol tanlangan bo'lsa yoki matn 6 xonali raqam bo'lsa.
-  if (role === ROLE_STUDENT || (!role && looksLikeClaim)) {
+  if (role === ROLE_ORG) {
+    const result = await redeemOwnerClaim(chatId, text)
+    if (result.ok) {
+      resetAttempts(chatId)
+      pendingRole.delete(chatId)
+    }
+    await send(chatId, result.message)
+    return
+  }
+
+  if (!role && looksLikeClaim) {
+    await send(
+      chatId,
+      card("ℹ️ <b>Avval rolni tanlang</b>", [
+        "",
+        "6 xonali kodni yuborishdan oldin quyidagilardan birini tanlang:",
+        `${BTN_STUDENT} — o'quvchi sifatida`,
+        `${BTN_ORG} — tashkilot egasi sifatida`,
+      ]),
+    )
+    return
+  }
+
+  if (role === ROLE_STUDENT) {
     await redeemStudentClaim(chatId, text)
     return
   }
@@ -459,6 +500,7 @@ async function main() {
     process.exit(1)
   }
   await connectDB()
+  await connectPlatformDB()
   const me = await tg("getMe", {})
   console.log(`[bot] started as @${me.username}`)
 
@@ -483,7 +525,7 @@ async function main() {
   const shutdown = async () => {
     running = false
     clearInterval(reconcileTimer)
-    await disconnectDB().catch(() => {})
+    await Promise.all([disconnectDB().catch(() => {}), disconnectPlatformDB().catch(() => {})])
     console.log("[bot] stopped")
     process.exit(0)
   }

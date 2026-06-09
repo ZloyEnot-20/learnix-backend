@@ -42,6 +42,7 @@ export function sendMessage(chatId, text, extra = {}) {
 // ─── Doimiy pastki menyu (reply keyboard) ─────────────────────────────────────
 export const BTN_STUDENT = "👨‍🎓 Men o'quvchiman"
 export const BTN_PARENT = "👨‍👩‍👧 Men ota-onaman"
+export const BTN_ORG = "🏢 Men tashkilotman"
 export const BTN_TASKS = "📋 Vazifalar"
 export const BTN_RESULTS = "📊 Natijalar"
 export const BTN_CHILDREN = "👨‍👩‍👧 Farzandlarim"
@@ -53,6 +54,7 @@ export const ROLE_KEYBOARD = {
   keyboard: [
     [{ text: BTN_STUDENT }],
     [{ text: BTN_PARENT }],
+    [{ text: BTN_ORG }],
     [{ text: BTN_HELP }],
   ],
   resize_keyboard: true,

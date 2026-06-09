@@ -15,6 +15,7 @@ export const env = {
   port: Number(process.env.PORT ?? 4000),
   mongoUri: required("MONGODB_URI"),
   dbName: process.env.MONGODB_DB ?? "ielts",
+  platformDbName: process.env.PLATFORM_MONGODB_DB ?? "learnix_platform",
   jwt: {
     accessSecret: required("JWT_ACCESS_SECRET"),
     refreshSecret: required("JWT_REFRESH_SECRET"),
