@@ -8,6 +8,11 @@ const organizationSchema = new Schema(
     subdomain: { type: String, required: true },
     status: { type: String, default: "active" },
     plan: { type: String, default: "free" },
+    limits: {
+      maxStudents: { type: Number, default: 50 },
+      maxTeachers: { type: Number, default: 5 },
+    },
+    trialEndsAt: { type: Date },
   },
   { timestamps: true, _id: false },
 )

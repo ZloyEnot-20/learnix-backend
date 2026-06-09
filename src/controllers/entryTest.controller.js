@@ -10,6 +10,11 @@ import {
   scoreMc,
   scoreReading,
 } from "../content/entry-test.js"
+import {
+  assertStudentInOrg,
+  assertTenantDoc,
+  tenantFilter,
+} from "../services/tenantScope.service.js"
 
 /** Convert a Map-bearing doc to a plain object for the client. */
 function serialize(doc) {
@@ -28,14 +33,13 @@ function assertAccess(req, doc) {
   if (doc.studentId !== myStudentId) throw ApiError.forbidden()
 }
 
-export const listEntryTests = asyncHandler(async (_req, res) => {
-  const tests = await EntryTest.find().sort({ assignedAt: -1 })
+export const listEntryTests = asyncHandler(async (req, res) => {
+  const tests = await EntryTest.find(tenantFilter(req)).sort({ assignedAt: -1 })
   res.json(tests.map(serialize))
 })
 
 export const getEntryTest = asyncHandler(async (req, res) => {
-  const doc = await EntryTest.findById(req.params.id)
-  if (!doc) throw ApiError.notFound("Entry test not found")
+  const doc = await assertTenantDoc(EntryTest, req.params.id, req)
   assertAccess(req, doc)
   res.json(serialize(doc))
 })
@@ -48,7 +52,7 @@ export const myEntryTest = asyncHandler(async (req, res) => {
 })
 
 export const assignEntryTest = asyncHandler(async (req, res) => {
-  const student = await findStudentById(req.body.studentId)
+  const student = await assertStudentInOrg(req.body.studentId, req)
   if (!student) throw ApiError.notFound("Student not found")
 
   const active = await EntryTest.findOne({
@@ -58,6 +62,7 @@ export const assignEntryTest = asyncHandler(async (req, res) => {
   if (active) throw ApiError.conflict("Student already has an active entry test")
 
   const doc = await EntryTest.create({
+    orgId: student.orgId,
     studentId: student._id,
     studentName: student.name,
     studentEmail: student.email ?? "",
@@ -72,14 +77,13 @@ export const assignEntryTest = asyncHandler(async (req, res) => {
 })
 
 export const deleteEntryTest = asyncHandler(async (req, res) => {
-  const doc = await EntryTest.findByIdAndDelete(req.params.id)
-  if (!doc) throw ApiError.notFound("Entry test not found")
+  const doc = await assertTenantDoc(EntryTest, req.params.id, req)
+  await EntryTest.findByIdAndDelete(doc._id)
   res.json({ ok: true })
 })
 
 async function loadOwned(req) {
-  const doc = await EntryTest.findById(req.params.id)
-  if (!doc) throw ApiError.notFound("Entry test not found")
+  const doc = await assertTenantDoc(EntryTest, req.params.id, req)
   assertAccess(req, doc)
   return doc
 }

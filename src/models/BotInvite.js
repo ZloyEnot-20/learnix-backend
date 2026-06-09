@@ -22,6 +22,7 @@ export function normaliseInviteCode(input) {
 const botInviteSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("inv") },
+    orgId: { type: String, required: true, index: true },
     code: { type: String, required: true, unique: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     createdBy: { type: String, default: "System" },

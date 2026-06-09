@@ -13,6 +13,7 @@ import { uid } from "../utils/ids.js"
 const parentLinkSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("plink") },
+    orgId: { type: String, required: true, index: true },
     chatId: { type: String, required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     parentName: { type: String, trim: true },

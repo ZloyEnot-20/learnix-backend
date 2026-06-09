@@ -1,6 +1,6 @@
 import { Router } from "express"
 import * as ctrl from "../controllers/exercise.controller.js"
-import { authenticate } from "../middleware/auth.js"
+import { protect } from "../middleware/protect.js"
 import { isSuperAdmin } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
@@ -10,7 +10,7 @@ import {
 } from "../validators/schemas.js"
 
 const router = Router()
-router.use(authenticate)
+router.use(...protect)
 
 // Read paths — available to any authenticated user (students included).
 router.get("/", ctrl.listExercises)

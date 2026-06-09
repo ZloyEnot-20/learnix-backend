@@ -26,8 +26,10 @@ export async function ensureLoginField(user) {
 }
 
 /** Load a student user or throw null. */
-export async function findStudentById(id) {
-  return User.findOne({ _id: id, role: "student" })
+export async function findStudentById(id, orgId = null) {
+  const filter = { _id: id, role: "student" }
+  if (orgId) filter.orgId = orgId
+  return User.findOne(filter)
 }
 
 const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -38,6 +40,9 @@ const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000
  * The plaintext password is held until the student redeems the code via the bot.
  */
 export async function createStudentClaim(studentId, plainPassword) {
+  const student = await User.findById(studentId).select("orgId")
+  if (!student?.orgId) throw new Error("Student organization is missing")
+
   await StudentClaim.deleteMany({ studentId, usedAt: null })
 
   const expiresAt = new Date(Date.now() + CLAIM_TTL_MS)
@@ -46,7 +51,13 @@ export async function createStudentClaim(studentId, plainPassword) {
     const active = await StudentClaim.findOne({ code, usedAt: null })
     if (active) continue
     try {
-      await StudentClaim.create({ studentId, code, password: plainPassword, expiresAt })
+      await StudentClaim.create({
+        studentId,
+        orgId: student.orgId,
+        code,
+        password: plainPassword,
+        expiresAt,
+      })
       return { code, expiresAt }
     } catch (err) {
       if (err?.code !== 11000) throw err

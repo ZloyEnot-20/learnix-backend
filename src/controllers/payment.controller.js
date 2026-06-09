@@ -4,9 +4,15 @@ import { Group } from "../models/Group.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { recordAudit } from "../services/audit.service.js"
+import {
+  assertOrgGroup,
+  assertTenantDoc,
+  tenantFilter,
+  withOrgId,
+} from "../services/tenantScope.service.js"
 
 export const listPayments = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.studentId) filter.studentId = req.query.studentId
   if (req.query.groupId) filter.groupId = req.query.groupId
   const payments = await Payment.find(filter).sort({ dueDate: -1 })
@@ -14,7 +20,8 @@ export const listPayments = asyncHandler(async (req, res) => {
 })
 
 export const createPayment = asyncHandler(async (req, res) => {
-  const payment = await Payment.create(req.body)
+  if (req.body.groupId) await assertOrgGroup(req.body.groupId, req)
+  const payment = await Payment.create(withOrgId(req, req.body))
   const [student, group] = await Promise.all([
     payment.studentId ? User.findById(payment.studentId).select("name") : null,
     payment.groupId ? Group.findById(payment.groupId).select("name") : null,
@@ -41,8 +48,8 @@ export const createPayment = asyncHandler(async (req, res) => {
 })
 
 export const updatePayment = asyncHandler(async (req, res) => {
+  await assertTenantDoc(Payment, req.params.id, req)
   const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true })
-  if (!payment) throw ApiError.notFound("Payment not found")
 
   await recordAudit({
     req,
@@ -58,8 +65,8 @@ export const updatePayment = asyncHandler(async (req, res) => {
 })
 
 export const deletePayment = asyncHandler(async (req, res) => {
-  const payment = await Payment.findByIdAndDelete(req.params.id)
-  if (!payment) throw ApiError.notFound("Payment not found")
+  const payment = await assertTenantDoc(Payment, req.params.id, req)
+  await Payment.findByIdAndDelete(payment._id)
 
   await recordAudit({
     req,
@@ -74,6 +81,7 @@ export const deletePayment = asyncHandler(async (req, res) => {
 })
 
 export const markPaid = asyncHandler(async (req, res) => {
+  await assertTenantDoc(Payment, req.params.id, req)
   const payment = await Payment.findByIdAndUpdate(
     req.params.id,
     { status: "paid", paidDate: new Date() },
@@ -107,8 +115,7 @@ export const markPaid = asyncHandler(async (req, res) => {
 })
 
 export const markUnpaid = asyncHandler(async (req, res) => {
-  const payment = await Payment.findById(req.params.id)
-  if (!payment) throw ApiError.notFound("Payment not found")
+  const payment = await assertTenantDoc(Payment, req.params.id, req)
   const overdue = new Date(payment.dueDate).getTime() < Date.now()
   payment.status = overdue ? "overdue" : "pending"
   payment.paidDate = undefined
@@ -142,7 +149,8 @@ export const markUnpaid = asyncHandler(async (req, res) => {
 
 /** Finance summary for a group. */
 export const groupFinanceSummary = asyncHandler(async (req, res) => {
-  const payments = await Payment.find({ groupId: req.params.id })
+  await assertOrgGroup(req.params.id, req)
+  const payments = await Payment.find({ groupId: req.params.id, ...tenantFilter(req) })
   let expectedTotal = 0
   let paidTotal = 0
   let overdueTotal = 0

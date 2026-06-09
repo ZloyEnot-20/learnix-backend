@@ -1,12 +1,13 @@
 import { AuditLog } from "../models/AuditLog.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { tenantFilter } from "../services/tenantScope.service.js"
 
 export const listAuditLogs = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
   const skip = (page - 1) * limit
 
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
 
   if (req.query.category && req.query.category !== "all") {
     filter.category = req.query.category
@@ -47,8 +48,9 @@ export const listAuditLogs = asyncHandler(async (req, res) => {
   })
 })
 
-export const getAuditCategories = asyncHandler(async (_req, res) => {
-  const categories = await AuditLog.distinct("category")
-  const actions = await AuditLog.distinct("action")
+export const getAuditCategories = asyncHandler(async (req, res) => {
+  const scope = tenantFilter(req)
+  const categories = await AuditLog.distinct("category", scope)
+  const actions = await AuditLog.distinct("action", scope)
   res.json({ categories: categories.sort(), actions: actions.sort() })
 })

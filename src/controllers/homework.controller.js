@@ -11,6 +11,14 @@ import {
   recordHomeworkSubmit,
   recordVocabActivity,
 } from "../services/activity.service.js"
+import {
+  assertOrgGroup,
+  assertTenantDoc,
+  findOrgGroup,
+  resolveOrgId,
+  tenantFilter,
+  withOrgId,
+} from "../services/tenantScope.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -78,13 +86,23 @@ async function failForCheating(sub, homeworkId, studentId, reason, at = new Date
   }
 }
 
-export const listHomework = asyncHandler(async (_req, res) => {
-  const homework = await Homework.find().sort({ createdAt: -1 })
+export const listHomework = asyncHandler(async (req, res) => {
+  const homework = await Homework.find(tenantFilter(req)).sort({ createdAt: -1 })
   res.json(homework)
 })
 
 export const getHomework = asyncHandler(async (req, res) => {
-  const hw = await Homework.findById(req.params.id)
+  let hw
+  if (req.user.role === "student") {
+    const sub = await Submission.findOne({
+      homeworkId: req.params.id,
+      studentId: req.user.id,
+    })
+    if (!sub) throw ApiError.notFound("Homework not found")
+    hw = await Homework.findById(req.params.id)
+  } else {
+    hw = await assertTenantDoc(Homework, req.params.id, req)
+  }
   if (!hw) throw ApiError.notFound("Homework not found")
   res.json(hw)
 })
@@ -96,16 +114,20 @@ export const getHomework = asyncHandler(async (req, res) => {
  * `Submission.homeworkId`).
  */
 export const getHomeworkDetails = asyncHandler(async (req, res) => {
-  const homework = await Homework.findById(req.params.id)
-  if (!homework) throw ApiError.notFound("Homework not found")
+  const homework = await assertTenantDoc(Homework, req.params.id, req)
+  const group = await findOrgGroup(homework.groupId, req)
+  if (!group) throw ApiError.forbidden("Homework not found in your organization")
 
-  const [group, submissions] = await Promise.all([
-    Group.findById(homework.groupId),
-    Submission.find({ homeworkId: homework._id }),
-  ])
-  const studentIds = group?.studentIds ?? []
+  const orgId = resolveOrgId(req)
+  const submissionFilter = { homeworkId: homework._id, ...tenantFilter(req) }
+  const submissions = await Submission.find(submissionFilter)
+  const studentIds = group.studentIds ?? []
   const students = studentIds.length
-    ? await User.find({ _id: { $in: studentIds }, role: "student" })
+    ? await User.find({
+        _id: { $in: studentIds },
+        role: "student",
+        ...(orgId ? { orgId } : {}),
+      })
     : []
 
   res.json({
@@ -117,15 +139,18 @@ export const getHomeworkDetails = asyncHandler(async (req, res) => {
 })
 
 export const createHomework = asyncHandler(async (req, res) => {
-  const hw = await Homework.create({
-    ...req.body,
-    createdBy: req.body.createdBy ?? req.user.name,
-  })
+  const group = await assertOrgGroup(req.body.groupId, req)
+  const hw = await Homework.create(
+    withOrgId(req, {
+      ...req.body,
+      createdBy: req.body.createdBy ?? req.user.name,
+    }),
+  )
 
   // Create a pending submission for every student in the target group.
-  const group = await Group.findById(hw.groupId)
-  if (group?.studentIds?.length) {
+  if (group.studentIds?.length) {
     const docs = group.studentIds.map((studentId) => ({
+      orgId: group.orgId,
       homeworkId: hw._id,
       studentId,
       status: "pending",
@@ -163,9 +188,11 @@ export const createHomework = asyncHandler(async (req, res) => {
 })
 
 export const deleteHomework = asyncHandler(async (req, res) => {
-  const hw = await Homework.findByIdAndDelete(req.params.id)
-  if (!hw) throw ApiError.notFound("Homework not found")
-  await Submission.deleteMany({ homeworkId: hw._id })
+  const hw = await assertTenantDoc(Homework, req.params.id, req)
+  const group = await findOrgGroup(hw.groupId, req)
+  if (!group) throw ApiError.forbidden("Homework not found in your organization")
+  await Homework.findByIdAndDelete(hw._id)
+  await Submission.deleteMany({ homeworkId: hw._id, ...tenantFilter(req) })
 
   await recordAudit({
     req,
@@ -180,7 +207,7 @@ export const deleteHomework = asyncHandler(async (req, res) => {
 })
 
 export const listSubmissions = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.homeworkId) filter.homeworkId = req.query.homeworkId
   if (req.query.studentId) filter.studentId = req.query.studentId
   const subs = await Submission.find(filter)
@@ -191,8 +218,8 @@ export const listSubmissions = asyncHandler(async (req, res) => {
 export const gradeSubmission = asyncHandler(async (req, res) => {
   const patch = { ...req.body }
   if (patch.score != null && !patch.status) patch.status = "graded"
+  await assertTenantDoc(Submission, req.params.id, req)
   const sub = await Submission.findByIdAndUpdate(req.params.id, patch, { new: true })
-  if (!sub) throw ApiError.notFound("Submission not found")
 
   // Notify the student when their work gets a grade or feedback.
   if (patch.score != null || patch.feedback) {
@@ -239,7 +266,10 @@ export const startHomework = asyncHandler(async (req, res) => {
   let sub = await Submission.findOne({ homeworkId, studentId })
 
   if (!sub) {
+    const orgId = resolveOrgId(req)
+    if (!orgId) throw ApiError.forbidden("Organization context required")
     sub = await Submission.create({
+      orgId,
       homeworkId,
       studentId,
       status: "in_progress",

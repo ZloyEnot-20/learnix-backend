@@ -20,6 +20,7 @@ const controlWorkStepSchema = new mongoose.Schema(
 const controlWorkSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("cw") },
+    orgId: { type: String, required: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     groupId: { type: String, ref: "Group", required: true },

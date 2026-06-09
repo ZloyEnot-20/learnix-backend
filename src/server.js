@@ -1,5 +1,6 @@
 import { createApp } from "./app.js"
 import { connectDB, disconnectDB } from "./config/db.js"
+import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 
 function start() {
@@ -18,10 +19,14 @@ function start() {
     console.error("[db] is MongoDB running? Check MONGODB_URI in .env")
   })
 
+  connectPlatformDB().catch((err) => {
+    console.error("[db] platform connection failed:", err?.message)
+  })
+
   const shutdown = async (signal) => {
     console.log(`[server] ${signal} received, shutting down`)
     server.close(async () => {
-      await disconnectDB().catch(() => {})
+      await Promise.all([disconnectDB().catch(() => {}), disconnectPlatformDB().catch(() => {})])
       process.exit(0)
     })
   }

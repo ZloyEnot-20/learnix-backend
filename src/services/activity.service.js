@@ -1,5 +1,6 @@
 import { StudentActivity } from "../models/StudentActivity.js"
 import { ExerciseEvent } from "../models/ExerciseEvent.js"
+import { User } from "../models/User.js"
 import { Submission } from "../models/Submission.js"
 import { ControlWorkSubmission } from "../models/ControlWorkSubmission.js"
 import { TestResult } from "../models/TestResult.js"
@@ -12,6 +13,13 @@ function pct(correct, total) {
 /**
  * Persist a student activity event. Failures are logged but never block the request.
  */
+async function resolveStudentOrgId(studentId, orgId) {
+  if (orgId) return orgId
+  if (!studentId) return null
+  const student = await User.findById(studentId).select("orgId")
+  return student?.orgId ?? null
+}
+
 export async function recordStudentActivity(input) {
   try {
     const accuracy =
@@ -20,8 +28,10 @@ export async function recordStudentActivity(input) {
         ? pct(input.correctCount, input.totalQuestions)
         : null)
 
+    const orgId = await resolveStudentOrgId(input.studentId, input.orgId)
     await StudentActivity.create({
       ...input,
+      orgId,
       accuracy,
       at: input.at ?? new Date(),
     })

@@ -4,8 +4,9 @@ import { uid } from "../utils/ids.js"
 const userSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("user") },
-    login: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
-    email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+    orgId: { type: String, index: true, default: null },
+    login: { type: String, lowercase: true, trim: true },
+    email: { type: String, lowercase: true, trim: true },
     name: { type: String, required: true, trim: true },
     role: {
       type: String,
@@ -23,9 +24,13 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, _id: false },
 )
 
+userSchema.index({ orgId: 1, login: 1 }, { unique: true, sparse: true })
+userSchema.index({ orgId: 1, email: 1 }, { unique: true, sparse: true })
+
 userSchema.methods.toSafeJSON = function toSafeJSON() {
   return {
     id: this._id,
+    orgId: this.orgId ?? null,
     login: this.login ?? this.email ?? "",
     email: this.email ?? "",
     name: this.name,

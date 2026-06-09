@@ -5,6 +5,7 @@ import { uid } from "../utils/ids.js"
 const exerciseEventSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("evt") },
+    orgId: { type: String, index: true, default: null },
     topic: { type: String, required: true, index: true },
     subtopic: { type: String },
     slug: { type: String, required: true },

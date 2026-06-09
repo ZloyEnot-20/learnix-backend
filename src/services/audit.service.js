@@ -24,6 +24,7 @@ export async function recordAudit({
   try {
     const a = actor ?? req?.user
     await AuditLog.create({
+      orgId: a?.orgId ?? null,
       action,
       category,
       actorId: a?.id ?? a?._id ?? null,

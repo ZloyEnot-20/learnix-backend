@@ -29,6 +29,7 @@ const attemptSchema = new mongoose.Schema(
 const submissionSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("sub") },
+    orgId: { type: String, required: true, index: true },
     homeworkId: { type: String, ref: "Homework", required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     status: {

@@ -25,6 +25,7 @@ const stepResultSchema = new mongoose.Schema(
 const controlWorkSubmissionSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("cws") },
+    orgId: { type: String, required: true, index: true },
     controlWorkId: { type: String, ref: "ControlWork", required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     status: {

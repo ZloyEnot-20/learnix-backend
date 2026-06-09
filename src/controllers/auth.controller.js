@@ -6,6 +6,12 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ensureLoginField } from "../services/student.service.js"
 import { normalizeLogin } from "../utils/login.js"
 import { recordAudit } from "../services/audit.service.js"
+import { getOrgStatus } from "../services/orgStatus.service.js"
+
+async function orgStatusFor(user) {
+  if (!user.orgId || user.role === "super_admin") return null
+  return getOrgStatus(user.orgId)
+}
 
 function tokensFor(user) {
   return {
@@ -30,16 +36,20 @@ export const register = asyncHandler(async (req, res) => {
     passwordHash,
   })
 
-  res.status(201).json({ user: user.toSafeJSON(), ...tokensFor(user) })
+  const orgStatus = await orgStatusFor(user)
+  res.status(201).json({ user: user.toSafeJSON(), orgStatus, ...tokensFor(user) })
 })
 
 export const login = asyncHandler(async (req, res) => {
-  const { login, password } = req.body
+  const { login, password, orgId } = req.body
   const identifier = normalizeLogin(login)
 
-  const user = await User.findOne({
+  const query = {
     $or: [{ login: identifier }, { email: identifier }],
-  }).select("+passwordHash")
+  }
+  if (orgId) query.orgId = orgId
+
+  const user = await User.findOne(query).select("+passwordHash")
 
   const ok = user ? await verifyPassword(user.passwordHash, password) : false
   if (!user || !ok) throw ApiError.unauthorized("Invalid login or password")
@@ -56,7 +66,8 @@ export const login = asyncHandler(async (req, res) => {
     targetLabel: user.name,
   })
 
-  res.json({ user: user.toSafeJSON(), ...tokensFor(user) })
+  const orgStatus = await orgStatusFor(user)
+  res.json({ user: user.toSafeJSON(), orgStatus, ...tokensFor(user) })
 })
 
 export const refresh = asyncHandler(async (req, res) => {
@@ -79,5 +90,6 @@ export const refresh = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id)
   if (!user) throw ApiError.unauthorized()
-  res.json({ user: user.toSafeJSON() })
+  const orgStatus = await orgStatusFor(user)
+  res.json({ user: user.toSafeJSON(), orgStatus })
 })

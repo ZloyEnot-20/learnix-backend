@@ -1,6 +1,6 @@
 import { Router } from "express"
 import * as ctrl from "../controllers/homework.controller.js"
-import { authenticate } from "../middleware/auth.js"
+import { protect } from "../middleware/protect.js"
 import { isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
@@ -13,7 +13,7 @@ import {
 } from "../validators/schemas.js"
 
 const router = Router()
-router.use(authenticate)
+router.use(...protect)
 
 // Student-facing
 router.get("/mine", ctrl.myHomework)

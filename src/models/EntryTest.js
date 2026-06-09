@@ -4,6 +4,7 @@ import { uid } from "../utils/ids.js"
 const entryTestSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("entry") },
+    orgId: { type: String, required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     studentName: { type: String, required: true },
     studentEmail: { type: String },

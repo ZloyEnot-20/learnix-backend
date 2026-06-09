@@ -5,6 +5,11 @@ import { User } from "../models/User.js"
 import { findStudentById } from "../services/student.service.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import {
+  assertStudentInOrg,
+  assertTenantDoc,
+  tenantFilter,
+} from "../services/tenantScope.service.js"
 
 const DEFAULT_TTL_HOURS = 72
 const MAX_TTL_HOURS = 24 * 30
@@ -33,7 +38,7 @@ function serialize(inv) {
 /** Staff: create a one-time invite code for a student. */
 export const createInvite = asyncHandler(async (req, res) => {
   const { studentId, ttlHours } = req.body
-  const student = await findStudentById(studentId)
+  const student = await assertStudentInOrg(studentId, req)
   if (!student) throw ApiError.notFound("Student not found")
 
   const hours = Math.min(Math.max(Number(ttlHours) || DEFAULT_TTL_HOURS, 1), MAX_TTL_HOURS)
@@ -44,6 +49,7 @@ export const createInvite = asyncHandler(async (req, res) => {
   for (let attempt = 0; attempt < 5 && !invite; attempt++) {
     try {
       invite = await BotInvite.create({
+        orgId: student.orgId,
         code: generateInviteCode(),
         studentId,
         createdBy: req.user?.name ?? "Staff",
@@ -60,7 +66,7 @@ export const createInvite = asyncHandler(async (req, res) => {
 
 /** Staff: list invites, optionally filtered by student. */
 export const listInvites = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.studentId) filter.studentId = req.query.studentId
   const invites = await BotInvite.find(filter).sort({ createdAt: -1 }).limit(200)
   res.json(invites.map(serialize))
@@ -68,14 +74,14 @@ export const listInvites = asyncHandler(async (req, res) => {
 
 /** Staff: revoke (delete) an invite. */
 export const revokeInvite = asyncHandler(async (req, res) => {
-  const inv = await BotInvite.findByIdAndDelete(req.params.id)
-  if (!inv) throw ApiError.notFound("Invite not found")
+  const inv = await assertTenantDoc(BotInvite, req.params.id, req)
+  await BotInvite.findByIdAndDelete(inv._id)
   res.json({ ok: true })
 })
 
 /** Staff: list active Telegram subscribers (parents) of a student. */
 export const listSubscribers = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.studentId) filter.studentId = req.query.studentId
   const links = await ParentLink.find(filter).sort({ createdAt: -1 })
   res.json(
@@ -92,8 +98,8 @@ export const listSubscribers = asyncHandler(async (req, res) => {
 
 /** Staff: remove a parent's subscription. */
 export const removeSubscriber = asyncHandler(async (req, res) => {
-  const link = await ParentLink.findByIdAndDelete(req.params.id)
-  if (!link) throw ApiError.notFound("Subscriber not found")
+  const link = await assertTenantDoc(ParentLink, req.params.id, req)
+  await ParentLink.findByIdAndDelete(link._id)
   res.json({ ok: true })
 })
 
@@ -109,7 +115,7 @@ function claimStatus(claim) {
  * password via the bot). The plaintext password is never returned.
  */
 export const listClaims = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.studentId) filter.studentId = req.query.studentId
   const claims = await StudentClaim.find(filter).sort({ createdAt: -1 }).limit(200)
   res.json(

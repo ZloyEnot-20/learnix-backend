@@ -7,6 +7,7 @@ import {
   recordVocabActivity,
   buildStudentSummary,
 } from "../services/activity.service.js"
+import { assertStudentInOrg, tenantFilter } from "../services/tenantScope.service.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : 0
@@ -24,7 +25,11 @@ export const recordEvent = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { source, homeworkId, controlWorkId, durationSeconds, ...body } = req.body
 
-  const event = await ExerciseEvent.create({ ...body, studentId })
+  const event = await ExerciseEvent.create({
+    ...body,
+    studentId,
+    orgId: req.user.orgId ?? null,
+  })
 
   await recordExerciseActivity({
     studentId,
@@ -75,7 +80,11 @@ export const listActivity = asyncHandler(async (req, res) => {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
   const skip = (page - 1) * limit
 
-  const filter = { studentId }
+  if (req.user.role !== "student") {
+    await assertStudentInOrg(studentId, req)
+  }
+
+  const filter = { studentId, ...tenantFilter(req) }
   if (req.query.category && req.query.category !== "all") filter.category = req.query.category
   if (req.query.eventType && req.query.eventType !== "all") filter.eventType = req.query.eventType
 
@@ -105,11 +114,12 @@ export const studentSummary = asyncHandler(async (req, res) => {
 
 /** Aggregate events into a topic → subtopic → exercise tree. */
 export const topicStats = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.user.role === "student") {
     filter.studentId = req.user.id
   } else if (req.query.studentId) {
     filter.studentId = req.query.studentId
+    await assertStudentInOrg(req.query.studentId, req)
   }
 
   const events = await ExerciseEvent.find(filter)

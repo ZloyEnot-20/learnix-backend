@@ -1,6 +1,6 @@
 import { Router } from "express"
 import * as ctrl from "../controllers/student.controller.js"
-import { authenticate } from "../middleware/auth.js"
+import { protect } from "../middleware/protect.js"
 import { isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
@@ -11,7 +11,7 @@ import {
 } from "../validators/schemas.js"
 
 const router = Router()
-router.use(authenticate)
+router.use(...protect)
 
 // Listing/creating students is staff-only.
 router.get("/login-suggestions", isStaff, validate(loginSuggestionsSchema), ctrl.loginSuggestions)

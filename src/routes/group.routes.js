@@ -1,6 +1,6 @@
 import { Router } from "express"
 import * as ctrl from "../controllers/group.controller.js"
-import { authenticate } from "../middleware/auth.js"
+import { protect } from "../middleware/protect.js"
 import { isStaff, isAdmin } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
@@ -11,7 +11,7 @@ import {
 } from "../validators/schemas.js"
 
 const router = Router()
-router.use(authenticate, isStaff)
+router.use(...protect, isStaff)
 
 router.get("/", ctrl.listGroups)
 router.post("/", validate(createGroupSchema), ctrl.createGroup)

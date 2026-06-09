@@ -40,22 +40,22 @@ export function loginVariantsFromName(name) {
   return [...new Set(variants.map((v) => v.slice(0, 32)).filter(Boolean))].slice(0, 3)
 }
 
-async function isLoginTaken(login) {
+async function isLoginTaken(login, orgId = null) {
   const normalized = login.toLowerCase()
-  const existing = await User.findOne({
-    $or: [{ login: normalized }, { email: normalized }],
-  }).select("_id")
+  const filter = { $or: [{ login: normalized }, { email: normalized }] }
+  if (orgId) filter.orgId = orgId
+  const existing = await User.findOne(filter).select("_id")
   return Boolean(existing)
 }
 
 /** Return up to 3 unique, available login suggestions for a name. */
-export async function suggestLogins(name) {
+export async function suggestLogins(name, orgId = null) {
   const bases = loginVariantsFromName(name)
   const suggestions = []
 
   for (const base of bases) {
     if (suggestions.length >= 3) break
-    if (!(await isLoginTaken(base))) suggestions.push(base)
+    if (!(await isLoginTaken(base, orgId))) suggestions.push(base)
   }
 
   // If base variants are taken, try numbered suffixes on the first base.
@@ -63,7 +63,7 @@ export async function suggestLogins(name) {
   if (fallback && suggestions.length < 3) {
     for (let i = 1; suggestions.length < 3 && i <= 99; i++) {
       const candidate = `${fallback}${i}`.slice(0, 32)
-      if (!suggestions.includes(candidate) && !(await isLoginTaken(candidate))) {
+      if (!suggestions.includes(candidate) && !(await isLoginTaken(candidate, orgId))) {
         suggestions.push(candidate)
       }
     }

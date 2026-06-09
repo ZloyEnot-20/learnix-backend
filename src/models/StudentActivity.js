@@ -8,6 +8,7 @@ import { uid } from "../utils/ids.js"
 const studentActivitySchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("act") },
+    orgId: { type: String, required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     eventType: { type: String, required: true, index: true },
     category: { type: String, required: true, index: true },

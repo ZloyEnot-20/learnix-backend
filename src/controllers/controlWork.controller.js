@@ -12,6 +12,13 @@ import {
   recordControlWorkStep,
   recordVocabActivity,
 } from "../services/activity.service.js"
+import {
+  assertOrgGroup,
+  assertTenantDoc,
+  resolveOrgId,
+  tenantFilter,
+  withOrgId,
+} from "../services/tenantScope.service.js"
 
 const PAUSE_MAX_SECONDS = 30 * 60
 
@@ -63,7 +70,7 @@ async function failForCheating(sub, controlWorkId, studentId, reason, at = new D
 
   await notify(studentId, {
     type: "result",
-    title: cw ? `Control work failed: ${cw.title}` : "Control work failed",
+    title: cw ? `Progress test failed: ${cw.title}` : "Progress test failed",
     message: "Submission flagged as cheating detected.",
     data: {
       controlWorkTitle: cw?.title,
@@ -166,14 +173,13 @@ function aggregateScore(stepResults) {
   return bandFromAttempt(total, correct)
 }
 
-export const listControlWorks = asyncHandler(async (_req, res) => {
-  const items = await ControlWork.find().sort({ createdAt: -1 })
+export const listControlWorks = asyncHandler(async (req, res) => {
+  const items = await ControlWork.find(tenantFilter(req)).sort({ createdAt: -1 })
   res.json(items)
 })
 
 export const getControlWork = asyncHandler(async (req, res) => {
-  const cw = await ControlWork.findById(req.params.id)
-  if (!cw) throw ApiError.notFound("Control work not found")
+  const cw = await assertTenantDoc(ControlWork, req.params.id, req)
   res.json(cw)
 })
 
@@ -186,20 +192,23 @@ export const createControlWork = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("At least one section with content is required")
   }
 
-  const cw = await ControlWork.create({
-    title,
-    description: description ?? "",
-    groupId,
-    dueAt,
-    timeLimitMinutes,
-    createdBy: req.body.createdBy ?? req.user.name,
-    steps,
-  })
+  const group = await assertOrgGroup(groupId, req)
+  const cw = await ControlWork.create(
+    withOrgId(req, {
+      title,
+      description: description ?? "",
+      groupId,
+      dueAt,
+      timeLimitMinutes,
+      createdBy: req.body.createdBy ?? req.user.name,
+      steps,
+    }),
+  )
 
-  const group = await Group.findById(groupId)
-  if (group?.studentIds?.length) {
+  if (group.studentIds?.length) {
     const stepResults = initStepResults(steps.length)
     const docs = group.studentIds.map((studentId) => ({
+      orgId: group.orgId,
       controlWorkId: cw._id,
       studentId,
       status: "pending",
@@ -209,7 +218,7 @@ export const createControlWork = asyncHandler(async (req, res) => {
     await ControlWorkSubmission.insertMany(docs, { ordered: false }).catch(() => {})
     await notifyMany(group.studentIds, {
       type: "homework",
-      title: `New control work: ${cw.title}`,
+      title: `New progress test: ${cw.title}`,
       message: `Your tutor assigned a unit test with ${steps.length} section${steps.length === 1 ? "" : "s"}. Due ${new Date(cw.dueAt).toLocaleDateString()}.`,
       data: {
         controlWorkTitle: cw.title,
@@ -238,9 +247,9 @@ export const createControlWork = asyncHandler(async (req, res) => {
 })
 
 export const deleteControlWork = asyncHandler(async (req, res) => {
-  const cw = await ControlWork.findByIdAndDelete(req.params.id)
-  if (!cw) throw ApiError.notFound("Control work not found")
-  await ControlWorkSubmission.deleteMany({ controlWorkId: cw._id })
+  const cw = await assertTenantDoc(ControlWork, req.params.id, req)
+  await ControlWork.findByIdAndDelete(cw._id)
+  await ControlWorkSubmission.deleteMany({ controlWorkId: cw._id, ...tenantFilter(req) })
 
   await recordAudit({
     req,
@@ -255,7 +264,7 @@ export const deleteControlWork = asyncHandler(async (req, res) => {
 })
 
 export const listControlWorkSubmissions = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...tenantFilter(req) }
   if (req.query.controlWorkId) filter.controlWorkId = req.query.controlWorkId
   if (req.query.studentId) filter.studentId = req.query.studentId
   const subs = await ControlWorkSubmission.find(filter)
@@ -392,7 +401,7 @@ export const completeControlWorkStep = asyncHandler(async (req, res) => {
     ControlWork.findById(controlWorkId),
     ControlWorkSubmission.findOne({ controlWorkId, studentId }),
   ])
-  if (!cw) throw ApiError.notFound("Control work not found")
+  if (!cw) throw ApiError.notFound("Progress test not found")
   if (!sub) throw ApiError.notFound("Submission not found")
   if (sub.integrityStatus === "cheating_detected") return res.json(sub)
 
@@ -456,11 +465,11 @@ export const completeControlWorkStep = asyncHandler(async (req, res) => {
   if (sub.status === "submitted") {
     await notify(studentId, {
       type: "result",
-      title: `Control work completed: ${cw.title}`,
+      title: `Progress test completed: ${cw.title}`,
       message:
         typeof sub.score === "number"
           ? `All ${cw.steps.length} sections completed (band ${sub.score.toFixed(1)}).`
-          : "Control work submitted.",
+          : "Progress test submitted.",
       data: {
         controlWorkTitle: cw.title,
         status: "submitted",

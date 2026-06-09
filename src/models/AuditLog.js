@@ -4,6 +4,7 @@ import { uid } from "../utils/ids.js"
 const auditLogSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("audit") },
+    orgId: { type: String, index: true, default: null },
     action: { type: String, required: true, index: true },
     category: { type: String, required: true, index: true },
     actorId: { type: String, index: true },

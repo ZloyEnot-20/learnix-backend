@@ -13,6 +13,7 @@ import controlWorkRoutes from "./controlWork.routes.js"
 import botInviteRoutes from "./botInvite.routes.js"
 import userRoutes from "./user.routes.js"
 import auditRoutes from "./audit.routes.js"
+import orgRoutes from "./org.routes.js"
 
 const router = Router()
 
@@ -30,5 +31,6 @@ router.use("/exercises", exerciseRoutes)
 router.use("/bot", botInviteRoutes)
 router.use("/users", userRoutes)
 router.use("/audit", auditRoutes)
+router.use("/org", orgRoutes)
 
 export default router

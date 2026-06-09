@@ -4,6 +4,7 @@ import { uid } from "../utils/ids.js"
 const homeworkSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("hw") },
+    orgId: { type: String, required: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     subject: {

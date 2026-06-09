@@ -16,6 +16,7 @@ export function generateClaimCode() {
 const studentClaimSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("claim") },
+    orgId: { type: String, required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     code: { type: String, required: true, index: true },
     // Temporary plaintext password, delivered once via the bot then cleared.

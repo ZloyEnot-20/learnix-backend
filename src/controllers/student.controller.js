@@ -15,9 +15,16 @@ import {
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 import { computeStudentLevel } from "../services/gamification.service.js"
 import { recordAudit } from "../services/audit.service.js"
+import {
+  assertOrgGroup,
+  assertStudentInOrg,
+  resolveOrgId,
+  tenantFilter,
+  withOrgId,
+} from "../services/tenantScope.service.js"
 
-export const listStudents = asyncHandler(async (_req, res) => {
-  const users = await User.find({ role: "student" }).sort({ joinedAt: -1 })
+export const listStudents = asyncHandler(async (req, res) => {
+  const users = await User.find({ role: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
   for (const u of users) {
     if (!u.login && u.email) await ensureLoginField(u)
   }
@@ -27,12 +34,12 @@ export const listStudents = asyncHandler(async (_req, res) => {
 export const loginSuggestions = asyncHandler(async (req, res) => {
   const name = String(req.query.name ?? "").trim()
   if (!name) return res.json([])
-  const suggestions = await suggestLogins(name)
+  const suggestions = await suggestLogins(name, resolveOrgId(req))
   res.json(suggestions)
 })
 
 export const getStudent = asyncHandler(async (req, res) => {
-  const student = await findStudentById(req.params.id)
+  const student = await assertStudentInOrg(req.params.id, req)
   if (!student) throw ApiError.notFound("Student not found")
   if (req.user.role === "student" && req.user.id !== student._id) {
     throw ApiError.forbidden()
@@ -45,21 +52,25 @@ export const createStudent = asyncHandler(async (req, res) => {
   const normalizedLogin = normalizeLogin(login)
   if (!normalizedLogin) throw ApiError.badRequest("Login is required")
 
+  const orgId = resolveOrgId(req)
   const taken = await User.findOne({
+    orgId,
     $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
   })
   if (taken) throw ApiError.conflict("Login is already taken")
 
   if (email) {
     const normalizedEmail = email.toLowerCase()
-    const emailTaken = await User.findOne({ email: normalizedEmail })
+    const emailTaken = await User.findOne({ orgId, email: normalizedEmail })
     if (emailTaken) throw ApiError.conflict("Email is already registered")
   }
+
+  if (groupId) await assertOrgGroup(groupId, req)
 
   const plainPassword = generatePassword()
   const passwordHash = await hashPassword(plainPassword)
 
-  const user = await User.create({
+  const user = await User.create(withOrgId(req, {
     login: normalizedLogin,
     name: name.trim(),
     email: email?.trim().toLowerCase() || undefined,
@@ -69,7 +80,7 @@ export const createStudent = asyncHandler(async (req, res) => {
     groupId: groupId || undefined,
     monthlyFee,
     notes: notes?.trim() || undefined,
-  })
+  }))
 
   if (groupId) await addStudentToGroup(groupId, user._id)
 
@@ -101,7 +112,7 @@ export const createStudent = asyncHandler(async (req, res) => {
 
 /** Staff: (re)generate a fresh confirmation code + password for a student. */
 export const regenerateClaim = asyncHandler(async (req, res) => {
-  const student = await findStudentById(req.params.id)
+  const student = await assertStudentInOrg(req.params.id, req)
   if (!student) throw ApiError.notFound("Student not found")
 
   const plainPassword = generatePassword()
@@ -123,15 +134,17 @@ export const regenerateClaim = asyncHandler(async (req, res) => {
 })
 
 export const updateStudent = asyncHandler(async (req, res) => {
-  const prev = await findStudentById(req.params.id)
+  const prev = await assertStudentInOrg(req.params.id, req)
   if (!prev) throw ApiError.notFound("Student not found")
 
   const patch = { ...req.body }
+  const orgId = prev.orgId
   if (patch.login !== undefined) {
     const normalizedLogin = normalizeLogin(patch.login)
     if (!normalizedLogin) throw ApiError.badRequest("Login is required")
     const taken = await User.findOne({
       _id: { $ne: prev._id },
+      orgId,
       $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
     })
     if (taken) throw ApiError.conflict("Login is already taken")
@@ -142,11 +155,13 @@ export const updateStudent = asyncHandler(async (req, res) => {
     if (!normalizedEmail) {
       patch.email = undefined
     } else {
-      const emailTaken = await User.findOne({ _id: { $ne: prev._id }, email: normalizedEmail })
+      const emailTaken = await User.findOne({ _id: { $ne: prev._id }, orgId, email: normalizedEmail })
       if (emailTaken) throw ApiError.conflict("Email is already registered")
       patch.email = normalizedEmail
     }
   }
+
+  if (patch.groupId) await assertOrgGroup(patch.groupId, req)
 
   const nextGroup = patch.groupId
   const student = await User.findByIdAndUpdate(prev._id, patch, { new: true })
@@ -184,7 +199,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
 })
 
 export const deleteStudent = asyncHandler(async (req, res) => {
-  const student = await findStudentById(req.params.id)
+  const student = await assertStudentInOrg(req.params.id, req)
   if (!student) throw ApiError.notFound("Student not found")
   let groupName = null
   if (student.groupId) {

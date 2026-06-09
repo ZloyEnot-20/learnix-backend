@@ -1,4 +1,5 @@
 import { Notification } from "../models/Notification.js"
+import { User } from "../models/User.js"
 import { deliverNotification } from "./telegram.service.js"
 
 // Telegramga darhol yuborish — fire-and-forget. Bu yerda xatolarni yutamiz,
@@ -17,7 +18,15 @@ function pushToTelegram(note) {
  */
 export async function notify(studentId, { type, title, message, data = {} }) {
   if (!studentId) return null
-  const note = await Notification.create({ studentId, type, title, message, data })
+  const student = await User.findById(studentId).select("orgId")
+  const note = await Notification.create({
+    orgId: student?.orgId,
+    studentId,
+    type,
+    title,
+    message,
+    data,
+  })
   pushToTelegram(note)
   return note
 }
@@ -26,7 +35,16 @@ export async function notify(studentId, { type, title, message, data = {} }) {
 export async function notifyMany(studentIds, { type, title, message, data = {} }) {
   const ids = (studentIds ?? []).filter(Boolean)
   if (ids.length === 0) return
-  const docs = ids.map((studentId) => ({ studentId, type, title, message, data }))
+  const students = await User.find({ _id: { $in: ids } }).select("_id orgId").lean()
+  const orgById = new Map(students.map((s) => [s._id, s.orgId]))
+  const docs = ids.map((studentId) => ({
+    orgId: orgById.get(studentId) ?? null,
+    studentId,
+    type,
+    title,
+    message,
+    data,
+  }))
   const created = await Notification.insertMany(docs, { ordered: false }).catch(() => [])
   for (const note of created) pushToTelegram(note)
 }

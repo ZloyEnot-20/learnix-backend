@@ -6,6 +6,11 @@ import { hashPassword } from "../utils/password.js"
 import { ensureLoginField } from "../services/student.service.js"
 import { generatePassword, normalizeLogin } from "../utils/login.js"
 import { recordAudit } from "../services/audit.service.js"
+import {
+  resolveOrgId,
+  tenantFilter,
+  withOrgId,
+} from "../services/tenantScope.service.js"
 
 const STAFF_ROLES = ["super_admin", "admin", "teacher"]
 
@@ -17,6 +22,14 @@ function manageableRoles(actorRole) {
 function assertCanManage(actor, target) {
   if (actor.id === target._id) {
     throw ApiError.badRequest("You cannot modify your own account here")
+  }
+  if (
+    actor.role !== "super_admin" &&
+    actor.orgId &&
+    target.orgId &&
+    actor.orgId !== target.orgId
+  ) {
+    throw ApiError.forbidden("You don't have access to this user")
   }
   if (target.role === "super_admin" && actor.role !== "super_admin") {
     throw ApiError.forbidden("You don't have access to this user")
@@ -36,16 +49,19 @@ async function clearTeacherFromGroups(teacherId) {
   await Group.updateMany({ teacherId }, { $unset: { teacherId: "" } })
 }
 
-async function findStaffById(id) {
-  const user = await User.findById(id)
-  if (!user || !STAFF_ROLES.includes(user.role)) return null
+async function findStaffById(id, req) {
+  const filter = { _id: id, role: { $in: STAFF_ROLES }, ...tenantFilter(req) }
+  const user = await User.findOne(filter)
+  if (!user) return null
   if (!user.login && user.email) await ensureLoginField(user)
   return user
 }
 
 export const listUsers = asyncHandler(async (req, res) => {
   const roles = manageableRoles(req.user.role)
-  const users = await User.find({ role: { $in: roles } }).sort({ createdAt: -1 })
+  const users = await User.find({ role: { $in: roles }, ...tenantFilter(req) }).sort({
+    createdAt: -1,
+  })
   for (const u of users) {
     if (!u.login && u.email) await ensureLoginField(u)
   }
@@ -53,7 +69,7 @@ export const listUsers = asyncHandler(async (req, res) => {
 })
 
 export const getUser = asyncHandler(async (req, res) => {
-  const user = await findStaffById(req.params.id)
+  const user = await findStaffById(req.params.id, req)
   if (!user) throw ApiError.notFound("User not found")
   assertCanManage(req.user, user)
   res.json(user.toSafeJSON())
@@ -66,27 +82,31 @@ export const createUser = asyncHandler(async (req, res) => {
   const normalizedLogin = normalizeLogin(login)
   if (!normalizedLogin) throw ApiError.badRequest("Login is required")
 
+  const orgId = resolveOrgId(req)
   const taken = await User.findOne({
+    orgId,
     $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
   })
   if (taken) throw ApiError.conflict("Login is already taken")
 
   if (email) {
     const normalizedEmail = email.toLowerCase()
-    const emailTaken = await User.findOne({ email: normalizedEmail })
+    const emailTaken = await User.findOne({ orgId, email: normalizedEmail })
     if (emailTaken) throw ApiError.conflict("Email is already registered")
   }
 
   const plainPassword = generatePassword()
   const passwordHash = await hashPassword(plainPassword)
 
-  const user = await User.create({
-    login: normalizedLogin,
-    name: name.trim(),
-    email: email?.trim().toLowerCase() || undefined,
-    role,
-    passwordHash,
-  })
+  const user = await User.create(
+    withOrgId(req, {
+      login: normalizedLogin,
+      name: name.trim(),
+      email: email?.trim().toLowerCase() || undefined,
+      role,
+      passwordHash,
+    }),
+  )
 
   await recordAudit({
     req,
@@ -105,7 +125,7 @@ export const createUser = asyncHandler(async (req, res) => {
 })
 
 export const updateUser = asyncHandler(async (req, res) => {
-  const prev = await findStaffById(req.params.id)
+  const prev = await findStaffById(req.params.id, req)
   if (!prev) throw ApiError.notFound("User not found")
   assertCanManage(req.user, prev)
 
@@ -119,6 +139,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     if (!normalizedLogin) throw ApiError.badRequest("Login is required")
     const taken = await User.findOne({
       _id: { $ne: prev._id },
+      orgId: prev.orgId,
       $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
     })
     if (taken) throw ApiError.conflict("Login is already taken")
@@ -130,7 +151,11 @@ export const updateUser = asyncHandler(async (req, res) => {
     if (!normalizedEmail) {
       patch.email = undefined
     } else {
-      const emailTaken = await User.findOne({ _id: { $ne: prev._id }, email: normalizedEmail })
+      const emailTaken = await User.findOne({
+        _id: { $ne: prev._id },
+        orgId: prev.orgId,
+        email: normalizedEmail,
+      })
       if (emailTaken) throw ApiError.conflict("Email is already registered")
       patch.email = normalizedEmail
     }
@@ -159,7 +184,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 })
 
 export const deleteUser = asyncHandler(async (req, res) => {
-  const user = await findStaffById(req.params.id)
+  const user = await findStaffById(req.params.id, req)
   if (!user) throw ApiError.notFound("User not found")
   assertCanManage(req.user, user)
 
@@ -183,7 +208,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
 })
 
 export const resetUserPassword = asyncHandler(async (req, res) => {
-  const user = await findStaffById(req.params.id)
+  const user = await findStaffById(req.params.id, req)
   if (!user) throw ApiError.notFound("User not found")
   assertCanManage(req.user, user)
 

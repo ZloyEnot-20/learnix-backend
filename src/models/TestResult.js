@@ -4,6 +4,7 @@ import { uid } from "../utils/ids.js"
 const testResultSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("res") },
+    orgId: { type: String, required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
     testType: {
       type: String,
