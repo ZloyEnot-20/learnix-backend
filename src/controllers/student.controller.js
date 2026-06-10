@@ -14,6 +14,7 @@ import {
 } from "../services/student.service.js"
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 import { computeStudentLevel } from "../services/gamification.service.js"
+import { buildIeltsProfile, buildIeltsSummaries } from "../services/ieltsProfile.service.js"
 import { recordAudit } from "../services/audit.service.js"
 import {
   assertOrgGroup,
@@ -169,6 +170,16 @@ export const updateStudent = asyncHandler(async (req, res) => {
 
   if (patch.groupId) assertSelectableGroup(await assertOrgGroup(patch.groupId, req))
 
+  const unset = {}
+  if (patch.targetBand === null) {
+    unset.targetBand = 1
+    delete patch.targetBand
+  }
+  if (patch.targetExamDate === null) {
+    unset.targetExamDate = 1
+    delete patch.targetExamDate
+  }
+
   const nextGroup = patch.groupId
   const shouldUnsetEmail =
     patch.email === undefined && Object.prototype.hasOwnProperty.call(req.body, "email")
@@ -176,10 +187,14 @@ export const updateStudent = asyncHandler(async (req, res) => {
   const student = shouldUnsetEmail
     ? await User.findByIdAndUpdate(
         prev._id,
-        { $set: patch, $unset: { email: 1 } },
+        Object.keys(unset).length
+          ? { $set: patch, $unset: { ...unset, email: 1 } }
+          : { $set: patch, $unset: { email: 1 } },
         { new: true },
       )
-    : await User.findByIdAndUpdate(prev._id, patch, { new: true })
+    : Object.keys(unset).length
+      ? await User.findByIdAndUpdate(prev._id, { $set: patch, $unset: unset }, { new: true })
+      : await User.findByIdAndUpdate(prev._id, patch, { new: true })
 
   if (nextGroup !== undefined && nextGroup !== prev.groupId) {
     if (prev.groupId) await removeStudentFromGroup(prev.groupId, student._id)
@@ -308,4 +323,22 @@ export const getStudentProgress = asyncHandler(async (req, res) => {
     unpaidTotal,
     paidTotal,
   })
+})
+
+/** Full IELTS profile for teacher student card. */
+export const getIeltsProfile = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const profile = await buildIeltsProfile(student)
+  res.json(profile)
+})
+
+/** Compact IELTS summaries for all students (staff list view). */
+export const getIeltsSummaries = asyncHandler(async (req, res) => {
+  const users = await User.find({ type: "student", ...tenantFilter(req) }).lean()
+  const summaries = await buildIeltsSummaries(users)
+  res.json(summaries)
 })

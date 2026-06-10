@@ -536,7 +536,6 @@ export const reportViolation = asyncHandler(async (req, res) => {
 export const recordAttempt = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { homeworkId, attempt } = req.body
-  const score = bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
   const now = new Date()
 
   const existing = await Submission.findOne({ homeworkId, studentId })
@@ -544,6 +543,10 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   // (avoids duplicate Telegram messages on re-submit or a double request).
   const alreadyDone = !!existing && ["submitted", "graded"].includes(existing.status)
   const hw = await Homework.findById(homeworkId)
+  const isSpeaking = hw?.subject === "speaking"
+  const score = isSpeaking
+    ? undefined
+    : bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
   let result
   if (!existing) {
     const orgId = resolveOrgId(req)
@@ -615,8 +618,9 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   await notify(studentId, {
     type: "result",
     title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
-    message:
-      typeof score === "number"
+    message: isSpeaking
+      ? `Speaking homework submitted (${attempt.answeredCount ?? attempt.correctCount}/${attempt.totalQuestions} recordings). Awaiting teacher review.`
+      : typeof score === "number"
         ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
         : "Homework submitted.",
     data: {

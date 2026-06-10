@@ -16,7 +16,7 @@ const exerciseSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     category: {
       type: String,
-      enum: ["grammar", "vocabulary"],
+      enum: ["grammar", "vocabulary", "speaking"],
       default: "grammar",
       index: true,
     },

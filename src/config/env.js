@@ -38,6 +38,16 @@ export const env = {
     // This interval is only a fallback reconcile for anything that failed to send.
     reconcileIntervalMs: Number(process.env.TELEGRAM_RECONCILE_INTERVAL_MS ?? 60_000),
   },
+  s3: {
+    endpoint: process.env.S3_ENDPOINT ?? "",
+    bucket: process.env.S3_BUCKET ?? "",
+    region: process.env.S3_REGION ?? "ru-1",
+    accessKey: process.env.S3_ACCESS_KEY ?? "",
+    secretKey: process.env.S3_SECRET_KEY ?? "",
+    get enabled() {
+      return Boolean(this.endpoint && this.bucket && this.accessKey && this.secretKey)
+    },
+  },
 }
 
 export const isProd = env.nodeEnv === "production"

@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema(
 
     notes: { type: String, trim: true },
 
+    targetBand: { type: Number, min: 4, max: 9 },
+
+    targetExamDate: { type: Date },
+
   },
 
   { timestamps: true, _id: false },
@@ -126,6 +130,10 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
 
     notes: this.notes,
 
+    targetBand: this.targetBand ?? null,
+
+    targetExamDate: this.targetExamDate ?? null,
+
   }
 
 }
@@ -155,6 +163,10 @@ userSchema.methods.toStudentJSON = function toStudentJSON() {
     monthlyFee: this.monthlyFee,
 
     notes: this.notes,
+
+    targetBand: this.targetBand ?? null,
+
+    targetExamDate: this.targetExamDate ?? null,
 
   }
 

@@ -90,6 +90,8 @@ export const createStudentSchema = {
     groupId: z.string().optional(),
     monthlyFee: z.number().nonnegative().optional(),
     notes: z.string().max(1000).optional(),
+    targetBand: z.number().min(4).max(9).nullable().optional(),
+    targetExamDate: z.coerce.date().nullable().optional(),
   }),
 }
 export const updateStudentSchema = {

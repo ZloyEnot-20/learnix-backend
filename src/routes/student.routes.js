@@ -15,12 +15,14 @@ router.use(...protect)
 
 // Listing/creating students is staff-only.
 router.get("/login-suggestions", isStaff, validate(loginSuggestionsSchema), ctrl.loginSuggestions)
+router.get("/ielts-summaries", isStaff, ctrl.getIeltsSummaries)
 router.get("/", isStaff, ctrl.listStudents)
 router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 
 // A student can read their own record + progress (ownership checked in ctrl).
 router.get("/:id", validate(idParamSchema), ctrl.getStudent)
 router.get("/:id/progress", validate(idParamSchema), ctrl.getStudentProgress)
+router.get("/:id/ielts-profile", validate(idParamSchema), ctrl.getIeltsProfile)
 router.get("/:id/level", validate(idParamSchema), ctrl.getStudentLevel)
 router.get("/:id/context", validate(idParamSchema), ctrl.getStudentContext)
 

@@ -14,6 +14,7 @@ import botInviteRoutes from "./botInvite.routes.js"
 import userRoutes from "./user.routes.js"
 import auditRoutes from "./audit.routes.js"
 import orgRoutes from "./org.routes.js"
+import uploadRoutes from "./upload.routes.js"
 
 const router = Router()
 
@@ -32,5 +33,6 @@ router.use("/bot", botInviteRoutes)
 router.use("/users", userRoutes)
 router.use("/audit", auditRoutes)
 router.use("/org", orgRoutes)
+router.use("/uploads", uploadRoutes)
 
 export default router
