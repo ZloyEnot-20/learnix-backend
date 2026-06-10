@@ -9,6 +9,7 @@ import { recordAudit } from "../services/audit.service.js"
 import {
   recordIntegrityEvent,
   recordHomeworkSubmit,
+  recordHomeworkAssigned,
   recordVocabActivity,
 } from "../services/activity.service.js"
 import {
@@ -19,10 +20,26 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
-import { findStudentIdsInGroup, serializeGroupDoc } from "../services/group.service.js"
+import { findStudentIdsInGroup, serializeGroupDoc, assertSelectableGroup } from "../services/group.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
+/** Max allowed homework session entries before auto-fail (first open + one resume). */
+const MAX_HOMEWORK_ENTRIES = 2
+/** Duplicate start calls within this window count as the same visit (remount). */
+const SESSION_REENTRY_GRACE_MS = 60_000
+
+function homeworkTopic(hw) {
+  return hw?.exerciseSlug ?? hw?.subject ?? "unknown"
+}
+
+function shouldCountHomeworkEntry(sub, now) {
+  if (sub.status === "pending" || sub.status === "paused") return true
+  if (sub.status !== "in_progress") return false
+  const lastStart = sub.sessionStartedAt?.getTime() ?? 0
+  if (!lastStart) return true
+  return now.getTime() - lastStart >= SESSION_REENTRY_GRACE_MS
+}
 
 function bandFromAttempt(total, correct) {
   if (!total || total <= 0) return undefined
@@ -140,7 +157,7 @@ export const getHomeworkDetails = asyncHandler(async (req, res) => {
 })
 
 export const createHomework = asyncHandler(async (req, res) => {
-  const group = await assertOrgGroup(req.body.groupId, req)
+  const group = assertSelectableGroup(await assertOrgGroup(req.body.groupId, req))
   const hw = await Homework.create(
     withOrgId(req, {
       ...req.body,
@@ -150,15 +167,30 @@ export const createHomework = asyncHandler(async (req, res) => {
 
   // Create a pending submission for every student in the target group.
   const studentIds = await findStudentIdsInGroup(group._id, group.orgId)
+  const topic = homeworkTopic(hw)
   if (studentIds.length) {
+    const assignedAt = new Date()
     const docs = studentIds.map((studentId) => ({
       orgId: group.orgId,
       homeworkId: hw._id,
       studentId,
+      topic,
+      homeworkTitle: hw.title,
+      assignedAt,
+      entryCount: 0,
       status: "pending",
+      integrityStatus: "ok",
     }))
     // Ignore duplicates (unique index on homeworkId+studentId).
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
+    await recordHomeworkAssigned({
+      studentIds,
+      orgId: group.orgId,
+      homeworkId: hw._id,
+      homeworkTitle: hw.title,
+      subject: hw.subject,
+      topic,
+    })
     await notifyMany(studentIds, {
       type: "homework",
       title: `New homework: ${hw.title}`,
@@ -267,6 +299,8 @@ export const startHomework = asyncHandler(async (req, res) => {
 
   let sub = await Submission.findOne({ homeworkId, studentId })
 
+  const hw = await Homework.findById(homeworkId)
+
   if (!sub) {
     const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
@@ -274,6 +308,10 @@ export const startHomework = asyncHandler(async (req, res) => {
       orgId,
       homeworkId,
       studentId,
+      topic: homeworkTopic(hw),
+      homeworkTitle: hw?.title,
+      assignedAt: now,
+      entryCount: 1,
       status: "in_progress",
       startedAt: now,
       sessionStartedAt: now,
@@ -295,6 +333,19 @@ export const startHomework = asyncHandler(async (req, res) => {
     const pausedFor = Math.floor((now.getTime() - sub.pausedAt.getTime()) / 1000)
     if (pausedFor > PAUSE_MAX_SECONDS) {
       await failForCheating(sub, homeworkId, studentId, "pause_expired", now)
+      return res.json(sub)
+    }
+  }
+
+  if (!sub.topic && hw) {
+    sub.topic = homeworkTopic(hw)
+    sub.homeworkTitle = hw.title
+  }
+
+  if (shouldCountHomeworkEntry(sub, now)) {
+    sub.entryCount = (sub.entryCount ?? 0) + 1
+    if (sub.entryCount > MAX_HOMEWORK_ENTRIES) {
+      await failForCheating(sub, homeworkId, studentId, "excessive_entries", now)
       return res.json(sub)
     }
   }
@@ -326,6 +377,9 @@ export const pauseHomework = asyncHandler(async (req, res) => {
   if (["submitted", "graded"].includes(sub.status)) {
     return res.json({ action: "already_done", submission: sub, pauseUsed: sub.pauseUsed ?? false })
   }
+  if (sub.status === "paused") {
+    return res.json({ action: "paused", submission: sub, pauseUsed: sub.pauseUsed ?? true })
+  }
 
   freezeActiveTime(sub, now)
   sub.status = "paused"
@@ -343,17 +397,27 @@ export const reportViolation = asyncHandler(async (req, res) => {
 
   const sub = await Submission.findOne({ homeworkId, studentId })
   if (!sub) {
+    const orgId = resolveOrgId(req)
+    if (!orgId) throw ApiError.forbidden("Organization context required")
+    const hw = await Homework.findById(homeworkId)
     return res.json({
       action: "pause",
       pauseUsed: true,
       submission: await Submission.create({
+        orgId,
         homeworkId,
         studentId,
+        topic: homeworkTopic(hw),
+        homeworkTitle: hw?.title,
+        assignedAt: now,
+        entryCount: 1,
         status: "paused",
         startedAt: now,
         pausedAt: now,
         elapsedSeconds: 0,
         pauseUsed: true,
+        integrityStatus: "cheating_suspicion",
+        violationCount: 1,
       }),
     })
   }
@@ -415,11 +479,19 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   // Already-finished submissions must not re-trigger the completion notification
   // (avoids duplicate Telegram messages on re-submit or a double request).
   const alreadyDone = !!existing && ["submitted", "graded"].includes(existing.status)
+  const hw = await Homework.findById(homeworkId)
   let result
   if (!existing) {
+    const orgId = resolveOrgId(req)
+    if (!orgId) throw ApiError.forbidden("Organization context required")
     result = await Submission.create({
+      orgId,
       homeworkId,
       studentId,
+      topic: homeworkTopic(hw),
+      homeworkTitle: hw?.title,
+      assignedAt: now,
+      entryCount: 1,
       status: "submitted",
       score,
       startedAt: now,
@@ -442,7 +514,6 @@ export const recordAttempt = asyncHandler(async (req, res) => {
 
   if (alreadyDone) return res.json(result)
 
-  const hw = await Homework.findById(homeworkId)
   await recordHomeworkSubmit({
     studentId,
     homeworkId,

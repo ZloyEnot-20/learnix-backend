@@ -19,7 +19,7 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
-import { findStudentIdsInGroup } from "../services/group.service.js"
+import { findStudentIdsInGroup, assertSelectableGroup } from "../services/group.service.js"
 
 const PAUSE_MAX_SECONDS = 30 * 60
 
@@ -193,7 +193,7 @@ export const createControlWork = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("At least one section with content is required")
   }
 
-  const group = await assertOrgGroup(groupId, req)
+  const group = assertSelectableGroup(await assertOrgGroup(groupId, req))
   const cw = await ControlWork.create(
     withOrgId(req, {
       title,

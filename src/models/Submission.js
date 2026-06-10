@@ -32,6 +32,12 @@ const submissionSchema = new mongoose.Schema(
     orgId: { type: String, required: true, index: true },
     homeworkId: { type: String, ref: "Homework", required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
+    /** Denormalized from Homework for reports (topic slug or subject). */
+    topic: { type: String, index: true },
+    homeworkTitle: { type: String },
+    assignedAt: { type: Date, default: Date.now },
+    /** How many times the student opened/resumed this homework session. */
+    entryCount: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ["pending", "in_progress", "paused", "submitted", "graded"],

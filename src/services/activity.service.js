@@ -5,6 +5,7 @@ import { Submission } from "../models/Submission.js"
 import { ControlWorkSubmission } from "../models/ControlWorkSubmission.js"
 import { TestResult } from "../models/TestResult.js"
 import { Homework } from "../models/Homework.js"
+import { Exercise } from "../models/Exercise.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
@@ -106,6 +107,35 @@ export async function recordExerciseActivity({
       ...metadata,
     },
   })
+}
+
+export async function recordHomeworkAssigned({
+  studentIds,
+  orgId,
+  homeworkId,
+  homeworkTitle,
+  subject,
+  topic,
+}) {
+  const at = new Date()
+  await Promise.all(
+    studentIds.map((studentId) =>
+      recordStudentActivity({
+        orgId,
+        studentId,
+        eventType: "homework.assigned",
+        category: "homework",
+        source: "homework",
+        subject,
+        contextId: homeworkId,
+        contextLabel: homeworkTitle,
+        materialSlug: topic,
+        materialTitle: homeworkTitle,
+        metadata: { topic, status: "pending", entryCount: 0 },
+        at,
+      }),
+    ),
+  )
 }
 
 export async function recordHomeworkSubmit({
@@ -343,9 +373,37 @@ export async function buildStudentSummary(studentId) {
         : null,
   }))
 
+  const homeworkFailed = homeworkSubs.filter(
+    (s) => s.integrityStatus === "cheating_detected" || s.attempt?.failedDueToCheating,
+  )
   const homeworkCompleted = homeworkSubs.filter((s) =>
     ["submitted", "graded"].includes(s.status),
   ).length
+  const homeworkByTopic = {}
+  for (const sub of homeworkSubs) {
+    const topic = sub.topic ?? homeworkById.get(sub.homeworkId)?.subject ?? "unknown"
+    if (!homeworkByTopic[topic]) {
+      homeworkByTopic[topic] = {
+        topic,
+        assigned: 0,
+        completed: 0,
+        failed: 0,
+        cheating: 0,
+        totalEntries: 0,
+      }
+    }
+    const row = homeworkByTopic[topic]
+    row.assigned += 1
+    row.totalEntries += sub.entryCount ?? 0
+    if (sub.integrityStatus === "cheating_detected" || sub.attempt?.failedDueToCheating) {
+      row.cheating += 1
+      row.failed += 1
+    } else if (["submitted", "graded"].includes(sub.status)) {
+      row.completed += 1
+    } else if (sub.status === "pending") {
+      // assigned only
+    }
+  }
   const controlCompleted = controlSubs.filter((s) =>
     ["submitted", "graded"].includes(s.status),
   ).length
@@ -359,6 +417,21 @@ export async function buildStudentSummary(studentId) {
     homework: {
       completed: homeworkCompleted,
       cheating: legacyCheating,
+      failed: homeworkFailed.length,
+      byTopic: Object.values(homeworkByTopic).sort((a, b) => b.assigned - a.assigned),
+      assignments: homeworkSubs.map((s) => ({
+        homeworkId: s.homeworkId,
+        homeworkTitle: s.homeworkTitle ?? homeworkById.get(s.homeworkId)?.title,
+        topic: s.topic ?? homeworkById.get(s.homeworkId)?.subject,
+        status: s.status,
+        integrityStatus: s.integrityStatus ?? "ok",
+        failedDueToCheating:
+          s.integrityStatus === "cheating_detected" || !!s.attempt?.failedDueToCheating,
+        entryCount: s.entryCount ?? 0,
+        score: s.score ?? null,
+        assignedAt: s.assignedAt,
+        submittedAt: s.submittedAt,
+      })),
     },
     controlWorks: {
       completed: controlCompleted,
@@ -382,5 +455,222 @@ export async function buildStudentSummary(studentId) {
       accuracy: a.accuracy,
       at: a.at,
     })),
+  }
+}
+
+function isCheatingSubmission(sub) {
+  return sub.integrityStatus === "cheating_detected" || !!sub.attempt?.failedDueToCheating
+}
+
+function avgRounded(nums) {
+  if (!nums.length) return null
+  return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10
+}
+
+/**
+ * Org-wide per-exercise statistics for the admin dashboard:
+ * homework assignments, completion / cheating / failure rates, practice accuracy.
+ */
+export async function buildExerciseStats(orgFilter = {}) {
+  const [submissions, homeworks, events, exercises, vocabActivities] = await Promise.all([
+    Submission.find(orgFilter).lean(),
+    Homework.find(orgFilter).select("_id exerciseSlug subject title").lean(),
+    ExerciseEvent.find(orgFilter).lean(),
+    Exercise.find().select("slug title topic subtopic type level category").lean(),
+    StudentActivity.find({ ...orgFilter, category: "vocabulary" }).lean(),
+  ])
+
+  const hwById = new Map(homeworks.map((h) => [h._id, h]))
+  const exerciseMeta = new Map(exercises.map((e) => [e.slug, e]))
+  const bySlug = new Map()
+
+  function ensureRow(slug, defaults = {}) {
+    if (!bySlug.has(slug)) {
+      const meta = exerciseMeta.get(slug)
+      bySlug.set(slug, {
+        slug,
+        title: meta?.title ?? defaults.title ?? slug,
+        topic: meta?.topic ?? defaults.topic ?? null,
+        subtopic: meta?.subtopic ?? null,
+        type: meta?.type ?? defaults.type ?? null,
+        level: meta?.level ?? null,
+        subject: meta?.category ?? defaults.subject ?? "grammar",
+        assigned: 0,
+        started: 0,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+        paused: 0,
+        cheating: 0,
+        failed: 0,
+        suspicion: 0,
+        timedOut: 0,
+        practiceAttempts: 0,
+        practiceCorrect: 0,
+        practiceTotal: 0,
+        practiceTimeouts: 0,
+        scores: [],
+      })
+    }
+    return bySlug.get(slug)
+  }
+
+  for (const sub of submissions) {
+    const hw = hwById.get(sub.homeworkId)
+    const slug = sub.topic || hw?.exerciseSlug || hw?.subject
+    if (!slug || slug === "unknown") continue
+
+    const row = ensureRow(slug, {
+      title: sub.homeworkTitle || hw?.title,
+      subject: hw?.subject ?? "grammar",
+    })
+    row.assigned += 1
+
+    const cheating = isCheatingSubmission(sub)
+    const completed =
+      ["submitted", "graded"].includes(sub.status) && !cheating
+
+    if (cheating) {
+      row.cheating += 1
+      row.failed += 1
+    } else if (completed) {
+      row.completed += 1
+      if (sub.attempt?.timedOut) row.timedOut += 1
+      if (typeof sub.score === "number") row.scores.push(sub.score)
+    } else if (sub.status === "in_progress") {
+      row.inProgress += 1
+    } else if (sub.status === "paused") {
+      row.paused += 1
+      if (sub.integrityStatus === "cheating_suspicion") row.suspicion += 1
+    } else if (sub.status === "pending") {
+      row.pending += 1
+    }
+
+    if (sub.status !== "pending") row.started += 1
+  }
+
+  for (const e of events) {
+    const row = ensureRow(e.slug, { title: e.title, topic: e.topic, type: e.type })
+    row.practiceAttempts += 1
+    row.practiceCorrect += e.correctCount ?? 0
+    row.practiceTotal += e.totalQuestions ?? 0
+    if (e.timedOut) row.practiceTimeouts += 1
+  }
+
+  for (const a of vocabActivities) {
+    const slug = a.materialSlug
+    if (!slug) continue
+    const row = ensureRow(slug, {
+      title: a.materialTitle ?? slug,
+      subject: "vocabulary",
+    })
+    row.practiceAttempts += 1
+    row.practiceCorrect += a.correctCount ?? 0
+    row.practiceTotal += a.totalQuestions ?? 0
+    if (a.timedOut) row.practiceTimeouts += 1
+  }
+
+  const exercisesList = [...bySlug.values()].map((row) => {
+    const completionRate = pct(row.completed, row.assigned)
+    const startedRate = pct(row.started, row.assigned)
+    const cheatingRate = pct(row.cheating, row.assigned)
+    const failureRate = pct(row.failed, row.assigned)
+    const suspicionRate = pct(row.suspicion, row.assigned)
+    const practiceAccuracy = pct(row.practiceCorrect, row.practiceTotal)
+    const avgScore = avgRounded(row.scores)
+
+    return {
+      slug: row.slug,
+      title: row.title,
+      topic: row.topic,
+      subtopic: row.subtopic,
+      type: row.type,
+      level: row.level,
+      subject: row.subject,
+      assigned: row.assigned,
+      started: row.started,
+      completed: row.completed,
+      inProgress: row.inProgress,
+      pending: row.pending,
+      paused: row.paused,
+      cheating: row.cheating,
+      failed: row.failed,
+      suspicion: row.suspicion,
+      timedOut: row.timedOut,
+      practiceAttempts: row.practiceAttempts,
+      practiceTimeouts: row.practiceTimeouts,
+      completionRate,
+      startedRate,
+      cheatingRate,
+      failureRate,
+      suspicionRate,
+      practiceAccuracy,
+      avgScore,
+    }
+  })
+
+  exercisesList.sort((a, b) => b.assigned - a.assigned || b.practiceAttempts - a.practiceAttempts)
+
+  const byTopicMap = new Map()
+  for (const ex of exercisesList) {
+    const key = ex.topic ?? ex.subject ?? "other"
+    const group = byTopicMap.get(key) ?? {
+      topic: key,
+      label: key.replace(/-/g, " "),
+      assigned: 0,
+      completed: 0,
+      cheating: 0,
+      failed: 0,
+      practiceAttempts: 0,
+      exercises: [],
+    }
+    group.assigned += ex.assigned
+    group.completed += ex.completed
+    group.cheating += ex.cheating
+    group.failed += ex.failed
+    group.practiceAttempts += ex.practiceAttempts
+    group.exercises.push(ex)
+    byTopicMap.set(key, group)
+  }
+
+  const topics = [...byTopicMap.values()]
+    .map((g) => ({
+      ...g,
+      completionRate: pct(g.completed, g.assigned),
+      cheatingRate: pct(g.cheating, g.assigned),
+      failureRate: pct(g.failed, g.assigned),
+      exercises: g.exercises.sort((a, b) => b.assigned - a.assigned),
+    }))
+    .sort((a, b) => b.assigned - a.assigned)
+
+  const totalAssigned = exercisesList.reduce((a, e) => a + e.assigned, 0)
+  const totalCompleted = exercisesList.reduce((a, e) => a + e.completed, 0)
+  const totalCheating = exercisesList.reduce((a, e) => a + e.cheating, 0)
+  const totalFailed = exercisesList.reduce((a, e) => a + e.failed, 0)
+  const totalPractice = exercisesList.reduce((a, e) => a + e.practiceAttempts, 0)
+
+  const weakest = [...exercisesList]
+    .filter((e) => e.assigned >= 3)
+    .sort((a, b) => (a.completionRate ?? 100) - (b.completionRate ?? 100))[0]
+  const mostCheating = [...exercisesList]
+    .filter((e) => e.cheating > 0)
+    .sort((a, b) => (b.cheatingRate ?? 0) - (a.cheatingRate ?? 0))[0]
+
+  return {
+    summary: {
+      exercisesTracked: exercisesList.length,
+      totalAssigned,
+      totalCompleted,
+      totalCheating,
+      totalFailed,
+      totalPracticeAttempts: totalPractice,
+      completionRate: pct(totalCompleted, totalAssigned),
+      cheatingRate: pct(totalCheating, totalAssigned),
+      failureRate: pct(totalFailed, totalAssigned),
+      weakestExercise: weakest ?? null,
+      mostCheatingExercise: mostCheating ?? null,
+    },
+    exercises: exercisesList,
+    topics,
   }
 }

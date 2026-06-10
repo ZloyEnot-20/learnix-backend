@@ -23,6 +23,7 @@ import {
   withOrgId,
 } from "../services/tenantScope.service.js"
 import { assertCanAddStudent } from "../services/orgLimits.service.js"
+import { assertSelectableGroup } from "../services/group.service.js"
 
 export const listStudents = asyncHandler(async (req, res) => {
   const users = await User.find({ type: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
@@ -66,7 +67,7 @@ export const createStudent = asyncHandler(async (req, res) => {
     if (emailTaken) throw ApiError.conflict("Email is already registered")
   }
 
-  if (groupId) await assertOrgGroup(groupId, req)
+  if (groupId) assertSelectableGroup(await assertOrgGroup(groupId, req))
 
   await assertCanAddStudent(orgId)
 
@@ -166,7 +167,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
     }
   }
 
-  if (patch.groupId) await assertOrgGroup(patch.groupId, req)
+  if (patch.groupId) assertSelectableGroup(await assertOrgGroup(patch.groupId, req))
 
   const nextGroup = patch.groupId
   const shouldUnsetEmail =

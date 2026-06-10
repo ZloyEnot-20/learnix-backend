@@ -1,4 +1,19 @@
 import { User } from "../models/User.js"
+import { ApiError } from "../utils/ApiError.js"
+
+/** System-managed group for entry test candidates — not assignable manually. */
+export const ENTRY_TEST_GROUP_NAME = "ENTRY TEST"
+
+export function isEntryTestGroup(group) {
+  return group?.name === ENTRY_TEST_GROUP_NAME
+}
+
+export function assertSelectableGroup(group) {
+  if (isEntryTestGroup(group)) {
+    throw ApiError.badRequest("The Entry Test group cannot be used for this action")
+  }
+  return group
+}
 
 /** Student user ids belonging to a group (canonical source: User.groupId). */
 export async function findStudentIdsInGroup(groupId, orgId = null) {

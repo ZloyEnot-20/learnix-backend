@@ -10,8 +10,7 @@ import {
   createStudentClaim,
 } from "./student.service.js"
 import { assertCanAddStudent } from "./orgLimits.service.js"
-
-export const ENTRY_TEST_GROUP_NAME = "ENTRY TEST"
+import { ENTRY_TEST_GROUP_NAME } from "./group.service.js"
 
 /** Find or create the org-wide entry-test candidate group. */
 export async function ensureEntryTestGroup(orgId, teacherId = null) {

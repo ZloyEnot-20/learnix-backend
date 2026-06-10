@@ -6,8 +6,10 @@ import {
   recordExerciseActivity,
   recordVocabActivity,
   buildStudentSummary,
+  buildExerciseStats,
 } from "../services/activity.service.js"
 import { assertStudentInOrg, tenantFilter } from "../services/tenantScope.service.js"
+import { isStaffType } from "../constants/userTypes.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : 0
@@ -187,4 +189,13 @@ export const topicStats = asyncHandler(async (req, res) => {
   }
 
   res.json(topics.sort((a, b) => a.accuracy - b.accuracy))
+})
+
+/** Per-exercise homework + practice statistics for staff dashboard. */
+export const exerciseStats = asyncHandler(async (req, res) => {
+  if (!isStaffType(req.user.type)) {
+    throw ApiError.forbidden("Staff access required")
+  }
+  const stats = await buildExerciseStats(tenantFilter(req))
+  res.json(stats)
 })
