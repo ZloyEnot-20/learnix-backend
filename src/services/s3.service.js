@@ -46,15 +46,20 @@ export async function uploadSpeakingAudio({ buffer, mimeType, prefix = "speaking
 
   const key = `${prefix}/${new Date().toISOString().slice(0, 10)}/${uid("audio")}.${ext}`
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: env.s3.bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: mimeType,
-      ACL: "public-read",
-    }),
-  )
+  const baseParams = {
+    Bucket: env.s3.bucket,
+    Key: key,
+    Body: buffer,
+    ContentType: mimeType,
+  }
+
+  try {
+    await s3.send(new PutObjectCommand({ ...baseParams, ACL: "public-read" }))
+  } catch (err) {
+    const msg = String(err?.message ?? err)
+    if (!/acl|access control/i.test(msg)) throw err
+    await s3.send(new PutObjectCommand(baseParams))
+  }
 
   return { key, url: publicObjectUrl(key) }
 }
