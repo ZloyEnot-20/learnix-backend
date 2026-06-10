@@ -6,6 +6,7 @@ import { ControlWorkSubmission } from "../models/ControlWorkSubmission.js"
 import { TestResult } from "../models/TestResult.js"
 import { Homework } from "../models/Homework.js"
 import { Exercise } from "../models/Exercise.js"
+import { aggregateHomeworkIntegrity } from "./submission.service.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
@@ -109,64 +110,11 @@ export async function recordExerciseActivity({
   })
 }
 
-export async function recordHomeworkAssigned({
-  studentIds,
-  orgId,
-  homeworkId,
-  homeworkTitle,
-  subject,
-  topic,
-}) {
-  const at = new Date()
-  await Promise.all(
-    studentIds.map((studentId) =>
-      recordStudentActivity({
-        orgId,
-        studentId,
-        eventType: "homework.assigned",
-        category: "homework",
-        source: "homework",
-        subject,
-        contextId: homeworkId,
-        contextLabel: homeworkTitle,
-        materialSlug: topic,
-        materialTitle: homeworkTitle,
-        metadata: { topic, status: "pending", entryCount: 0 },
-        at,
-      }),
-    ),
-  )
-}
+/** @deprecated Homework records live on Submission only — kept for API compatibility. */
+export async function recordHomeworkAssigned() {}
 
-export async function recordHomeworkSubmit({
-  studentId,
-  homeworkId,
-  homeworkTitle,
-  subject,
-  attempt,
-  score,
-}) {
-  await recordStudentActivity({
-    studentId,
-    eventType: "homework.submit",
-    category: "homework",
-    source: "homework",
-    subject,
-    contextId: homeworkId,
-    contextLabel: homeworkTitle,
-    materialSlug: attempt?.exerciseSlug,
-    correctCount: attempt?.correctCount,
-    totalQuestions: attempt?.totalQuestions,
-    durationSeconds: attempt?.durationSeconds,
-    timedOut: attempt?.timedOut,
-    score,
-    failedDueToCheating: attempt?.failedDueToCheating,
-    metadata: {
-      mistakes: attempt?.mistakes?.length ? attempt.mistakes : undefined,
-      answeredCount: attempt?.answeredCount,
-    },
-  })
-}
+/** @deprecated Homework records live on Submission only — kept for API compatibility. */
+export async function recordHomeworkSubmit() {}
 
 export async function recordControlWorkStep({
   studentId,
@@ -260,13 +208,15 @@ export async function buildStudentSummary(studentId) {
   ])
 
   const integrityEvents = activities.filter((a) => a.category === "integrity")
+  const homeworkIntegrity = aggregateHomeworkIntegrity(homeworkSubs)
   const cheatingEvents = integrityEvents.filter(
     (a) => a.eventType === "integrity.cheating" || a.failedDueToCheating,
   )
   const violationEvents = integrityEvents.filter((a) => a.eventType === "integrity.violation")
 
-  const byReason = {}
+  const byReason = { ...homeworkIntegrity.byReason }
   for (const e of integrityEvents) {
+    if (e.source === "homework") continue
     const reason = e.metadata?.reason ?? "unknown"
     byReason[reason] = (byReason[reason] ?? 0) + 1
   }
@@ -302,6 +252,7 @@ export async function buildStudentSummary(studentId) {
 
   for (const a of activities) {
     if (a.category === "integrity" || a.category === "mock_test") continue
+    if (a.source === "homework" || a.category === "homework") continue
     if (a.correctCount != null || a.totalQuestions != null) {
       bumpSubject(a.subject, a.correctCount, a.totalQuestions, a.score)
     }
@@ -410,8 +361,11 @@ export async function buildStudentSummary(studentId) {
 
   return {
     integrity: {
-      violations: violationEvents.length,
-      cheatingIncidents: cheatingEvents.length + legacyCheating + legacyControlCheating,
+      violations: homeworkIntegrity.violations + violationEvents.filter((e) => e.source !== "homework").length,
+      cheatingIncidents:
+        homeworkIntegrity.cheating +
+        cheatingEvents.filter((e) => e.source !== "homework").length +
+        legacyControlCheating,
       byReason,
     },
     homework: {
@@ -423,14 +377,25 @@ export async function buildStudentSummary(studentId) {
         homeworkId: s.homeworkId,
         homeworkTitle: s.homeworkTitle ?? homeworkById.get(s.homeworkId)?.title,
         topic: s.topic ?? homeworkById.get(s.homeworkId)?.subject,
+        subject: s.subject ?? homeworkById.get(s.homeworkId)?.subject,
         status: s.status,
         integrityStatus: s.integrityStatus ?? "ok",
         failedDueToCheating:
           s.integrityStatus === "cheating_detected" || !!s.attempt?.failedDueToCheating,
         entryCount: s.entryCount ?? 0,
+        lastEntryAt: s.lastEntryAt,
+        violationCount: s.violationCount ?? 0,
+        elapsedSeconds: s.elapsedSeconds ?? 0,
         score: s.score ?? null,
         assignedAt: s.assignedAt,
         submittedAt: s.submittedAt,
+        attempt: s.attempt
+          ? {
+              correctCount: s.attempt.correctCount,
+              totalQuestions: s.attempt.totalQuestions,
+              timedOut: s.attempt.timedOut,
+            }
+          : null,
       })),
     },
     controlWorks: {

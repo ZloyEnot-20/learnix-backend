@@ -7,11 +7,9 @@ import { ApiError } from "../utils/ApiError.js"
 import { notify, notifyMany } from "../services/notification.service.js"
 import { recordAudit } from "../services/audit.service.js"
 import {
-  recordIntegrityEvent,
-  recordHomeworkSubmit,
-  recordHomeworkAssigned,
   recordVocabActivity,
 } from "../services/activity.service.js"
+import { appendSubmissionEvent } from "../services/submission.service.js"
 import {
   assertOrgGroup,
   assertTenantDoc,
@@ -69,19 +67,15 @@ async function failForCheating(sub, homeworkId, studentId, reason, at = new Date
     cheatingReason: reason ?? "unknown",
     mistakes: [],
   }
+  appendSubmissionEvent(sub, {
+    type: "cheating",
+    reason: reason ?? "unknown",
+    entryCount: sub.entryCount ?? 0,
+    metadata: { violationCount: sub.violationCount ?? 0 },
+  })
   await sub.save()
 
   const hw = await Homework.findById(homeworkId)
-  await recordIntegrityEvent({
-    studentId,
-    source: "homework",
-    contextId: homeworkId,
-    contextLabel: hw?.title,
-    subject: hw?.subject,
-    eventType: "integrity.cheating",
-    reason: reason ?? "unknown",
-    violationCount: sub.violationCount ?? 0,
-  })
 
   await notify(studentId, {
     type: "result",
@@ -175,22 +169,16 @@ export const createHomework = asyncHandler(async (req, res) => {
       homeworkId: hw._id,
       studentId,
       topic,
+      subject: hw.subject,
       homeworkTitle: hw.title,
       assignedAt,
       entryCount: 0,
       status: "pending",
       integrityStatus: "ok",
+      events: [{ at: assignedAt, type: "assigned" }],
     }))
     // Ignore duplicates (unique index on homeworkId+studentId).
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
-    await recordHomeworkAssigned({
-      studentIds,
-      orgId: group.orgId,
-      homeworkId: hw._id,
-      homeworkTitle: hw.title,
-      subject: hw.subject,
-      topic,
-    })
     await notifyMany(studentIds, {
       type: "homework",
       title: `New homework: ${hw.title}`,
@@ -248,12 +236,34 @@ export const listSubmissions = asyncHandler(async (req, res) => {
   res.json(subs)
 })
 
+/** Homework check dashboard — assignments + all student records from Submission. */
+export const homeworkCheck = asyncHandler(async (req, res) => {
+  const filter = tenantFilter(req)
+  const [assignments, records] = await Promise.all([
+    Homework.find(filter).sort({ createdAt: -1 }),
+    Submission.find(filter).sort({ assignedAt: -1 }),
+  ])
+  res.json({ assignments, records })
+})
+
 /** Teacher/admin grades or updates a submission. */
 export const gradeSubmission = asyncHandler(async (req, res) => {
   const patch = { ...req.body }
   if (patch.score != null && !patch.status) patch.status = "graded"
   await assertTenantDoc(Submission, req.params.id, req)
-  const sub = await Submission.findByIdAndUpdate(req.params.id, patch, { new: true })
+  const sub = await Submission.findById(req.params.id)
+  if (!sub) throw ApiError.notFound("Submission not found")
+  Object.assign(sub, patch)
+  if (patch.score != null || patch.feedback) {
+    appendSubmissionEvent(sub, {
+      type: "graded",
+      metadata: {
+        score: patch.score != null ? Number(patch.score) : undefined,
+        hasFeedback: !!patch.feedback,
+      },
+    })
+  }
+  await sub.save()
 
   // Notify the student when their work gets a grade or feedback.
   if (patch.score != null || patch.feedback) {
@@ -291,10 +301,61 @@ export const myHomework = asyncHandler(async (req, res) => {
   res.json(entries)
 })
 
+/** Increment session entry counter on each homework open (mobile anti-cheat). */
+export const recordHomeworkEntry = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { homeworkId } = req.body
+  const now = new Date()
+
+  const hw = await Homework.findById(homeworkId)
+  if (!hw) throw ApiError.notFound("Homework not found")
+
+  let sub = await Submission.findOne({ homeworkId, studentId })
+
+  if (!sub) {
+    const orgId = resolveOrgId(req)
+    if (!orgId) throw ApiError.forbidden("Organization context required")
+    sub = await Submission.create({
+      orgId,
+      homeworkId,
+      studentId,
+      topic: homeworkTopic(hw),
+      subject: hw?.subject,
+      homeworkTitle: hw.title,
+      assignedAt: now,
+      lastEntryAt: now,
+      entryCount: 1,
+      status: "pending",
+      pauseUsed: false,
+      events: [{ at: now, type: "entry", entryCount: 1 }],
+    })
+    return res.json(sub)
+  }
+
+  if (
+    sub.integrityStatus === "cheating_detected" ||
+    sub.attempt?.failedDueToCheating ||
+    ["submitted", "graded"].includes(sub.status)
+  ) {
+    return res.json(sub)
+  }
+
+  sub.entryCount = (sub.entryCount ?? 0) + 1
+  sub.lastEntryAt = now
+  if (sub.entryCount > MAX_HOMEWORK_ENTRIES) {
+    await failForCheating(sub, homeworkId, studentId, "excessive_entries", now)
+    return res.json(sub)
+  }
+
+  appendSubmissionEvent(sub, { type: "entry", entryCount: sub.entryCount })
+  await sub.save()
+  res.json(sub)
+})
+
 /** Begin or resume an active homework session (timer runs only while sessionStartedAt is set). */
 export const startHomework = asyncHandler(async (req, res) => {
   const studentId = req.user.id
-  const { homeworkId } = req.body
+  const { homeworkId, skipEntryCount = false } = req.body
   const now = new Date()
 
   let sub = await Submission.findOne({ homeworkId, studentId })
@@ -309,14 +370,16 @@ export const startHomework = asyncHandler(async (req, res) => {
       homeworkId,
       studentId,
       topic: homeworkTopic(hw),
+      subject: hw?.subject,
       homeworkTitle: hw?.title,
       assignedAt: now,
-      entryCount: 1,
+      entryCount: skipEntryCount ? 0 : 1,
       status: "in_progress",
       startedAt: now,
       sessionStartedAt: now,
       elapsedSeconds: 0,
       pauseUsed: false,
+      events: [{ at: now, type: "start", entryCount: skipEntryCount ? 0 : 1 }],
     })
     return res.json(sub)
   }
@@ -340,9 +403,10 @@ export const startHomework = asyncHandler(async (req, res) => {
   if (!sub.topic && hw) {
     sub.topic = homeworkTopic(hw)
     sub.homeworkTitle = hw.title
+    sub.subject = hw.subject
   }
 
-  if (shouldCountHomeworkEntry(sub, now)) {
+  if (!skipEntryCount && shouldCountHomeworkEntry(sub, now)) {
     sub.entryCount = (sub.entryCount ?? 0) + 1
     if (sub.entryCount > MAX_HOMEWORK_ENTRIES) {
       await failForCheating(sub, homeworkId, studentId, "excessive_entries", now)
@@ -359,6 +423,7 @@ export const startHomework = asyncHandler(async (req, res) => {
   sub.startedAt = sub.startedAt ?? now
   sub.sessionStartedAt = now
   sub.pausedAt = undefined
+  appendSubmissionEvent(sub, { type: "start", entryCount: sub.entryCount ?? 0 })
   await sub.save()
   res.json(sub)
 })
@@ -385,6 +450,7 @@ export const pauseHomework = asyncHandler(async (req, res) => {
   sub.status = "paused"
   sub.pausedAt = now
   sub.pauseUsed = true
+  appendSubmissionEvent(sub, { type: "pause" })
   await sub.save()
 
   return res.json({ action: "paused", submission: sub, pauseUsed: true })
@@ -408,6 +474,7 @@ export const reportViolation = asyncHandler(async (req, res) => {
         homeworkId,
         studentId,
         topic: homeworkTopic(hw),
+        subject: hw?.subject,
         homeworkTitle: hw?.title,
         assignedAt: now,
         entryCount: 1,
@@ -418,6 +485,9 @@ export const reportViolation = asyncHandler(async (req, res) => {
         pauseUsed: true,
         integrityStatus: "cheating_suspicion",
         violationCount: 1,
+        events: [
+          { at: now, type: "violation", reason: reason ?? "unknown", entryCount: 1 },
+        ],
       }),
     })
   }
@@ -446,19 +516,13 @@ export const reportViolation = asyncHandler(async (req, res) => {
     sub.pauseUsed = true
     sub.violationCount = (sub.violationCount ?? 0) + 1
     sub.integrityStatus = "cheating_suspicion"
-    await sub.save()
-
-    const hw = await Homework.findById(homeworkId)
-    await recordIntegrityEvent({
-      studentId,
-      source: "homework",
-      contextId: homeworkId,
-      contextLabel: hw?.title,
-      subject: hw?.subject,
-      eventType: "integrity.violation",
+    appendSubmissionEvent(sub, {
+      type: "violation",
       reason: reason ?? "unknown",
-      violationCount: sub.violationCount,
+      entryCount: sub.entryCount ?? 0,
+      metadata: { violationCount: sub.violationCount },
     })
+    await sub.save()
 
     return res.json({ action: "pause", submission: sub, pauseUsed: true })
   }
@@ -489,6 +553,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       homeworkId,
       studentId,
       topic: homeworkTopic(hw),
+      subject: hw?.subject,
       homeworkTitle: hw?.title,
       assignedAt: now,
       entryCount: 1,
@@ -497,6 +562,17 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       startedAt: now,
       submittedAt: now,
       attempt,
+      events: [
+        {
+          at: now,
+          type: "submit",
+          metadata: {
+            correctCount: attempt.correctCount,
+            totalQuestions: attempt.totalQuestions,
+            score,
+          },
+        },
+      ],
     })
   } else {
     freezeActiveTime(existing, now)
@@ -508,20 +584,20 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       ...attempt,
       durationSeconds: attempt.durationSeconds ?? existing.elapsedSeconds ?? 0,
     }
+    if (!existing.subject && hw) existing.subject = hw.subject
+    appendSubmissionEvent(existing, {
+      type: "submit",
+      metadata: {
+        correctCount: attempt.correctCount,
+        totalQuestions: attempt.totalQuestions,
+        score,
+      },
+    })
     await existing.save()
     result = existing
   }
 
   if (alreadyDone) return res.json(result)
-
-  await recordHomeworkSubmit({
-    studentId,
-    homeworkId,
-    homeworkTitle: hw?.title,
-    subject: hw?.subject,
-    attempt,
-    score,
-  })
 
   if (hw?.subject === "vocabulary") {
     await recordVocabActivity({

@@ -150,6 +150,13 @@ export const recordAttemptSchema = {
 }
 
 export const startHomeworkSchema = {
+  body: z.object({
+    homeworkId: z.string().min(1),
+    skipEntryCount: z.boolean().optional().default(false),
+  }),
+}
+
+export const recordHomeworkEntrySchema = {
   body: z.object({ homeworkId: z.string().min(1) }),
 }
 
