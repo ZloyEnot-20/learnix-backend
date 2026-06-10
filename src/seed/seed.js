@@ -27,7 +27,7 @@ async function seedSuperAdmin() {
     login: email,
     email,
     name: "Super Admin",
-    role: "super_admin",
+    type: "super_admin",
     passwordHash: await hashPassword(env.seed.superAdminPassword),
     isPremium: true,
   })
@@ -44,7 +44,7 @@ async function seedStudent() {
     login: email,
     email,
     name: "Student",
-    role: "student",
+    type: "student",
     passwordHash: await hashPassword(env.seed.studentPassword),
   })
   console.log(`[seed] created student: ${email}`)

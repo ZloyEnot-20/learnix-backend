@@ -1,18 +1,15 @@
 import { User } from "../models/User.js"
-import { Group } from "../models/Group.js"
 import { StudentClaim, generateClaimCode } from "../models/StudentClaim.js"
 
-/** Add a student to a group (both sides) idempotently. */
+/** Assign a student to a group (membership lives on User.groupId only). */
 export async function addStudentToGroup(groupId, studentId) {
-  await Group.updateOne({ _id: groupId }, { $addToSet: { studentIds: studentId } })
-  await User.updateOne({ _id: studentId, role: "student" }, { $set: { groupId } })
+  await User.updateOne({ _id: studentId, type: "student" }, { $set: { groupId } })
 }
 
-/** Remove a student from a group (both sides). */
+/** Remove a student from a group. */
 export async function removeStudentFromGroup(groupId, studentId) {
-  await Group.updateOne({ _id: groupId }, { $pull: { studentIds: studentId } })
   await User.updateOne(
-    { _id: studentId, role: "student", groupId },
+    { _id: studentId, type: "student", groupId },
     { $unset: { groupId: "" } },
   )
 }
@@ -27,7 +24,7 @@ export async function ensureLoginField(user) {
 
 /** Load a student user or throw null. */
 export async function findStudentById(id, orgId = null) {
-  const filter = { _id: id, role: "student" }
+  const filter = { _id: id, type: "student" }
   if (orgId) filter.orgId = orgId
   return User.findOne(filter)
 }

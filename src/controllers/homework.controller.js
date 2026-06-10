@@ -19,6 +19,7 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
+import { findStudentIdsInGroup, serializeGroupDoc } from "../services/group.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -93,7 +94,7 @@ export const listHomework = asyncHandler(async (req, res) => {
 
 export const getHomework = asyncHandler(async (req, res) => {
   let hw
-  if (req.user.role === "student") {
+  if (req.user.type === "student") {
     const sub = await Submission.findOne({
       homeworkId: req.params.id,
       studentId: req.user.id,
@@ -121,18 +122,18 @@ export const getHomeworkDetails = asyncHandler(async (req, res) => {
   const orgId = resolveOrgId(req)
   const submissionFilter = { homeworkId: homework._id, ...tenantFilter(req) }
   const submissions = await Submission.find(submissionFilter)
-  const studentIds = group.studentIds ?? []
+  const studentIds = await findStudentIdsInGroup(group._id, orgId)
   const students = studentIds.length
     ? await User.find({
         _id: { $in: studentIds },
-        role: "student",
+        type: "student",
         ...(orgId ? { orgId } : {}),
       })
     : []
 
   res.json({
     homework,
-    group,
+    group: await serializeGroupDoc(group),
     students: students.map((s) => s.toStudentJSON()),
     submissions,
   })
@@ -148,8 +149,9 @@ export const createHomework = asyncHandler(async (req, res) => {
   )
 
   // Create a pending submission for every student in the target group.
-  if (group.studentIds?.length) {
-    const docs = group.studentIds.map((studentId) => ({
+  const studentIds = await findStudentIdsInGroup(group._id, group.orgId)
+  if (studentIds.length) {
+    const docs = studentIds.map((studentId) => ({
       orgId: group.orgId,
       homeworkId: hw._id,
       studentId,
@@ -157,7 +159,7 @@ export const createHomework = asyncHandler(async (req, res) => {
     }))
     // Ignore duplicates (unique index on homeworkId+studentId).
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
-    await notifyMany(group.studentIds, {
+    await notifyMany(studentIds, {
       type: "homework",
       title: `New homework: ${hw.title}`,
       message: `Your tutor assigned a new task. Due ${new Date(hw.dueAt).toLocaleDateString()}.`,

@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
 import { env } from "./env.js"
+import { ensureUserIndexes } from "./userIndexes.js"
 
 mongoose.set("strictQuery", true)
 
@@ -12,6 +13,7 @@ export async function connectDB() {
   })
   // Avoid logging the full URI (it may contain credentials).
   console.log(`[db] connected to MongoDB (db: ${mongoose.connection.name})`)
+  await ensureUserIndexes()
   return mongoose.connection
 }
 

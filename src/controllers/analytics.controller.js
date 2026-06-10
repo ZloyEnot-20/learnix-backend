@@ -14,7 +14,7 @@ function pct(correct, total) {
 }
 
 function resolveStudentId(req) {
-  if (req.user.role === "student") return req.user.id
+  if (req.user.type === "student") return req.user.id
   if (req.params.studentId) return req.params.studentId
   if (req.query.studentId) return String(req.query.studentId)
   return null
@@ -72,7 +72,7 @@ export const recordVocab = asyncHandler(async (req, res) => {
 export const listActivity = asyncHandler(async (req, res) => {
   const studentId = resolveStudentId(req)
   if (!studentId) throw ApiError.badRequest("studentId is required")
-  if (req.user.role === "student" && studentId !== req.user.id) {
+  if (req.user.type === "student" && studentId !== req.user.id) {
     throw ApiError.forbidden()
   }
 
@@ -80,7 +80,7 @@ export const listActivity = asyncHandler(async (req, res) => {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
   const skip = (page - 1) * limit
 
-  if (req.user.role !== "student") {
+  if (req.user.type !== "student") {
     await assertStudentInOrg(studentId, req)
   }
 
@@ -105,7 +105,7 @@ export const listActivity = asyncHandler(async (req, res) => {
 /** Aggregated analytics summary for one student. */
 export const studentSummary = asyncHandler(async (req, res) => {
   const studentId = req.params.studentId ?? req.user.id
-  if (req.user.role === "student" && studentId !== req.user.id) {
+  if (req.user.type === "student" && studentId !== req.user.id) {
     throw ApiError.forbidden()
   }
   const summary = await buildStudentSummary(studentId)
@@ -115,7 +115,7 @@ export const studentSummary = asyncHandler(async (req, res) => {
 /** Aggregate events into a topic → subtopic → exercise tree. */
 export const topicStats = asyncHandler(async (req, res) => {
   const filter = { ...tenantFilter(req) }
-  if (req.user.role === "student") {
+  if (req.user.type === "student") {
     filter.studentId = req.user.id
   } else if (req.query.studentId) {
     filter.studentId = req.query.studentId

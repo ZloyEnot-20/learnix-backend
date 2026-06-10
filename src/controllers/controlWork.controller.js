@@ -19,6 +19,7 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
+import { findStudentIdsInGroup } from "../services/group.service.js"
 
 const PAUSE_MAX_SECONDS = 30 * 60
 
@@ -205,9 +206,10 @@ export const createControlWork = asyncHandler(async (req, res) => {
     }),
   )
 
-  if (group.studentIds?.length) {
+  const studentIds = await findStudentIdsInGroup(group._id, group.orgId)
+  if (studentIds.length) {
     const stepResults = initStepResults(steps.length)
-    const docs = group.studentIds.map((studentId) => ({
+    const docs = studentIds.map((studentId) => ({
       orgId: group.orgId,
       controlWorkId: cw._id,
       studentId,
@@ -216,7 +218,7 @@ export const createControlWork = asyncHandler(async (req, res) => {
       stepResults,
     }))
     await ControlWorkSubmission.insertMany(docs, { ordered: false }).catch(() => {})
-    await notifyMany(group.studentIds, {
+    await notifyMany(studentIds, {
       type: "homework",
       title: `New progress test: ${cw.title}`,
       message: `Your tutor assigned a unit test with ${steps.length} section${steps.length === 1 ? "" : "s"}. Due ${new Date(cw.dueAt).toLocaleDateString()}.`,

@@ -24,7 +24,7 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
 
   req.user = {
     id: user._id,
-    role: user.role,
+    type: user.type,
     orgId: user.orgId ?? null,
     name: user.name,
     email: user.email,

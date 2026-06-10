@@ -9,7 +9,7 @@ import { recordAudit } from "../services/audit.service.js"
 import { getOrgStatus } from "../services/orgStatus.service.js"
 
 async function orgStatusFor(user) {
-  if (!user.orgId || user.role === "super_admin") return null
+  if (!user.orgId || user.type === "super_admin") return null
   return getOrgStatus(user.orgId)
 }
 
@@ -32,7 +32,7 @@ export const register = asyncHandler(async (req, res) => {
     login: normalized,
     email: normalized,
     name,
-    role: "student",
+    type: "student",
     passwordHash,
   })
 
@@ -58,7 +58,7 @@ export const login = asyncHandler(async (req, res) => {
 
   await recordAudit({
     req,
-    actor: { id: user._id, name: user.name, role: user.role },
+    actor: { id: user._id, name: user.name, type: user.type },
     action: "login",
     category: "auth",
     targetType: "user",

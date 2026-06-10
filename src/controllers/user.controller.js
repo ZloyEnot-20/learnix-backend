@@ -11,37 +11,36 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
-
-const STAFF_ROLES = ["super_admin", "admin", "teacher"]
-
-function manageableRoles(actorRole) {
-  if (actorRole === "super_admin") return STAFF_ROLES
-  return ["admin", "teacher"]
-}
+import { assertCanAddTeacher } from "../services/orgLimits.service.js"
+import {
+  manageableTypes,
+  STAFF_TYPES,
+  USER_TYPES,
+} from "../constants/userTypes.js"
 
 function assertCanManage(actor, target) {
   if (actor.id === target._id) {
     throw ApiError.badRequest("You cannot modify your own account here")
   }
   if (
-    actor.role !== "super_admin" &&
+    actor.type !== USER_TYPES.SUPER_ADMIN &&
     actor.orgId &&
     target.orgId &&
     actor.orgId !== target.orgId
   ) {
     throw ApiError.forbidden("You don't have access to this user")
   }
-  if (target.role === "super_admin" && actor.role !== "super_admin") {
+  if (target.type === USER_TYPES.SUPER_ADMIN && actor.type !== USER_TYPES.SUPER_ADMIN) {
     throw ApiError.forbidden("You don't have access to this user")
   }
-  if (!manageableRoles(actor.role).includes(target.role)) {
+  if (!manageableTypes(actor.type).includes(target.type)) {
     throw ApiError.forbidden("You don't have access to this user")
   }
 }
 
-function assertRoleAssignable(actorRole, nextRole) {
-  if (!manageableRoles(actorRole).includes(nextRole)) {
-    throw ApiError.forbidden(`You cannot assign the ${nextRole} role`)
+function assertTypeAssignable(actorType, nextType) {
+  if (!manageableTypes(actorType).includes(nextType)) {
+    throw ApiError.forbidden(`You cannot assign the ${nextType} type`)
   }
 }
 
@@ -50,7 +49,7 @@ async function clearTeacherFromGroups(teacherId) {
 }
 
 async function findStaffById(id, req) {
-  const filter = { _id: id, role: { $in: STAFF_ROLES }, ...tenantFilter(req) }
+  const filter = { _id: id, type: { $in: STAFF_TYPES }, ...tenantFilter(req) }
   const user = await User.findOne(filter)
   if (!user) return null
   if (!user.login && user.email) await ensureLoginField(user)
@@ -58,8 +57,8 @@ async function findStaffById(id, req) {
 }
 
 export const listUsers = asyncHandler(async (req, res) => {
-  const roles = manageableRoles(req.user.role)
-  const users = await User.find({ role: { $in: roles }, ...tenantFilter(req) }).sort({
+  const types = manageableTypes(req.user.type)
+  const users = await User.find({ type: { $in: types }, ...tenantFilter(req) }).sort({
     createdAt: -1,
   })
   for (const u of users) {
@@ -76,8 +75,8 @@ export const getUser = asyncHandler(async (req, res) => {
 })
 
 export const createUser = asyncHandler(async (req, res) => {
-  const { name, login, email, role } = req.body
-  assertRoleAssignable(req.user.role, role)
+  const { name, login, email, type } = req.body
+  assertTypeAssignable(req.user.type, type)
 
   const normalizedLogin = normalizeLogin(login)
   if (!normalizedLogin) throw ApiError.badRequest("Login is required")
@@ -95,6 +94,10 @@ export const createUser = asyncHandler(async (req, res) => {
     if (emailTaken) throw ApiError.conflict("Email is already registered")
   }
 
+  if (type === USER_TYPES.TEACHER) {
+    await assertCanAddTeacher(orgId)
+  }
+
   const plainPassword = generatePassword()
   const passwordHash = await hashPassword(plainPassword)
 
@@ -103,7 +106,7 @@ export const createUser = asyncHandler(async (req, res) => {
       login: normalizedLogin,
       name: name.trim(),
       email: email?.trim().toLowerCase() || undefined,
-      role,
+      type,
       passwordHash,
     }),
   )
@@ -115,7 +118,7 @@ export const createUser = asyncHandler(async (req, res) => {
     targetType: "user",
     targetId: user._id,
     targetLabel: user.name,
-    details: { role: user.role, login: user.login },
+    details: { type: user.type, login: user.login },
   })
 
   res.status(201).json({
@@ -130,8 +133,11 @@ export const updateUser = asyncHandler(async (req, res) => {
   assertCanManage(req.user, prev)
 
   const patch = { ...req.body }
-  if (patch.role !== undefined) {
-    assertRoleAssignable(req.user.role, patch.role)
+  if (patch.type !== undefined) {
+    assertTypeAssignable(req.user.type, patch.type)
+    if (patch.type === USER_TYPES.TEACHER && prev.type !== USER_TYPES.TEACHER) {
+      await assertCanAddTeacher(prev.orgId)
+    }
   }
 
   if (patch.login !== undefined) {
@@ -163,10 +169,10 @@ export const updateUser = asyncHandler(async (req, res) => {
 
   if (patch.name !== undefined) patch.name = patch.name.trim()
 
-  const prevRole = prev.role
+  const prevType = prev.type
   const user = await User.findByIdAndUpdate(prev._id, patch, { new: true })
 
-  if (prevRole === "teacher" && user.role !== "teacher") {
+  if (prevType === USER_TYPES.TEACHER && user.type !== USER_TYPES.TEACHER) {
     await clearTeacherFromGroups(user._id)
   }
 
@@ -177,7 +183,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     targetType: "user",
     targetId: user._id,
     targetLabel: user.name,
-    details: { patch: req.body, previousRole: prevRole },
+    details: { patch: req.body, previousType: prevType },
   })
 
   res.json(user.toSafeJSON())
@@ -188,7 +194,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
   if (!user) throw ApiError.notFound("User not found")
   assertCanManage(req.user, user)
 
-  if (user.role === "teacher") {
+  if (user.type === USER_TYPES.TEACHER) {
     await clearTeacherFromGroups(user._id)
   }
 
@@ -201,7 +207,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
     targetType: "user",
     targetId: user._id,
     targetLabel: user.name,
-    details: { role: user.role, login: user.login },
+    details: { type: user.type, login: user.login },
   })
 
   res.json({ ok: true })

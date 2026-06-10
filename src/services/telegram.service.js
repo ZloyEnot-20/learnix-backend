@@ -273,7 +273,7 @@ export async function deliverNotification(note) {
   const links = await ParentLink.find({ studentId: note.studentId }).lean()
   if (links.length === 0) return
 
-  const student = await User.findOne({ _id: note.studentId, role: "student" }).lean()
+  const student = await User.findOne({ _id: note.studentId, type: "student" }).lean()
   const childName = student?.name ?? "Farzand"
 
   await Promise.all(
@@ -301,7 +301,7 @@ export async function reconcilePending(limitPerLink = 20) {
 
   const students = await User.find({
     _id: { $in: links.map((l) => l.studentId) },
-    role: "student",
+    type: "student",
   }).lean()
   const nameById = new Map(students.map((s) => [s._id, s.name]))
 

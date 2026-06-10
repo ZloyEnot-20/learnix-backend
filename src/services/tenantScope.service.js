@@ -10,7 +10,7 @@ export function resolveOrgId(req) {
 }
 
 export function canCrossTenant(req) {
-  return CROSS_TENANT_ROLES.has(req.user?.role)
+  return CROSS_TENANT_ROLES.has(req.user?.type)
 }
 
 /** Mongo filter for tenant-scoped collections. Super admins see all when orgId is absent. */
@@ -67,9 +67,9 @@ export async function assertTenantDoc(Model, id, req) {
 export async function assertStudentInOrg(studentId, req) {
   const orgId = resolveOrgId(req)
   if (!orgId || canCrossTenant(req)) {
-    return User.findOne({ _id: studentId, role: "student" })
+    return User.findOne({ _id: studentId, type: "student" })
   }
-  const student = await User.findOne({ _id: studentId, role: "student", orgId })
+  const student = await User.findOne({ _id: studentId, type: "student", orgId })
   if (!student) throw ApiError.forbidden("Student not found in your organization")
   return student
 }

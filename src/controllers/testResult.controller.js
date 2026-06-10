@@ -21,7 +21,7 @@ export const saveTestResult = asyncHandler(async (req, res) => {
 /** The authenticated student's own test results (staff can pass ?studentId). */
 export const listTestResults = asyncHandler(async (req, res) => {
   let studentId = req.user.id
-  if (req.user.role !== "student" && req.query.studentId) {
+  if (req.user.type !== "student" && req.query.studentId) {
     studentId = req.query.studentId
   }
   const results = await TestResult.find({ studentId }).sort({ date: -1 })
@@ -31,7 +31,7 @@ export const listTestResults = asyncHandler(async (req, res) => {
 export const getTestResult = asyncHandler(async (req, res) => {
   const result = await TestResult.findById(req.params.id)
   if (!result) throw ApiError.notFound("Result not found")
-  if (req.user.role === "student") {
+  if (req.user.type === "student") {
     const myId = req.user.id
     if (result.studentId !== myId) throw ApiError.forbidden()
   }

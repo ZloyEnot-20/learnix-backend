@@ -5,6 +5,12 @@ import { isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
   assignEntrySchema,
+  assignPhoneEntrySchema,
+  phoneLookupSchema,
+  publicSaveMcSchema,
+  publicSaveReadingSchema,
+  publicWritingDraftSchema,
+  publicSubmitWritingSchema,
   saveMcSchema,
   saveReadingSchema,
   writingDraftSchema,
@@ -14,6 +20,22 @@ import {
 } from "../validators/schemas.js"
 
 const router = Router()
+
+// Public — phone-based entry test (no login)
+router.post("/public/lookup", validate(phoneLookupSchema), ctrl.lookupByPhone)
+router.patch("/public/:id/mc", validate(publicSaveMcSchema), ctrl.publicSaveMc)
+router.patch("/public/:id/reading", validate(publicSaveReadingSchema), ctrl.publicSaveReading)
+router.patch(
+  "/public/:id/writing/draft",
+  validate(publicWritingDraftSchema),
+  ctrl.publicSaveWritingDraft,
+)
+router.patch(
+  "/public/:id/writing/submit",
+  validate(publicSubmitWritingSchema),
+  ctrl.publicSubmitWriting,
+)
+
 router.use(...protect)
 
 // Student-facing
@@ -26,6 +48,7 @@ router.patch("/:id/writing/submit", validate(submitWritingSchema), ctrl.submitWr
 // Staff
 router.get("/", isStaff, ctrl.listEntryTests)
 router.post("/", isStaff, validate(assignEntrySchema), ctrl.assignEntryTest)
+router.post("/register", isStaff, validate(assignPhoneEntrySchema), ctrl.registerEntryTestCandidateHandler)
 router.patch("/:id/grade", isStaff, validate(gradeWritingSchema), ctrl.gradeWriting)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteEntryTest)
 

@@ -29,7 +29,7 @@ export async function recordAudit({
       category,
       actorId: a?.id ?? a?._id ?? null,
       actorName: a?.name ?? "System",
-      actorRole: a?.role ?? null,
+      actorRole: a?.type ?? a?.role ?? null,
       targetType: targetType ?? null,
       targetId: targetId ?? null,
       targetLabel: targetLabel ?? null,

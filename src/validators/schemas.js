@@ -167,6 +167,46 @@ export const reportViolationSchema = {
 export const assignEntrySchema = {
   body: z.object({ studentId: z.string().min(1) }),
 }
+export const assignPhoneEntrySchema = {
+  body: z.object({
+    name: z.string().min(1).max(200),
+    phone: z.string().min(5).max(30),
+    login: z.string().min(1).max(64).optional(),
+    email: z.string().email().max(254).optional().or(z.literal("")),
+    notes: z.string().max(500).optional(),
+  }),
+}
+export const phoneLookupSchema = {
+  body: z.object({
+    phone: z.string().min(5).max(30),
+    orgId: z.string().min(1).optional(),
+  }),
+}
+const publicPhoneBody = z.object({
+  phone: z.string().min(5).max(30),
+})
+export const publicSaveMcSchema = {
+  params: idParam,
+  body: publicPhoneBody.extend({
+    answers: z.record(z.string(), z.string()),
+    completed: z.boolean().default(false),
+  }),
+}
+export const publicSaveReadingSchema = {
+  params: idParam,
+  body: publicPhoneBody.extend({
+    answers: z.record(z.string(), z.union([z.number(), z.boolean()])),
+    completed: z.boolean().default(false),
+  }),
+}
+export const publicWritingDraftSchema = {
+  params: idParam,
+  body: publicPhoneBody.extend({ text: z.string().max(20000) }),
+}
+export const publicSubmitWritingSchema = {
+  params: idParam,
+  body: publicPhoneBody.extend({ text: z.string().max(20000) }),
+}
 export const saveMcSchema = {
   params: idParam,
   body: z.object({
@@ -421,15 +461,15 @@ export const reportControlWorkViolationSchema = {
 }
 
 // ---------- Staff users (org admin) ----------
-const staffRole = z.enum(["admin", "teacher"])
-const staffRoleSuper = z.enum(["super_admin", "admin", "teacher"])
+const staffType = z.enum(["admin", "teacher"])
+const staffTypeSuper = z.enum(["super_admin", "admin", "teacher"])
 
 export const createUserSchema = {
   body: z.object({
     name: z.string().min(1).max(120),
     login: z.string().min(1).max(64),
     email: optionalEmail,
-    role: staffRoleSuper,
+    type: staffTypeSuper,
   }),
 }
 
@@ -439,7 +479,7 @@ export const updateUserSchema = {
     name: z.string().min(1).max(120).optional(),
     login: z.string().min(1).max(64).optional(),
     email: optionalEmail,
-    role: staffRoleSuper.optional(),
+    type: staffTypeSuper.optional(),
   }),
 }
 

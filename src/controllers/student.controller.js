@@ -22,9 +22,10 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
+import { assertCanAddStudent } from "../services/orgLimits.service.js"
 
 export const listStudents = asyncHandler(async (req, res) => {
-  const users = await User.find({ role: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
+  const users = await User.find({ type: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
   for (const u of users) {
     if (!u.login && u.email) await ensureLoginField(u)
   }
@@ -41,7 +42,7 @@ export const loginSuggestions = asyncHandler(async (req, res) => {
 export const getStudent = asyncHandler(async (req, res) => {
   const student = await assertStudentInOrg(req.params.id, req)
   if (!student) throw ApiError.notFound("Student not found")
-  if (req.user.role === "student" && req.user.id !== student._id) {
+  if (req.user.type === "student" && req.user.id !== student._id) {
     throw ApiError.forbidden()
   }
   res.json(student.toStudentJSON())
@@ -57,30 +58,34 @@ export const createStudent = asyncHandler(async (req, res) => {
     orgId,
     $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
   })
-  if (taken) throw ApiError.conflict("Login is already taken")
+  if (taken) throw ApiError.conflict(`Login "${normalizedLogin}" is already taken`)
 
-  if (email) {
-    const normalizedEmail = email.toLowerCase()
+  const normalizedEmail = email?.trim()?.toLowerCase()
+  if (normalizedEmail) {
     const emailTaken = await User.findOne({ orgId, email: normalizedEmail })
     if (emailTaken) throw ApiError.conflict("Email is already registered")
   }
 
   if (groupId) await assertOrgGroup(groupId, req)
 
+  await assertCanAddStudent(orgId)
+
   const plainPassword = generatePassword()
   const passwordHash = await hashPassword(plainPassword)
 
-  const user = await User.create(withOrgId(req, {
+  const userPayload = withOrgId(req, {
     login: normalizedLogin,
     name: name.trim(),
-    email: email?.trim().toLowerCase() || undefined,
     phone: phone?.trim() || undefined,
-    role: "student",
+    type: "student",
     passwordHash,
     groupId: groupId || undefined,
     monthlyFee,
     notes: notes?.trim() || undefined,
-  }))
+  })
+  if (normalizedEmail) userPayload.email = normalizedEmail
+
+  const user = await User.create(userPayload)
 
   if (groupId) await addStudentToGroup(groupId, user._id)
 
@@ -147,13 +152,13 @@ export const updateStudent = asyncHandler(async (req, res) => {
       orgId,
       $or: [{ login: normalizedLogin }, { email: normalizedLogin }],
     })
-    if (taken) throw ApiError.conflict("Login is already taken")
+    if (taken) throw ApiError.conflict(`Login "${normalizedLogin}" is already taken`)
     patch.login = normalizedLogin
   }
   if (patch.email !== undefined) {
     const normalizedEmail = patch.email?.trim()?.toLowerCase()
     if (!normalizedEmail) {
-      patch.email = undefined
+      delete patch.email
     } else {
       const emailTaken = await User.findOne({ _id: { $ne: prev._id }, orgId, email: normalizedEmail })
       if (emailTaken) throw ApiError.conflict("Email is already registered")
@@ -164,7 +169,16 @@ export const updateStudent = asyncHandler(async (req, res) => {
   if (patch.groupId) await assertOrgGroup(patch.groupId, req)
 
   const nextGroup = patch.groupId
-  const student = await User.findByIdAndUpdate(prev._id, patch, { new: true })
+  const shouldUnsetEmail =
+    patch.email === undefined && Object.prototype.hasOwnProperty.call(req.body, "email")
+
+  const student = shouldUnsetEmail
+    ? await User.findByIdAndUpdate(
+        prev._id,
+        { $set: patch, $unset: { email: 1 } },
+        { new: true },
+      )
+    : await User.findByIdAndUpdate(prev._id, patch, { new: true })
 
   if (nextGroup !== undefined && nextGroup !== prev.groupId) {
     if (prev.groupId) await removeStudentFromGroup(prev.groupId, student._id)
@@ -227,7 +241,7 @@ export const deleteStudent = asyncHandler(async (req, res) => {
 /** Group + teacher names for the student's own profile (no group list access). */
 export const getStudentContext = asyncHandler(async (req, res) => {
   const studentId = req.params.id
-  if (req.user.role === "student" && req.user.id !== studentId) {
+  if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
 
@@ -250,7 +264,7 @@ export const getStudentContext = asyncHandler(async (req, res) => {
 /** Gamification level/points summary for a student. */
 export const getStudentLevel = asyncHandler(async (req, res) => {
   const studentId = req.params.id
-  if (req.user.role === "student" && req.user.id !== studentId) {
+  if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
   const summary = await computeStudentLevel(studentId)
@@ -260,7 +274,7 @@ export const getStudentLevel = asyncHandler(async (req, res) => {
 /** Derived progress summary used by the student dashboard. */
 export const getStudentProgress = asyncHandler(async (req, res) => {
   const studentId = req.params.id
-  if (req.user.role === "student" && req.user.id !== studentId) {
+  if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
 

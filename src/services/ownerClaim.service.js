@@ -69,7 +69,7 @@ export async function redeemOwnerClaim(chatId, rawCode) {
     tenantExisting.name = owner.name
     tenantExisting.login = login.toLowerCase()
     tenantExisting.email = email
-    tenantExisting.role = "admin"
+    tenantExisting.type = "admin"
     tenantExisting.passwordHash = passwordHash
     await tenantExisting.save()
   } else {
@@ -77,7 +77,7 @@ export async function redeemOwnerClaim(chatId, rawCode) {
       login: login.toLowerCase(),
       email,
       name: owner.name,
-      role: "admin",
+      type: "admin",
       passwordHash,
       isPremium: true,
     })

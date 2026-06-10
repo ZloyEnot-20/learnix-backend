@@ -3,6 +3,7 @@ import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
+import { serializeGroupDoc, serializeGroups } from "../services/group.service.js"
 import { recordAudit } from "../services/audit.service.js"
 import {
   assertOrgGroup,
@@ -13,24 +14,29 @@ import {
 
 export const listGroups = asyncHandler(async (req, res) => {
   const groups = await Group.find(tenantFilter(req)).sort({ createdAt: -1 })
-  res.json(groups)
+  res.json(await serializeGroups(groups))
 })
 
 export const getGroup = asyncHandler(async (req, res) => {
   const group = await assertTenantDoc(Group, req.params.id, req)
-  res.json(group)
+  res.json(await serializeGroupDoc(group))
 })
 
 export const createGroup = asyncHandler(async (req, res) => {
-  // Teachers may only create groups they own.
-  const teacherId = req.user.role === "teacher" ? req.user.id : req.body.teacherId
+  const teacherId = req.user.type === "teacher" ? req.user.id : req.body.teacherId
+  const { studentIds, ...body } = req.body
   const group = await Group.create(
     withOrgId(req, {
-      ...req.body,
+      ...body,
       teacherId,
-      studentIds: req.body.studentIds ?? [],
     }),
   )
+
+  if (studentIds?.length) {
+    for (const studentId of studentIds) {
+      await addStudentToGroup(group._id, studentId)
+    }
+  }
 
   await recordAudit({
     req,
@@ -41,12 +47,13 @@ export const createGroup = asyncHandler(async (req, res) => {
     targetLabel: group.name,
   })
 
-  res.status(201).json(group)
+  res.status(201).json(await serializeGroupDoc(group))
 })
 
 export const updateGroup = asyncHandler(async (req, res) => {
   await assertTenantDoc(Group, req.params.id, req)
-  const group = await Group.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  const { studentIds: _studentIds, ...patch } = req.body
+  const group = await Group.findByIdAndUpdate(req.params.id, patch, { new: true })
 
   await recordAudit({
     req,
@@ -55,16 +62,16 @@ export const updateGroup = asyncHandler(async (req, res) => {
     targetType: "group",
     targetId: group._id,
     targetLabel: group.name,
-    details: { patch: req.body },
+    details: { patch },
   })
 
-  res.json(group)
+  res.json(await serializeGroupDoc(group))
 })
 
 export const deleteGroup = asyncHandler(async (req, res) => {
   const group = await assertTenantDoc(Group, req.params.id, req)
   await Group.findByIdAndDelete(group._id)
-  await User.updateMany({ role: "student", groupId: group._id }, { $unset: { groupId: "" } })
+  await User.updateMany({ type: "student", groupId: group._id }, { $unset: { groupId: "" } })
 
   await recordAudit({
     req,
@@ -82,7 +89,7 @@ export const addMember = asyncHandler(async (req, res) => {
   const group = await assertOrgGroup(req.params.id, req)
   const student = await User.findOne({
     _id: req.body.studentId,
-    role: "student",
+    type: "student",
     orgId: group.orgId,
   }).select("name")
   await addStudentToGroup(group._id, req.body.studentId)
@@ -102,14 +109,14 @@ export const addMember = asyncHandler(async (req, res) => {
     },
   })
 
-  res.json(await Group.findById(group._id))
+  res.json(await serializeGroupDoc(group))
 })
 
 export const removeMember = asyncHandler(async (req, res) => {
   const group = await assertOrgGroup(req.params.id, req)
   const student = await User.findOne({
     _id: req.body.studentId,
-    role: "student",
+    type: "student",
     orgId: group.orgId,
   }).select("name")
   await removeStudentFromGroup(group._id, req.body.studentId)
@@ -129,5 +136,5 @@ export const removeMember = asyncHandler(async (req, res) => {
     },
   })
 
-  res.json(await Group.findById(group._id))
+  res.json(await serializeGroupDoc(group))
 })

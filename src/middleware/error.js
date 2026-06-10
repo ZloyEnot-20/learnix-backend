@@ -14,9 +14,38 @@ export function errorHandler(err, _req, res, _next) {
     })
   }
 
-  // Duplicate key (e.g. unique email)
+  // Duplicate key (unique login/email within org)
   if (err?.code === 11000) {
-    return res.status(409).json({ error: "Resource already exists" })
+    const keyPattern = err.keyPattern ?? {}
+    const keyValue = err.keyValue ?? {}
+    const fields = Object.keys(keyPattern)
+
+    if (fields.includes("login")) {
+      const login = keyValue.login
+      return res.status(409).json({
+        error: login
+          ? `Login "${login}" is already taken in this organization`
+          : "Login is already taken in this organization",
+      })
+    }
+
+    if (fields.includes("email")) {
+      const email = keyValue.email
+      if (email == null || email === "") {
+        return res.status(409).json({
+          error:
+            "Only one student without email is allowed per organization (database index issue). Restart the API server, or add an email to this student.",
+        })
+      }
+      return res.status(409).json({
+        error: `Email "${email}" is already registered in this organization`,
+      })
+    }
+
+    return res.status(409).json({
+      error: "A user with these details already exists",
+      details: isProd ? undefined : { keyPattern, keyValue },
+    })
   }
 
   // Never expose stack traces or internals in production. Log server-side only,

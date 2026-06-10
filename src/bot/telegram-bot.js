@@ -102,7 +102,7 @@ async function getChildren(chatId) {
   if (links.length === 0) return []
   const students = await User.find({
     _id: { $in: links.map((l) => l.studentId) },
-    role: "student",
+    type: "student",
   }).lean()
   const byId = new Map(students.map((s) => [s._id, s]))
   return links
@@ -134,7 +134,7 @@ async function redeemStudentClaim(chatId, rawCode) {
     return
   }
 
-  const student = await User.findOne({ _id: claim.studentId, role: "student" }).lean()
+  const student = await User.findOne({ _id: claim.studentId, type: "student" }).lean()
   if (!student) {
     await send(chatId, "❌ Bu kodga bog'langan o'quvchi topilmadi. Markazga murojaat qiling.")
     return
@@ -429,7 +429,7 @@ async function handleMessage(msg) {
     return
   }
 
-  const student = await User.findOne({ _id: invite.studentId, role: "student" })
+  const student = await User.findOne({ _id: invite.studentId, type: "student" })
   if (!student) {
     await send(chatId, "❌ Bu kodga bog'langan o'quvchi topilmadi. Markazga murojaat qiling.")
     return
