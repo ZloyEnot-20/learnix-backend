@@ -106,7 +106,6 @@ export function buildSpeakingCatalog() {
       exerciseCount: 1,
       questionCount: prompts.length,
       totalMinutes: meta.estimatedTime,
-      color: "rose",
       order: 100 + idx,
     })
 
