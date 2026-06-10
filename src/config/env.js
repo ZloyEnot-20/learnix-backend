@@ -44,6 +44,8 @@ export const env = {
     region: process.env.S3_REGION ?? "ru-1",
     accessKey: process.env.S3_ACCESS_KEY ?? "",
     secretKey: process.env.S3_SECRET_KEY ?? "",
+    /** Optional public API base used in locally-stored upload URLs (e.g. http://192.168.1.110:4000). */
+    publicApiUrl: process.env.PUBLIC_API_URL ?? "",
     get enabled() {
       return Boolean(this.endpoint && this.bucket && this.accessKey && this.secretKey)
     },

@@ -4,11 +4,16 @@ import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
+import path from "path"
+import { fileURLToPath } from "url"
 import { isProd } from "./config/env.js"
 import { apiLimiter } from "./middleware/rateLimit.js"
 import { notFound, errorHandler } from "./middleware/error.js"
 import routes from "./routes/index.js"
 import healthRoutes from "./routes/health.routes.js"
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const LOCAL_UPLOADS_DIR = path.join(__dirname, "../uploads")
 
 export function createApp() {
   const app = express()
@@ -29,6 +34,11 @@ export function createApp() {
   // Health checks are mounted before the rate limiter so monitoring/uptime
   // probes (and PM2/load balancers) are never throttled.
   app.use("/api", healthRoutes)
+
+  // Dev fallback for speaking recordings when S3 is unavailable.
+  if (!isProd) {
+    app.use("/api/uploads/files", express.static(LOCAL_UPLOADS_DIR))
+  }
 
   app.use("/api", apiLimiter, routes)
 

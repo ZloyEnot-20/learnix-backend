@@ -32,10 +32,15 @@ export const uploadSpeakingAudioHandler = asyncHandler(async (req, res) => {
     throw ApiError.badRequest(`Unsupported audio type: ${mime}`)
   }
 
+  const publicBaseUrl =
+    process.env.PUBLIC_API_URL ||
+    `${req.protocol}://${req.get("host")}`
+
   const { url, key } = await uploadSpeakingAudio({
     buffer: file.buffer,
     mimeType: mime,
     prefix: `speaking/${req.user.id}`,
+    publicBaseUrl,
   })
 
   res.status(201).json({ url, key })
