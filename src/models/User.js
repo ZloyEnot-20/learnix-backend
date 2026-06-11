@@ -44,6 +44,8 @@ const userSchema = new mongoose.Schema(
 
     isPremium: { type: Boolean, default: false },
 
+    avatarUrl: { type: String, trim: true },
+
     phone: { type: String, trim: true },
 
     groupId: { type: String, ref: "Group" },
@@ -119,6 +121,8 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     type: this.type,
 
     isPremium: this.isPremium,
+
+    avatarUrl: this.avatarUrl ?? null,
 
     phone: this.phone,
 

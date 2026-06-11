@@ -1,5 +1,6 @@
 import { Submission } from "../models/Submission.js"
 import { ExerciseEvent } from "../models/ExerciseEvent.js"
+import { User } from "../models/User.js"
 
 /**
  * Gamification rules. Points are DERIVED from existing activity (completed
@@ -78,4 +79,88 @@ export async function computeStudentLevel(studentId) {
     requirements: CEFR_LEVEL_REQUIREMENT,
     unlockedCefrLevels,
   }
+}
+
+/** Org-wide student ranking by derived XP (top N). */
+export async function computeOrgLeaderboard(orgId, limit = 30) {
+  const students = await User.find({ orgId, type: "student" }).select("_id name avatarUrl").lean()
+  if (students.length === 0) return []
+
+  const studentIds = students.map((s) => s._id)
+  const nameById = new Map(students.map((s) => [s._id, s.name]))
+  const avatarById = new Map(students.map((s) => [s._id, s.avatarUrl ?? null]))
+
+  const [homeworkAgg, exerciseAgg] = await Promise.all([
+    Submission.aggregate([
+      {
+        $match: {
+          orgId,
+          studentId: { $in: studentIds },
+          status: { $in: ["submitted", "graded"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$studentId",
+          submissions: { $sum: 1 },
+          correctSum: { $sum: { $ifNull: ["$attempt.correctCount", 0] } },
+        },
+      },
+    ]),
+    ExerciseEvent.aggregate([
+      { $match: { studentId: { $in: studentIds } } },
+      {
+        $group: {
+          _id: "$studentId",
+          correctSum: { $sum: { $ifNull: ["$correctCount", 0] } },
+        },
+      },
+    ]),
+  ])
+
+  const pointsByStudent = new Map(
+    studentIds.map((id) => [id, { homeworkPoints: 0, exercisePoints: 0 }]),
+  )
+
+  for (const row of homeworkAgg) {
+    const cur = pointsByStudent.get(row._id)
+    if (!cur) continue
+    cur.homeworkPoints =
+      row.submissions * HOMEWORK_COMPLETION_POINTS + row.correctSum * POINTS_PER_HOMEWORK_CORRECT
+  }
+
+  for (const row of exerciseAgg) {
+    const cur = pointsByStudent.get(row._id)
+    if (!cur) continue
+    cur.exercisePoints = row.correctSum * POINTS_PER_EXERCISE_CORRECT
+  }
+
+  const entries = studentIds.map((id) => {
+    const { homeworkPoints, exercisePoints } = pointsByStudent.get(id) ?? {
+      homeworkPoints: 0,
+      exercisePoints: 0,
+    }
+    const totalPoints = homeworkPoints + exercisePoints
+    const level = Math.floor(totalPoints / POINTS_PER_LEVEL) + 1
+    const tier = tierForLevel(level)
+    return {
+      studentId: id,
+      name: nameById.get(id) ?? "Student",
+      avatarUrl: avatarById.get(id) ?? null,
+      totalPoints,
+      level,
+      tier: tier.id,
+      tierLabel: tier.label,
+    }
+  })
+
+  entries.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
+    return a.name.localeCompare(b.name)
+  })
+
+  return entries.slice(0, limit).map((entry, index) => ({
+    rank: index + 1,
+    ...entry,
+  }))
 }

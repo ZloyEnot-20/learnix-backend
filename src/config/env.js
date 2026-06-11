@@ -50,6 +50,17 @@ export const env = {
       return Boolean(this.endpoint && this.bucket && this.accessKey && this.secretKey)
     },
   },
+  whisper: {
+    /** Base URL of the Python Whisper microservice (e.g. http://127.0.0.1:5001). */
+    url: (process.env.WHISPER_SERVICE_URL ?? "http://127.0.0.1:5001").replace(/\/$/, ""),
+    model: process.env.WHISPER_MODEL ?? "base",
+    language: process.env.WHISPER_LANGUAGE ?? "en",
+    /** Request timeout for a single transcription (ms). */
+    timeoutMs: Number(process.env.WHISPER_TIMEOUT_MS ?? 120_000),
+    get enabled() {
+      return Boolean(this.url)
+    },
+  },
 }
 
 export const isProd = env.nodeEnv === "production"

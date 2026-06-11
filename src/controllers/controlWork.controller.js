@@ -20,6 +20,8 @@ import {
   withOrgId,
 } from "../services/tenantScope.service.js"
 import { findStudentIdsInGroup, assertSelectableGroup } from "../services/group.service.js"
+import { transcribeControlWorkStep } from "../services/speaking-transcription.service.js"
+import { env } from "../config/env.js"
 
 const PAUSE_MAX_SECONDS = 30 * 60
 
@@ -462,6 +464,12 @@ export const completeControlWorkStep = asyncHandler(async (req, res) => {
       total: attempt?.totalQuestions ?? 0,
       source: "control_work",
     })
+  }
+
+  if (step?.subject === "speaking" && env.whisper.enabled) {
+    void transcribeControlWorkStep(sub._id, idx).catch((err) =>
+      console.error("[whisper] control-work transcription failed:", err.message),
+    )
   }
 
   if (sub.status === "submitted") {

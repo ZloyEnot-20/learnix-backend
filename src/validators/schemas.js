@@ -117,12 +117,20 @@ export const createHomeworkSchema = {
   }),
 }
 
+const speakingRecordingGradeSchema = z.object({
+  questionId: z.number(),
+  score: z.number().min(0).max(9).optional(),
+  feedback: z.string().max(2000).optional(),
+})
+
 export const gradeSubmissionSchema = {
   params: idParam,
   body: z.object({
     score: z.number().min(0).max(9).optional(),
     feedback: z.string().max(2000).optional(),
     status: z.enum(["pending", "in_progress", "paused", "submitted", "graded"]).optional(),
+    /** Per-question speaking grades — merged into attempt.mistakes by questionId. */
+    recordingGrades: z.array(speakingRecordingGradeSchema).optional(),
   }),
 }
 
@@ -492,10 +500,24 @@ export const updateUserSchema = {
   }),
 }
 
+// ---------- Organization settings ----------
+export const updateOrgSettingsSchema = {
+  body: z.object({
+    allowScreenshots: z.boolean(),
+  }),
+}
+
 // ---------- Telegram bot invites ----------
 export const createInviteSchema = {
   body: z.object({
     studentId: z.string().min(1),
     ttlHours: z.number().int().positive().max(24 * 30).optional(),
+  }),
+}
+
+// ---------- Speech recognition (Whisper) ----------
+export const speechTestSchema = {
+  body: z.object({
+    url: z.string().url(),
   }),
 }

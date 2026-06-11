@@ -13,6 +13,10 @@ const organizationSchema = new Schema(
       maxTeachers: { type: Number, default: 5 },
     },
     trialEndsAt: { type: Date },
+    settings: {
+      /** When true, students may take screenshots during homework on mobile. */
+      allowScreenshots: { type: Boolean, default: false },
+    },
   },
   { timestamps: true, _id: false },
 )

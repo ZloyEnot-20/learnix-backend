@@ -35,6 +35,12 @@ router.patch(
   validate(gradeSubmissionSchema),
   ctrl.gradeSubmission,
 )
+router.post(
+  "/submissions/:id/transcribe",
+  isStaff,
+  validate(idParamSchema),
+  ctrl.transcribeSubmission,
+)
 router.get("/:id/details", isStaff, validate(idParamSchema), ctrl.getHomeworkDetails)
 router.get("/:id", validate(idParamSchema), ctrl.getHomework)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteHomework)

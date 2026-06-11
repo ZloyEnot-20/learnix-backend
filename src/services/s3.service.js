@@ -47,6 +47,13 @@ function extForMime(mimeType) {
   return "m4a"
 }
 
+function imageExtForMime(mimeType) {
+  if (mimeType.includes("png")) return "png"
+  if (mimeType.includes("webp")) return "webp"
+  if (mimeType.includes("gif")) return "gif"
+  return "jpg"
+}
+
 async function uploadToS3({ buffer, mimeType, prefix }) {
   const s3 = getClient()
   if (!s3) throw new Error("S3 storage is not configured")
@@ -98,4 +105,50 @@ export async function uploadSpeakingAudio({
   }
 
   return uploadToLocal({ buffer, mimeType, prefix, publicBaseUrl })
+}
+
+async function uploadImageToS3({ buffer, mimeType, key }) {
+  const s3 = getClient()
+  if (!s3) throw new Error("S3 storage is not configured")
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: env.s3.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    }),
+  )
+
+  return { key, url: publicObjectUrl(key) }
+}
+
+async function uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl }) {
+  const filePath = path.join(LOCAL_UPLOAD_ROOT, key)
+  await mkdir(path.dirname(filePath), { recursive: true })
+  await writeFile(filePath, buffer)
+  return { key, url: localObjectUrl(key, publicBaseUrl) }
+}
+
+/**
+ * Upload a profile avatar (one object key per user).
+ * @param {{ buffer: Buffer, mimeType: string, userId: string, publicBaseUrl?: string }} opts
+ */
+export async function uploadAvatar({ buffer, mimeType, userId, publicBaseUrl }) {
+  const ext = imageExtForMime(mimeType)
+  const key = `avatars/${userId}.${ext}`
+
+  if (env.s3.enabled) {
+    try {
+      return await uploadImageToS3({ buffer, mimeType, key })
+    } catch (err) {
+      console.error("[s3] avatar upload failed:", err?.message ?? err)
+      if (isProd) throw err
+      console.warn("[s3] falling back to local avatar storage (development only)")
+    }
+  } else if (isProd) {
+    throw new Error("S3 storage is not configured")
+  }
+
+  return uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl })
 }

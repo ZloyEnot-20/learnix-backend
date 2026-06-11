@@ -19,6 +19,8 @@ import {
   withOrgId,
 } from "../services/tenantScope.service.js"
 import { findStudentIdsInGroup, serializeGroupDoc, assertSelectableGroup } from "../services/group.service.js"
+import { transcribeHomeworkSubmission } from "../services/speaking-transcription.service.js"
+import { env } from "../config/env.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -249,24 +251,45 @@ export const homeworkCheck = asyncHandler(async (req, res) => {
 /** Teacher/admin grades or updates a submission. */
 export const gradeSubmission = asyncHandler(async (req, res) => {
   const patch = { ...req.body }
+  const recordingGrades = patch.recordingGrades
+  delete patch.recordingGrades
+
   if (patch.score != null && !patch.status) patch.status = "graded"
   await assertTenantDoc(Submission, req.params.id, req)
   const sub = await Submission.findById(req.params.id)
   if (!sub) throw ApiError.notFound("Submission not found")
+
+  if (recordingGrades?.length && sub.attempt?.mistakes?.length) {
+    for (const grade of recordingGrades) {
+      const mistake = sub.attempt.mistakes.find((m) => m.questionId === grade.questionId)
+      if (!mistake) continue
+      if (grade.score != null) mistake.score = grade.score
+      if (grade.feedback !== undefined) {
+        mistake.feedback = grade.feedback.trim() || undefined
+      }
+    }
+    sub.markModified("attempt")
+    if (!patch.status) patch.status = "graded"
+  }
+
   Object.assign(sub, patch)
-  if (patch.score != null || patch.feedback) {
+  const hasRecordingGrades = recordingGrades?.some(
+    (g) => g.score != null || (g.feedback && g.feedback.trim()),
+  )
+  if (patch.score != null || patch.feedback || hasRecordingGrades) {
     appendSubmissionEvent(sub, {
       type: "graded",
       metadata: {
         score: patch.score != null ? Number(patch.score) : undefined,
-        hasFeedback: !!patch.feedback,
+        hasFeedback: !!patch.feedback || !!hasRecordingGrades,
+        recordingCount: recordingGrades?.length,
       },
     })
   }
   await sub.save()
 
   // Notify the student when their work gets a grade or feedback.
-  if (patch.score != null || patch.feedback) {
+  if (patch.score != null || patch.feedback || hasRecordingGrades) {
     const hw = await Homework.findById(sub.homeworkId)
     await notify(sub.studentId, {
       type: "result",
@@ -284,6 +307,31 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
     }).catch(() => {})
   }
   res.json(sub)
+})
+
+/** Staff: (re)run Whisper transcription for a speaking submission. */
+export const transcribeSubmission = asyncHandler(async (req, res) => {
+  if (!env.whisper.enabled) {
+    throw new ApiError(503, "Whisper service is not configured")
+  }
+
+  await assertTenantDoc(Submission, req.params.id, req)
+  const sub = await Submission.findById(req.params.id)
+  if (!sub) throw ApiError.notFound("Submission not found")
+
+  const hw = await Homework.findById(sub.homeworkId)
+  if (hw?.subject !== "speaking") {
+    throw ApiError.badRequest("Transcription is only available for speaking homework")
+  }
+
+  const hasAudio = sub.attempt?.mistakes?.some((m) => /^https?:\/\//i.test(m.userAnswer ?? ""))
+  if (!hasAudio) {
+    throw ApiError.badRequest("No speaking recordings found in this submission")
+  }
+
+  await transcribeHomeworkSubmission(sub._id)
+  const updated = await Submission.findById(sub._id)
+  res.json(updated)
 })
 
 // ---------- Student-facing ----------
@@ -633,6 +681,12 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       score: typeof score === "number" ? score : undefined,
     },
   }).catch(() => {})
+
+  if (isSpeaking && env.whisper.enabled && !alreadyDone) {
+    void transcribeHomeworkSubmission(result._id).catch((err) =>
+      console.error("[whisper] homework transcription failed:", err.message),
+    )
+  }
 
   res.json(result)
 })

@@ -8,6 +8,12 @@ const mistakeSchema = new mongoose.Schema(
     userAnswer: String,
     correctAnswer: String,
     explanation: String,
+    /** Teacher IELTS band for a speaking recording (0–9). */
+    score: Number,
+    /** Teacher feedback for a single speaking recording. */
+    feedback: String,
+    /** Auto-generated speech-to-text (Whisper) — may be inaccurate. */
+    transcription: String,
   },
   { _id: false },
 )

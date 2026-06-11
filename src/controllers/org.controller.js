@@ -6,6 +6,8 @@ import { getPlatformAnnouncementModel } from "../models/platform/PlatformAnnounc
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { resolveOrgId } from "../services/tenantScope.service.js"
+import { computeOrgLeaderboard } from "../services/gamification.service.js"
+import { recordAudit } from "../services/audit.service.js"
 
 async function ensurePlatformDb() {
   await connectPlatformDB()
@@ -33,6 +35,12 @@ function activeAnnouncementFilter(orgId) {
         ],
       },
     ],
+  }
+}
+
+function formatOrgSettings(org) {
+  return {
+    allowScreenshots: org?.settings?.allowScreenshots === true,
   }
 }
 
@@ -113,4 +121,59 @@ export const getOrgBanner = asyncHandler(async (req, res) => {
     .lean()
 
   res.json(items.map(formatAnnouncement))
+})
+
+/** Top students in the current organization by XP. */
+export const getOrgLeaderboard = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+
+  const entries = await computeOrgLeaderboard(orgId, 30)
+  res.json(entries)
+})
+
+/** Organization settings for staff UI and mobile homework sessions. */
+export const getOrgSettings = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+
+  await ensurePlatformDb()
+  const Organization = getOrganizationModel()
+  const org = await Organization.findById(orgId).lean()
+  if (!org) throw ApiError.notFound("Organization not found")
+
+  res.json(formatOrgSettings(org))
+})
+
+/** Update organization settings (org admin only). */
+export const updateOrgSettings = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+
+  const { allowScreenshots } = req.body
+
+  await ensurePlatformDb()
+  const Organization = getOrganizationModel()
+  const org = await Organization.findById(orgId).lean()
+  if (!org) throw ApiError.notFound("Organization not found")
+
+  const previous = formatOrgSettings(org)
+
+  await Organization.findByIdAndUpdate(orgId, {
+    $set: { "settings.allowScreenshots": allowScreenshots },
+  })
+
+  await recordAudit({
+    req,
+    action: "org.settings_updated",
+    category: "settings",
+    targetType: "organization",
+    targetId: orgId,
+    targetLabel: org.name,
+    details: {
+      allowScreenshots: { from: previous.allowScreenshots, to: allowScreenshots },
+    },
+  })
+
+  res.json({ allowScreenshots })
 })

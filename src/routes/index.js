@@ -15,6 +15,7 @@ import userRoutes from "./user.routes.js"
 import auditRoutes from "./audit.routes.js"
 import orgRoutes from "./org.routes.js"
 import uploadRoutes from "./upload.routes.js"
+import speechRoutes from "./speech.routes.js"
 
 const router = Router()
 
@@ -34,5 +35,6 @@ router.use("/users", userRoutes)
 router.use("/audit", auditRoutes)
 router.use("/org", orgRoutes)
 router.use("/uploads", uploadRoutes)
+router.use("/speech", speechRoutes)
 
 export default router
