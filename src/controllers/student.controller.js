@@ -329,10 +329,12 @@ export const getStudentContext = asyncHandler(async (req, res) => {
       group.lessonStartTime &&
       group.lessonEndTime
     ) {
+      const startTime = String(group.lessonStartTime).trim().slice(0, 5)
+      const endTime = String(group.lessonEndTime).trim().slice(0, 5)
       lessonSchedule = {
         weekdays: group.lessonWeekdays,
-        startTime: group.lessonStartTime,
-        endTime: group.lessonEndTime,
+        startTime,
+        endTime,
       }
     }
   }

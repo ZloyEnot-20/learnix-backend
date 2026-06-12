@@ -32,9 +32,19 @@ export const refreshSchema = {
 }
 
 // ---------- Group ----------
-const timeHHmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm format")
+function normalizeTimeHHmm(value) {
+  if (typeof value !== "string") return value
+  const trimmed = value.trim()
+  const match = trimmed.match(/^([01]\d|2[0-3]):([0-5]\d)/)
+  return match ? `${match[1]}:${match[2]}` : trimmed
+}
+
+const timeHHmm = z.preprocess(
+  normalizeTimeHHmm,
+  z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm format"),
+)
 const lessonWeekdaysField = z
-  .array(z.number().int().min(0).max(6))
+  .array(z.coerce.number().int().min(0).max(6))
   .min(1, "Select at least one weekday")
 
 function assertLessonTimeOrder(startTime, endTime, ctx) {

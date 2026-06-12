@@ -22,12 +22,26 @@ export const getGroup = asyncHandler(async (req, res) => {
   res.json(await serializeGroupDoc(group))
 })
 
+function normalizeGroupLessonFields(body) {
+  const next = { ...body }
+  if (Array.isArray(next.lessonWeekdays)) {
+    next.lessonWeekdays = [...new Set(next.lessonWeekdays.map(Number).filter((d) => d >= 0 && d <= 6))]
+  }
+  if (typeof next.lessonStartTime === "string") {
+    next.lessonStartTime = next.lessonStartTime.trim().slice(0, 5)
+  }
+  if (typeof next.lessonEndTime === "string") {
+    next.lessonEndTime = next.lessonEndTime.trim().slice(0, 5)
+  }
+  return next
+}
+
 export const createGroup = asyncHandler(async (req, res) => {
   if (req.body.name?.trim() === ENTRY_TEST_GROUP_NAME) {
     throw ApiError.badRequest("This group name is reserved for the entry test")
   }
   const teacherId = req.user.type === "teacher" ? req.user.id : req.body.teacherId
-  const { studentIds, ...body } = req.body
+  const { studentIds, ...body } = normalizeGroupLessonFields(req.body)
   const group = await Group.create(
     withOrgId(req, {
       ...body,
@@ -55,8 +69,8 @@ export const createGroup = asyncHandler(async (req, res) => {
 
 export const updateGroup = asyncHandler(async (req, res) => {
   await assertTenantDoc(Group, req.params.id, req)
-  const { studentIds: _studentIds, ...patch } = req.body
-  const group = await Group.findByIdAndUpdate(req.params.id, patch, { new: true })
+  const { studentIds: _studentIds, ...patch } = normalizeGroupLessonFields(req.body)
+  const group = await Group.findByIdAndUpdate(req.params.id, { $set: patch }, { new: true, runValidators: true })
 
   await recordAudit({
     req,
