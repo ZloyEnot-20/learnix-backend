@@ -102,6 +102,15 @@ export const loginSuggestionsSchema = {
   query: z.object({ name: z.string().min(1).max(120) }),
 }
 
+export const sendStudentNotificationSchema = {
+  params: idParam,
+  body: z.object({
+    title: z.string().min(1).max(120),
+    message: z.string().min(1).max(1000),
+    type: z.enum(["system", "reminder", "achievement"]).optional(),
+  }),
+}
+
 // ---------- Homework ----------
 export const createHomeworkSchema = {
   body: z.object({

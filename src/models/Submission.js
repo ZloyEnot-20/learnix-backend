@@ -46,6 +46,7 @@ const submissionEventSchema = new mongoose.Schema(
         "cheating",
         "submit",
         "graded",
+        "retry",
       ],
       required: true,
     },

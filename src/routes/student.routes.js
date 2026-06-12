@@ -7,6 +7,7 @@ import {
   createStudentSchema,
   updateStudentSchema,
   loginSuggestionsSchema,
+  sendStudentNotificationSchema,
   idParamSchema,
 } from "../validators/schemas.js"
 
@@ -27,6 +28,12 @@ router.get("/:id/level", validate(idParamSchema), ctrl.getStudentLevel)
 router.get("/:id/context", validate(idParamSchema), ctrl.getStudentContext)
 
 router.patch("/:id", isStaff, validate(updateStudentSchema), ctrl.updateStudent)
+router.post(
+  "/:id/notify",
+  isStaff,
+  validate(sendStudentNotificationSchema),
+  ctrl.sendStudentNotification,
+)
 router.post("/:id/claim", isStaff, validate(idParamSchema), ctrl.regenerateClaim)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteStudent)
 

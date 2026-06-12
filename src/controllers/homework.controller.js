@@ -309,6 +309,90 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
   res.json(sub)
 })
 
+/** Staff: reset a student's submission so they can solve the homework again. */
+export const retrySubmission = asyncHandler(async (req, res) => {
+  await assertTenantDoc(Submission, req.params.id, req)
+  const sub = await Submission.findById(req.params.id)
+  if (!sub) throw ApiError.notFound("Submission not found")
+
+  const hasProgress =
+    sub.status !== "pending" ||
+    !!sub.attempt ||
+    !!sub.startedAt ||
+    (sub.entryCount ?? 0) > 0
+  if (!hasProgress) {
+    throw ApiError.badRequest("Student has not started this homework yet")
+  }
+
+  const previousStatus = sub.status
+  const previousScore = sub.score
+  const previousAttempt = sub.attempt
+    ? {
+        correctCount: sub.attempt.correctCount,
+        totalQuestions: sub.attempt.totalQuestions,
+        score: sub.score,
+        status: sub.status,
+        integrityStatus: sub.integrityStatus,
+      }
+    : undefined
+
+  sub.status = "pending"
+  sub.integrityStatus = "ok"
+  sub.violationCount = 0
+  sub.elapsedSeconds = 0
+  sub.pauseUsed = false
+  sub.entryCount = 0
+  sub.unset("score")
+  sub.unset("feedback")
+  sub.unset("attempt")
+  sub.unset("startedAt")
+  sub.unset("sessionStartedAt")
+  sub.unset("pausedAt")
+  sub.unset("submittedAt")
+  sub.unset("lastEntryAt")
+
+  appendSubmissionEvent(sub, {
+    type: "retry",
+    metadata: {
+      previousStatus,
+      previousScore,
+      previousAttempt,
+      resetBy: req.user.name,
+    },
+  })
+  await sub.save()
+
+  const hw = await Homework.findById(sub.homeworkId)
+  await notify(sub.studentId, {
+    type: "homework",
+    title: hw ? `Practice again: ${hw.title}` : "Homework retry assigned",
+    message: "Your tutor asked you to complete this homework again to reinforce the material.",
+    data: {
+      homeworkTitle: hw?.title,
+      subject: hw?.subject,
+      dueAt: hw?.dueAt,
+      status: "pending",
+    },
+  }).catch(() => {})
+
+  await recordAudit({
+    req,
+    action: "update",
+    category: "homework",
+    targetType: "submission",
+    targetId: sub._id,
+    targetLabel: hw?.title ?? sub.homeworkId,
+    details: {
+      studentId: sub.studentId,
+      homeworkId: sub.homeworkId,
+      previousStatus,
+      previousScore,
+    },
+  })
+
+  res.json(sub)
+})
+
 /** Staff: (re)run Whisper transcription for a speaking submission. */
 export const transcribeSubmission = asyncHandler(async (req, res) => {
   if (!env.whisper.enabled) {

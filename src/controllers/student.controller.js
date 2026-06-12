@@ -25,6 +25,7 @@ import {
 } from "../services/tenantScope.service.js"
 import { assertCanAddStudent } from "../services/orgLimits.service.js"
 import { assertSelectableGroup } from "../services/group.service.js"
+import { notify } from "../services/notification.service.js"
 
 export const listStudents = asyncHandler(async (req, res) => {
   const users = await User.find({ type: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
@@ -225,7 +226,56 @@ export const updateStudent = asyncHandler(async (req, res) => {
     details: Object.keys(auditDetails).length ? auditDetails : null,
   })
 
+  if (auditDetails.groupChange) {
+    const fromName = auditDetails.groupChange.fromGroupName ?? "No group"
+    const toName = auditDetails.groupChange.toGroupName ?? "No group"
+    await notify(student._id, {
+      type: "system",
+      title: "Group update",
+      message: `You have been moved from ${fromName} to ${toName}.`,
+      data: {
+        kind: "group_change",
+        fromGroupId: auditDetails.groupChange.fromGroupId,
+        toGroupId: auditDetails.groupChange.toGroupId,
+      },
+    })
+  }
+
   res.json(student.toStudentJSON())
+})
+
+/** Staff: send a custom in-app notification to a student. */
+export const sendStudentNotification = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+
+  const { title, message, type } = req.body
+  const note = await notify(student._id, {
+    type: type ?? "system",
+    title: title.trim(),
+    message: message.trim(),
+    data: { sentBy: req.user.id, sentByName: req.user.name },
+  })
+
+  await recordAudit({
+    req,
+    action: "notify",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+    details: { title: note.title },
+  })
+
+  res.status(201).json({
+    id: note._id,
+    studentId: note.studentId,
+    type: note.type,
+    title: note.title,
+    message: note.message,
+    read: note.read,
+    createdAt: note.createdAt,
+  })
 })
 
 export const deleteStudent = asyncHandler(async (req, res) => {
