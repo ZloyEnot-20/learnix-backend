@@ -2,6 +2,7 @@ import { env } from "../config/env.js"
 import { whisperHealth, transcribeAudioUrl } from "../services/whisper.service.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
+import { assertPublicHttpUrl } from "../utils/ssrf.js"
 
 /** GET /speech/status — staff-only service health for the admin panel. */
 export const getSpeechStatus = asyncHandler(async (_req, res) => {
@@ -25,9 +26,7 @@ export const testSpeechTranscription = asyncHandler(async (req, res) => {
   if (!url || typeof url !== "string") {
     throw ApiError.badRequest("url is required")
   }
-  if (!/^https?:\/\//i.test(url)) {
-    throw ApiError.badRequest("url must be a public http(s) address")
-  }
+  assertPublicHttpUrl(url)
 
   const text = await transcribeAudioUrl(url)
   res.json({ text, language: env.whisper.language })

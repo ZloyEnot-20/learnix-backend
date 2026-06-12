@@ -2,6 +2,7 @@ import { Router } from "express"
 import * as ctrl from "../controllers/entryTest.controller.js"
 import { protect } from "../middleware/protect.js"
 import { isStaff } from "../middleware/authorize.js"
+import { entryTestPublicLimiter } from "../middleware/rateLimit.js"
 import { validate } from "../middleware/validate.js"
 import {
   assignEntrySchema,
@@ -22,6 +23,7 @@ import {
 const router = Router()
 
 // Public — phone-based entry test (no login)
+router.use("/public", entryTestPublicLimiter)
 router.post("/public/lookup", validate(phoneLookupSchema), ctrl.lookupByPhone)
 router.patch("/public/:id/mc", validate(publicSaveMcSchema), ctrl.publicSaveMc)
 router.patch("/public/:id/reading", validate(publicSaveReadingSchema), ctrl.publicSaveReading)

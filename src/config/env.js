@@ -13,6 +13,8 @@ function required(name) {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
+  corsOrigins: process.env.CORS_ORIGINS ?? "",
+  allowPublicRegistration: process.env.ALLOW_PUBLIC_REGISTRATION === "true",
   mongoUri: required("MONGODB_URI"),
   dbName: process.env.MONGODB_DB ?? "ielts",
   platformDbName: process.env.PLATFORM_MONGODB_DB ?? "learnix_platform",
@@ -53,6 +55,8 @@ export const env = {
   whisper: {
     /** Base URL of the Python Whisper microservice (e.g. http://127.0.0.1:5001). */
     url: (process.env.WHISPER_SERVICE_URL ?? "http://127.0.0.1:5001").replace(/\/$/, ""),
+    /** Shared secret sent as X-API-Key (required in production when Whisper is enabled). */
+    apiKey: process.env.WHISPER_API_KEY ?? "",
     model: process.env.WHISPER_MODEL ?? "base",
     language: process.env.WHISPER_LANGUAGE ?? "en",
     /** Request timeout for a single transcription (ms). */

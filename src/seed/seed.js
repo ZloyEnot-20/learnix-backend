@@ -11,6 +11,7 @@
 import mongoose from "../config/mongoose.js"
 import { connectDB, disconnectDB } from "../config/db.js"
 import { env } from "../config/env.js"
+import { assertSeedPassword } from "../utils/seedGuard.js"
 import { hashPassword } from "../utils/password.js"
 import { User } from "../models/User.js"
 import { Level } from "../models/Level.js"
@@ -72,6 +73,8 @@ async function seedVocabDecks() {
 }
 
 async function seed() {
+  assertSeedPassword("SEED_SUPERADMIN_PASSWORD", env.seed.superAdminPassword)
+  assertSeedPassword("SEED_STUDENT_PASSWORD", env.seed.studentPassword)
   await connectDB()
   await seedSuperAdmin()
   await seedStudent()

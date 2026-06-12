@@ -6,7 +6,8 @@ import morgan from "morgan"
 import cookieParser from "cookie-parser"
 import path from "path"
 import { fileURLToPath } from "url"
-import { isProd } from "./config/env.js"
+import { env, isProd } from "./config/env.js"
+import { parseCorsOrigins, createCorsOptions } from "./utils/cors.js"
 import { apiLimiter } from "./middleware/rateLimit.js"
 import { notFound, errorHandler } from "./middleware/error.js"
 import routes from "./routes/index.js"
@@ -24,7 +25,7 @@ export function createApp() {
       crossOriginResourcePolicy: { policy: "cross-origin" },
     }),
   )
-  app.use(cors())
+  app.use(cors(createCorsOptions(parseCorsOrigins(env.corsOrigins))))
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
 

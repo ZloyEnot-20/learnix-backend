@@ -2,8 +2,10 @@ import { createApp } from "./app.js"
 import { connectDB, disconnectDB } from "./config/db.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
+import { validateSecurityConfig } from "./config/securityCheck.js"
 
 function start() {
+  validateSecurityConfig()
   const app = createApp()
 
   // Start listening immediately so the process is reachable (and health checks

@@ -1,5 +1,6 @@
 import { AuditLog } from "../models/AuditLog.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { escapeRegex } from "../utils/regex.js"
 import { tenantFilter } from "../services/tenantScope.service.js"
 
 export const listAuditLogs = asyncHandler(async (req, res) => {
@@ -21,10 +22,11 @@ export const listAuditLogs = asyncHandler(async (req, res) => {
 
   const search = String(req.query.search ?? "").trim()
   if (search) {
+    const safe = escapeRegex(search)
     filter.$or = [
-      { actorName: { $regex: search, $options: "i" } },
-      { targetLabel: { $regex: search, $options: "i" } },
-      { action: { $regex: search, $options: "i" } },
+      { actorName: { $regex: safe, $options: "i" } },
+      { targetLabel: { $regex: safe, $options: "i" } },
+      { action: { $regex: safe, $options: "i" } },
     ]
   }
 

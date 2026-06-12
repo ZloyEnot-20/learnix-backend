@@ -1,6 +1,13 @@
 import { env } from "../config/env.js"
+import { assertPublicHttpUrl } from "../utils/ssrf.js"
 
 const AUDIO_URL_RE = /^https?:\/\//i
+
+function whisperHeaders() {
+  const headers = {}
+  if (env.whisper.apiKey) headers["X-API-Key"] = env.whisper.apiKey
+  return headers
+}
 
 /** @returns {boolean} */
 export function isSpeakingAudioUrl(value) {
@@ -20,7 +27,10 @@ export async function whisperHealth() {
   const timer = setTimeout(() => controller.abort(), 10_000)
 
   try {
-    const res = await fetch(`${env.whisper.url}/health`, { signal: controller.signal })
+    const res = await fetch(`${env.whisper.url}/health`, {
+      signal: controller.signal,
+      headers: whisperHeaders(),
+    })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) {
       return { ok: false, error: data.detail ?? `HTTP ${res.status}` }
@@ -42,6 +52,8 @@ export async function transcribeAudioUrl(audioUrl) {
   if (!env.whisper.enabled) {
     throw new Error("Whisper service is not configured")
   }
+
+  assertPublicHttpUrl(audioUrl)
 
   const audioRes = await fetch(audioUrl)
   if (!audioRes.ok) {
@@ -68,6 +80,7 @@ export async function transcribeAudioUrl(audioUrl) {
       method: "POST",
       body: form,
       signal: controller.signal,
+      headers: whisperHeaders(),
     })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) {

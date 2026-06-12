@@ -7,6 +7,7 @@ import { ensureLoginField } from "../services/student.service.js"
 import { normalizeLogin } from "../utils/login.js"
 import { recordAudit } from "../services/audit.service.js"
 import { getOrgStatus } from "../services/orgStatus.service.js"
+import { env, isProd } from "../config/env.js"
 
 async function orgStatusFor(user) {
   if (!user.orgId || user.type === "super_admin") return null
@@ -21,6 +22,10 @@ function tokensFor(user) {
 }
 
 export const register = asyncHandler(async (req, res) => {
+  if (isProd && !env.allowPublicRegistration) {
+    throw ApiError.forbidden("Public registration is disabled")
+  }
+
   const { email, password, name } = req.body
   const normalized = email.toLowerCase()
 
