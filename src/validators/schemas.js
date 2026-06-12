@@ -32,23 +32,52 @@ export const refreshSchema = {
 }
 
 // ---------- Group ----------
+const timeHHmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:mm format")
+const lessonWeekdaysField = z
+  .array(z.number().int().min(0).max(6))
+  .min(1, "Select at least one weekday")
+
+function assertLessonTimeOrder(startTime, endTime, ctx) {
+  if (startTime >= endTime) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "End time must be after start time",
+      path: ["lessonEndTime"],
+    })
+  }
+}
+
 export const createGroupSchema = {
-  body: z.object({
-    name: z.string().min(1).max(120),
-    description: z.string().max(500).optional(),
-    teacherId: z.string().optional(),
-    studentIds: z.array(z.string()).optional(),
-    monthlyFee: z.number().nonnegative().optional(),
-  }),
+  body: z
+    .object({
+      name: z.string().min(1).max(120),
+      description: z.string().max(500).optional(),
+      teacherId: z.string().optional(),
+      studentIds: z.array(z.string()).optional(),
+      monthlyFee: z.number().nonnegative().optional(),
+      lessonWeekdays: lessonWeekdaysField,
+      lessonStartTime: timeHHmm,
+      lessonEndTime: timeHHmm,
+    })
+    .superRefine((data, ctx) => assertLessonTimeOrder(data.lessonStartTime, data.lessonEndTime, ctx)),
 }
 export const updateGroupSchema = {
   params: idParam,
-  body: z.object({
-    name: z.string().min(1).max(120).optional(),
-    description: z.string().max(500).optional(),
-    teacherId: z.string().optional(),
-    monthlyFee: z.number().nonnegative().optional(),
-  }),
+  body: z
+    .object({
+      name: z.string().min(1).max(120).optional(),
+      description: z.string().max(500).optional(),
+      teacherId: z.string().optional(),
+      monthlyFee: z.number().nonnegative().optional(),
+      lessonWeekdays: lessonWeekdaysField.optional(),
+      lessonStartTime: timeHHmm.optional(),
+      lessonEndTime: timeHHmm.optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.lessonStartTime && data.lessonEndTime) {
+        assertLessonTimeOrder(data.lessonStartTime, data.lessonEndTime, ctx)
+      }
+    }),
 }
 export const groupMemberSchema = {
   params: idParam,

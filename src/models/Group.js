@@ -13,6 +13,11 @@ const groupSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     teacherId: { type: String, ref: "User" },
     monthlyFee: { type: Number, min: 0 },
+    /** JS weekday indices: 0 = Sun … 6 = Sat */
+    lessonWeekdays: { type: [Number], default: undefined },
+    /** HH:mm (24h), local org timezone assumed client-side */
+    lessonStartTime: { type: String, trim: true },
+    lessonEndTime: { type: String, trim: true },
     createdAt: { type: Date, default: Date.now },
   },
   { _id: false },

@@ -316,6 +316,7 @@ export const getStudentContext = asyncHandler(async (req, res) => {
 
   let groupName = null
   let teacherName = null
+  let lessonSchedule = null
   if (student.groupId) {
     const group = await Group.findById(student.groupId)
     groupName = group?.name ?? null
@@ -323,8 +324,19 @@ export const getStudentContext = asyncHandler(async (req, res) => {
       const teacher = await User.findById(group.teacherId).select("name")
       teacherName = teacher?.name ?? null
     }
+    if (
+      group?.lessonWeekdays?.length &&
+      group.lessonStartTime &&
+      group.lessonEndTime
+    ) {
+      lessonSchedule = {
+        weekdays: group.lessonWeekdays,
+        startTime: group.lessonStartTime,
+        endTime: group.lessonEndTime,
+      }
+    }
   }
-  res.json({ groupName, teacherName })
+  res.json({ groupName, teacherName, lessonSchedule })
 })
 
 /** Gamification level/points summary for a student. */
