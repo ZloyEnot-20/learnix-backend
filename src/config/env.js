@@ -10,9 +10,19 @@ function required(name) {
   return value
 }
 
+/** Express route prefix. Set API_PREFIX= (empty) if nginx strips /api before proxying to Node. */
+function apiPrefixFromEnv() {
+  if (process.env.API_PREFIX !== undefined) {
+    return String(process.env.API_PREFIX).replace(/\/$/, "")
+  }
+  return "/api"
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
+  /** Mount path for REST routes (default /api). Empty when the reverse proxy strips /api. */
+  apiPrefix: apiPrefixFromEnv(),
   corsOrigins: process.env.CORS_ORIGINS ?? "",
   /** Proxy hops when behind nginx (rate limit / req.ip). TRUST_PROXY=false to disable. */
   trustProxy:

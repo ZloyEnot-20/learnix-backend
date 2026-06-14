@@ -3,10 +3,6 @@ import { connectDB, disconnectDB } from "./config/db.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 import { validateSecurityConfig } from "./config/securityCheck.js"
-import {
-  isTelegramWebhookConfigured,
-  registerTelegramWebhook,
-} from "./services/telegram-webhook.service.js"
 
 function start() {
   validateSecurityConfig()
@@ -15,16 +11,11 @@ function start() {
   // Start listening immediately so the process is reachable (and health checks
   // respond) even if MongoDB is temporarily unavailable. The DB connects in the
   // background; /api/health/ready reflects whether it's actually ready.
-  const server = app.listen(env.port, async () => {
-    console.log(`[server] API listening on http://localhost:${env.port}/api`)
-    console.log(`[server] health: http://localhost:${env.port}/api/health`)
-    if (isTelegramWebhookConfigured()) {
-      try {
-        await registerTelegramWebhook()
-      } catch (err) {
-        console.error("[telegram] webhook registration failed:", err.message)
-      }
-    }
+  const server = app.listen(env.port, () => {
+    const prefix = env.apiPrefix || "(root)"
+    console.log(`[server] API listening on http://localhost:${env.port}${env.apiPrefix || ""}`)
+    console.log(`[server] health: http://localhost:${env.port}${env.apiPrefix}/health`)
+    console.log(`[server] API_PREFIX=${prefix}`)
   })
 
   connectDB().catch((err) => {

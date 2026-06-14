@@ -523,7 +523,8 @@ async function main() {
   })
 }
 
-const isDirectRun = import.meta.url === pathToFileURL(process.argv[1]).href
+const isDirectRun =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href
 if (isDirectRun) {
   main().catch((err) => {
     console.error("[bot] fatal:", err.message)

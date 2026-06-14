@@ -4,10 +4,17 @@
 import { env } from "../config/env.js"
 import { tg } from "./telegram.service.js"
 
-/** Path from TELEGRAM_WEBHOOK_URL (e.g. /api/telegram/webhook). */
+/** Internal Express path for the Telegram webhook POST handler. */
 export function getTelegramWebhookPath() {
-  if (!env.telegram.webhookUrl) return "/api/telegram/webhook"
-  return new URL(env.telegram.webhookUrl).pathname
+  const internal = `${env.apiPrefix || ""}/telegram/webhook`.replace(/\/+/g, "/")
+  if (!env.telegram.webhookUrl) return internal
+
+  const publicPath = new URL(env.telegram.webhookUrl).pathname
+  // nginx often exposes /api/... publicly but forwards /... to Node when API_PREFIX is empty.
+  if (!env.apiPrefix && publicPath.startsWith("/api/")) {
+    return publicPath.slice("/api".length) || internal
+  }
+  return publicPath
 }
 
 export function isTelegramWebhookConfigured() {

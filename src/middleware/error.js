@@ -1,8 +1,13 @@
 import { isProd } from "../config/env.js"
 import { ApiError } from "../utils/ApiError.js"
 
-export function notFound(_req, res) {
-  res.status(404).json({ error: "Route not found" })
+export function notFound(req, res) {
+  console.warn(`[404] ${req.method} ${req.originalUrl}`)
+  res.status(404).json({
+    error: "Route not found",
+    path: req.originalUrl,
+    hint: "API routes are mounted under the configured API_PREFIX (default /api). If nginx strips /api, set API_PREFIX= in .env.",
+  })
 }
 
 // eslint-disable-next-line no-unused-vars

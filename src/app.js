@@ -17,6 +17,12 @@ import telegramRoutes from "./routes/telegram.routes.js"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOCAL_UPLOADS_DIR = path.join(__dirname, "../uploads")
 
+function apiMount(subpath = "") {
+  const base = env.apiPrefix || ""
+  if (!subpath) return base || "/"
+  return `${base}/${subpath}`.replace(/\/+/g, "/")
+}
+
 export function createApp() {
   const app = express()
 
@@ -40,16 +46,16 @@ export function createApp() {
 
   // Health checks are mounted before the rate limiter so monitoring/uptime
   // probes (and PM2/load balancers) are never throttled.
-  app.use("/api", healthRoutes)
+  app.use(apiMount(), healthRoutes)
   // Telegram webhook — before rate limiter so Telegram POSTs are never throttled.
   app.use(telegramRoutes)
 
   // Dev fallback for speaking recordings when S3 is unavailable.
   if (!isProd) {
-    app.use("/api/uploads/files", express.static(LOCAL_UPLOADS_DIR))
+    app.use(apiMount("uploads/files"), express.static(LOCAL_UPLOADS_DIR))
   }
 
-  app.use("/api", apiLimiter, routes)
+  app.use(apiMount(), apiLimiter, routes)
 
   app.use(notFound)
   app.use(errorHandler)
