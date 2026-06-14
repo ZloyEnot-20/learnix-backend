@@ -26,16 +26,15 @@ export const env = {
   },
   seed: {
     // Bootstrap super-admin credentials (used only by `npm run seed`).
-    // Provide real values via env; the defaults are for first local run only.
-    superAdminEmail: process.env.SEED_SUPERADMIN_EMAIL ?? "superadmin@ielts.com",
-    superAdminPassword: process.env.SEED_SUPERADMIN_PASSWORD ?? "super123",
-    // Demo student account used by the quick-login button on the sign-in page.
-    studentEmail: process.env.SEED_STUDENT_EMAIL ?? "student@ielts.com",
-    studentPassword: process.env.SEED_STUDENT_PASSWORD ?? "student123",
+    superAdminEmail: process.env.SEED_SUPERADMIN_EMAIL ?? "superadmin@example.com",
+    superAdminPassword: process.env.SEED_SUPERADMIN_PASSWORD ?? "change_me_super_admin_password",
   },
   telegram: {
     // The bot token from @BotFather. Keep it in .env, never in source control.
     botToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
+    // Public HTTPS URL registered via setWebhook (path must match Express route).
+    webhookUrl: (process.env.TELEGRAM_WEBHOOK_URL ?? "").replace(/\/$/, ""),
+    webhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET ?? "",
     // Notifications are pushed immediately on creation (notify() → telegram.service).
     // This interval is only a fallback reconcile for anything that failed to send.
     reconcileIntervalMs: Number(process.env.TELEGRAM_RECONCILE_INTERVAL_MS ?? 60_000),

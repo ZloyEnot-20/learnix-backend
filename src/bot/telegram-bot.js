@@ -9,9 +9,9 @@
  *   2. Kod to'g'ri va amal qilsa — chat shu o'quvchiga "ulanadi" (ParentLink) va
  *      kod ishlatilgan deb belgilanadi. Bitta chat bir nechta farzandni
  *      kuzatishi mumkin. Kod noto'g'ri bo'lsa — qayta so'raydi (cheklov bilan).
- *   3. Bildirishnomalar ESA backend tomonidan DARHOL yuboriladi (notify() →
- *      telegram.service). Bu bot faqat zaxira sifatida vaqti-vaqti bilan
- *      yuborilmay qolgan xabarlarni yetkazadi (reconcilePending, idempotent).
+ *   3. Bildirishnomalar backend tomonidan DARHOL yuboriladi (notify() →
+ *      telegram.service). Yangilanishlar faqat webhook orqali keladi
+ *      (TELEGRAM_WEBHOOK_URL → setWebhook). Bu jarayon zaxira reconcile uchun.
  *
  * Ishga tushirish:  npm run dev (pm2)  yoki  npm run bot
  */
@@ -42,6 +42,7 @@ import {
   MENU_BUTTONS,
 } from "../services/telegram.service.js"
 import { redeemOwnerClaim } from "../services/ownerClaim.service.js"
+import { pathToFileURL } from "node:url"
 
 const TOKEN = env.telegram.botToken
 
@@ -471,27 +472,11 @@ async function handleMessage(msg) {
   await send(chatId, await buildSummary({ student }))
 }
 
-// ─── Long-polling tsikli ──────────────────────────────────────────────────────
-let running = true
-let offset = 0
-
-async function pollUpdates() {
-  while (running) {
-    try {
-      const updates = await tg("getUpdates", { offset, timeout: 30, allowed_updates: ["message"] })
-      for (const update of updates) {
-        offset = update.update_id + 1
-        if (update.message) {
-          await handleMessage(update.message).catch((err) =>
-            console.error("[bot] handler error:", err.message),
-          )
-        }
-      }
-    } catch (err) {
-      console.error("[bot] getUpdates error:", err.message)
-      await new Promise((r) => setTimeout(r, 3_000))
-    }
-  }
+export async function handleTelegramUpdate(update) {
+  if (!update?.message) return
+  await handleMessage(update.message).catch((err) =>
+    console.error("[bot] handler error:", err.message),
+  )
 }
 
 async function main() {
@@ -522,8 +507,9 @@ async function main() {
     reconcilePending().catch((err) => console.error("[bot] reconcile error:", err.message))
   }, env.telegram.reconcileIntervalMs)
 
+  const abort = new AbortController()
   const shutdown = async () => {
-    running = false
+    abort.abort()
     clearInterval(reconcileTimer)
     await Promise.all([disconnectDB().catch(() => {}), disconnectPlatformDB().catch(() => {})])
     console.log("[bot] stopped")
@@ -532,10 +518,15 @@ async function main() {
   process.on("SIGINT", shutdown)
   process.on("SIGTERM", shutdown)
 
-  await pollUpdates()
+  await new Promise((resolve) => {
+    abort.signal.addEventListener("abort", resolve, { once: true })
+  })
 }
 
-main().catch((err) => {
-  console.error("[bot] fatal:", err.message)
-  process.exit(1)
-})
+const isDirectRun = import.meta.url === pathToFileURL(process.argv[1]).href
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error("[bot] fatal:", err.message)
+    process.exit(1)
+  })
+}

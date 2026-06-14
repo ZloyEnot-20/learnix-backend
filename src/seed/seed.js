@@ -35,22 +35,6 @@ async function seedSuperAdmin() {
   console.log(`[seed] created super admin: ${email}`)
 }
 
-async function seedStudent() {
-  const email = env.seed.studentEmail
-  if (await User.findOne({ $or: [{ email }, { login: email }] })) {
-    console.log(`[seed] student already exists: ${email}`)
-    return
-  }
-  await User.create({
-    login: email,
-    email,
-    name: "Student",
-    type: "student",
-    passwordHash: await hashPassword(env.seed.studentPassword),
-  })
-  console.log(`[seed] created student: ${email}`)
-}
-
 /**
  * Levels are now hard-coded on the frontend (Beginner → Expert). Drop any
  * leftover dynamic level folders so they no longer surface as duplicates.
@@ -74,10 +58,8 @@ async function seedVocabDecks() {
 
 async function seed() {
   assertSeedPassword("SEED_SUPERADMIN_PASSWORD", env.seed.superAdminPassword)
-  assertSeedPassword("SEED_STUDENT_PASSWORD", env.seed.studentPassword)
   await connectDB()
   await seedSuperAdmin()
-  await seedStudent()
   await clearExtraLevels()
   await seedVocabDecks()
 }

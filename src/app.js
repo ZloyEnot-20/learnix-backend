@@ -12,6 +12,7 @@ import { apiLimiter } from "./middleware/rateLimit.js"
 import { notFound, errorHandler } from "./middleware/error.js"
 import routes from "./routes/index.js"
 import healthRoutes from "./routes/health.routes.js"
+import telegramRoutes from "./routes/telegram.routes.js"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOCAL_UPLOADS_DIR = path.join(__dirname, "../uploads")
@@ -35,6 +36,8 @@ export function createApp() {
   // Health checks are mounted before the rate limiter so monitoring/uptime
   // probes (and PM2/load balancers) are never throttled.
   app.use("/api", healthRoutes)
+  // Telegram webhook — before rate limiter so Telegram POSTs are never throttled.
+  app.use(telegramRoutes)
 
   // Dev fallback for speaking recordings when S3 is unavailable.
   if (!isProd) {

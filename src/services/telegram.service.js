@@ -18,11 +18,12 @@ import { Homework } from "../models/Homework.js"
 const API = `https://api.telegram.org/bot${env.telegram.botToken}`
 
 // ─── Telegram API ─────────────────────────────────────────────────────────────
-export async function tg(method, body) {
+export async function tg(method, body, { signal } = {}) {
   const res = await fetch(`${API}/${method}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
+    signal,
   })
   const data = await res.json()
   if (!data.ok) throw new Error(`Telegram ${method} failed: ${data.description}`)
