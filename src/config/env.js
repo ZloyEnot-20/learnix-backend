@@ -14,6 +14,11 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
   corsOrigins: process.env.CORS_ORIGINS ?? "",
+  /** Proxy hops when behind nginx (rate limit / req.ip). TRUST_PROXY=false to disable. */
+  trustProxy:
+    process.env.TRUST_PROXY === "false"
+      ? false
+      : Number(process.env.TRUST_PROXY ?? (process.env.NODE_ENV === "production" ? 1 : 0)),
   allowPublicRegistration: process.env.ALLOW_PUBLIC_REGISTRATION === "true",
   mongoUri: required("MONGODB_URI"),
   dbName: process.env.MONGODB_DB ?? "ielts",

@@ -23,6 +23,8 @@ export function validateSecurityConfig() {
   }
 
   if (!env.corsOrigins.trim()) {
-    throw new Error("[security] CORS_ORIGINS must be set in production")
+    throw new Error(
+      "[security] CORS_ORIGINS must be set in production (comma-separated frontend URLs, e.g. https://learnix.tw1.ru)",
+    )
   }
 }

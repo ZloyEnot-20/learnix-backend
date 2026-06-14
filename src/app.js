@@ -20,6 +20,11 @@ const LOCAL_UPLOADS_DIR = path.join(__dirname, "../uploads")
 export function createApp() {
   const app = express()
 
+  // Behind nginx/reverse proxy — correct client IP and secure cookies.
+  if (env.trustProxy) {
+    app.set("trust proxy", env.trustProxy)
+  }
+
   app.disable("x-powered-by")
   app.use(
     helmet({
