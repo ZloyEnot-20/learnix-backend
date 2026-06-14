@@ -16,6 +16,7 @@ function start() {
     console.log(`[server] API listening on http://localhost:${env.port}${env.apiPrefix || ""}`)
     console.log(`[server] health: http://localhost:${env.port}${env.apiPrefix}/health`)
     console.log(`[server] API_PREFIX=${prefix}`)
+    console.log(`[server] MONGODB_URI=${env.mongoUri}`)
   })
 
   connectDB().catch((err) => {
