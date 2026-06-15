@@ -1,11 +1,25 @@
 import dotenv from "dotenv"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
-dotenv.config()
+const envPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env")
+// Always load project .env (PM2 cwd may differ). override: .env wins over stale PM2 env.
+dotenv.config({ path: envPath, override: true })
 
 function required(name) {
-  const value = process.env[name]
-  if (!value) {
+  const raw = process.env[name]
+  if (raw == null || String(raw).trim() === "") {
     throw new Error(`Missing required environment variable: ${name}`)
+  }
+  return String(raw).trim().replace(/^["']|["']$/g, "")
+}
+
+function mongoUriFromEnv() {
+  const value = required("MONGODB_URI")
+  if (!/^mongodb(\+srv)?:\/\//.test(value)) {
+    throw new Error(
+      `${"MONGODB_URI"} must start with "mongodb://" or "mongodb+srv://" — check ${envPath}`,
+    )
   }
   return value
 }
@@ -32,7 +46,7 @@ export const env = {
       ? false
       : Number(process.env.TRUST_PROXY ?? (process.env.NODE_ENV === "production" ? 1 : 0)),
   allowPublicRegistration: process.env.ALLOW_PUBLIC_REGISTRATION === "true",
-  mongoUri: required("MONGODB_URI"),
+  mongoUri: mongoUriFromEnv(),
   dbName: process.env.MONGODB_DB ?? "ielts",
   platformDbName: process.env.PLATFORM_MONGODB_DB ?? "learnix_platform",
   jwt: {
