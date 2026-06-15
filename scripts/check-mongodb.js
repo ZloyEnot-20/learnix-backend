@@ -6,6 +6,7 @@ import dns from "node:dns/promises"
 import net from "node:net"
 import mongoose from "mongoose"
 import { env } from "../src/config/env.js"
+import { detectOutboundIps, formatAtlasWhitelistHint } from "../src/config/outboundIp.js"
 
 function maskUri(uri) {
   try {
@@ -19,15 +20,6 @@ function maskUri(uri) {
     }
   } catch {
     return { error: "URI parse failed — check quotes/special chars in .env" }
-  }
-}
-
-async function outboundIpv4() {
-  try {
-    const res = await fetch("https://ifconfig.me/ip", { signal: AbortSignal.timeout(8000) })
-    return (await res.text()).trim()
-  } catch {
-    return null
   }
 }
 
@@ -57,11 +49,16 @@ function tcpProbe(host, port, ms = 5000) {
 async function main() {
   console.log("=== MongoDB diagnostics ===\n")
   console.log("NODE_ENV:", env.nodeEnv)
+  console.log("mongoose:", (await import("mongoose")).default.version)
   console.log("dbName:", env.dbName)
   console.log("URI (masked):", maskUri(env.mongoUri))
 
-  const ip = await outboundIpv4()
-  console.log("\nOutbound IPv4 (whitelist this in Atlas):", ip ?? "could not detect — run: curl -4 ifconfig.me")
+  const ips = await detectOutboundIps()
+  console.log("\nOutbound IPs (whitelist ALL in Atlas → Network Access):")
+  console.log(formatAtlasWhitelistHint(ips))
+  if (ips.ipv6) {
+    console.log("  ⚠ VPS uses IPv6 — adding only 0.0.0.0/0 will NOT help; add IPv6 or ::/0")
+  }
 
   const host = maskUri(env.mongoUri).host
   if (host && !maskUri(env.mongoUri).error) {
@@ -100,8 +97,8 @@ async function main() {
     if (/authentication|auth failed|bad auth/i.test(msg)) {
       console.log("\n→ Wrong password/user in MONGODB_URI on this server (not IP whitelist).")
     } else if (/whitelist|Could not connect to any servers/i.test(msg)) {
-      console.log("\n→ Still network/IP/DNS. Confirm Atlas shows IP:", ip ?? "?")
-      console.log("  Temporarily add 0.0.0.0/0 in Atlas to isolate the cause.")
+      console.log("\n→ Network/IP whitelist. Add to Atlas:\n  " + formatAtlasWhitelistHint(ips).replace(/\n/g, "\n  "))
+      console.log("  Quick test: add 0.0.0.0/0 AND ::/0 temporarily, then restrict to specific IPs.")
     } else if (/ENOTFOUND|querySrv/i.test(msg)) {
       console.log("\n→ DNS problem on VPS (cannot resolve MongoDB SRV/hostnames).")
     }

@@ -1,3 +1,5 @@
+import { detectOutboundIps, formatAtlasWhitelistHint } from "./outboundIp.js"
+
 let atlasHintLogged = false
 
 function isAtlasNetworkError(message) {
@@ -13,14 +15,10 @@ export async function logDbConnectionFailure(label, err) {
   }
   if (atlasHintLogged) return
   atlasHintLogged = true
-  console.error(
-    "[db] Atlas → Network Access: add this server's public IP (VPS IP ≠ your home PC where Compass works)",
-  )
-  try {
-    const res = await fetch("https://ifconfig.me/ip", { signal: AbortSignal.timeout(5000) })
-    const ip = (await res.text()).trim()
-    if (ip) console.error(`[db] outbound IPv4 to whitelist: ${ip}`)
-  } catch {
-    console.error("[db] on the server run: curl -4 ifconfig.me")
+  console.error("[db] Atlas → Network Access: whitelist ALL outbound IPs below (VPS may use IPv6, not IPv4)")
+  const ips = await detectOutboundIps()
+  console.error("[db] add to Atlas:\n" + formatAtlasWhitelistHint(ips))
+  if (ips.ipv6 && !ips.ipv4) {
+    console.error("[db] this server exits via IPv6 only — 0.0.0.0/0 alone is NOT enough; add ::/0 or the IPv6 address")
   }
 }
