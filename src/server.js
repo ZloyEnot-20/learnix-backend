@@ -1,6 +1,5 @@
 import { createApp } from "./app.js"
 import { connectDB, disconnectDB } from "./config/db.js"
-import { logDbConnectionFailure } from "./config/dbConnectHint.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 import { validateSecurityConfig } from "./config/securityCheck.js"
@@ -29,9 +28,13 @@ function start() {
         )
       }
     })
-    .catch((err) => logDbConnectionFailure("initial connection", err))
+    .catch(() => {
+      /* connectDB already logged root cause via logMongoConnectError */
+    })
 
-  connectPlatformDB().catch((err) => logDbConnectionFailure("platform connection", err))
+  connectPlatformDB().catch(() => {
+    /* connectPlatformDB already logged root cause */
+  })
 
   const shutdown = async (signal) => {
     console.log(`[server] ${signal} received, shutting down`)

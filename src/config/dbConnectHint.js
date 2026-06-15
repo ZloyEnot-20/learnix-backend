@@ -2,23 +2,21 @@ import { detectOutboundIps, formatAtlasWhitelistHint } from "./outboundIp.js"
 
 let atlasHintLogged = false
 
-function isAtlasNetworkError(message) {
-  return /whitelist|Could not connect to any servers/i.test(String(message ?? ""))
-}
-
-/** Log Atlas IP whitelist hint once (typical VPS vs local Compass mismatch). */
-export async function logDbConnectionFailure(label, err) {
-  console.error(`[db] ${label} failed:`, err?.message)
-  if (!isAtlasNetworkError(err?.message)) {
-    console.error("[db] is MongoDB running? Check MONGODB_URI in .env")
-    return
-  }
+/** Extra Atlas network hints after logMongoConnectError (network kind only). */
+export async function logMongoNetworkHint() {
   if (atlasHintLogged) return
   atlasHintLogged = true
-  console.error("[db] Atlas → Network Access: whitelist ALL outbound IPs below (VPS may use IPv6, not IPv4)")
+  console.error("[db] → Network/IP: whitelist outbound IP(s) in Atlas → Network Access")
+  console.error("[db] → VPS may use IPv6; family:4 forces IPv4 — whitelist IPv4 or add ::/0")
   const ips = await detectOutboundIps()
   console.error("[db] add to Atlas:\n" + formatAtlasWhitelistHint(ips))
   if (ips.ipv6 && !ips.ipv4) {
-    console.error("[db] this server exits via IPv6 only — 0.0.0.0/0 alone is NOT enough; add ::/0 or the IPv6 address")
+    console.error("[db] this server exits via IPv6 only — 0.0.0.0/0 alone is not enough")
   }
+}
+
+/** @deprecated use logMongoConnectError + logMongoNetworkHint */
+export async function logDbConnectionFailure(label, err) {
+  const { logMongoConnectError } = await import("./mongoOptions.js")
+  await logMongoConnectError(label, err, logMongoNetworkHint)
 }

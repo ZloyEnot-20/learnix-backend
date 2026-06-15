@@ -6,7 +6,7 @@ import dns from "node:dns/promises"
 import net from "node:net"
 import mongoose from "mongoose"
 import { env } from "../src/config/env.js"
-import { MONGO_DRIVER_OPTS } from "../src/config/mongoOptions.js"
+import { MONGO_DRIVER_OPTS, classifyMongoConnectError, collectMongoErrorMessages, mongoRootCauses } from "../src/config/mongoOptions.js"
 import { detectOutboundIps, formatAtlasWhitelistHint } from "../src/config/outboundIp.js"
 
 function maskUri(uri) {
@@ -92,15 +92,24 @@ async function main() {
     await mongoose.connection.db.admin().ping()
     console.log("CONNECT: OK (db:", mongoose.connection.name + ")")
   } catch (err) {
-    const msg = String(err?.message ?? err)
-    console.log("CONNECT: FAIL")
-    console.log("  ", msg.split("\n")[0])
-    if (/authentication|auth failed|bad auth/i.test(msg)) {
-      console.log("\n→ Wrong password/user in MONGODB_URI on this server (not IP whitelist).")
-    } else if (/whitelist|Could not connect to any servers/i.test(msg)) {
+    const messages = collectMongoErrorMessages(err)
+    const kind = classifyMongoConnectError(messages)
+    const roots = mongoRootCauses(messages)
+
+    console.log("CONNECT: FAIL [" + kind + "]")
+    if (roots.length) {
+      console.log("  root cause(s):")
+      for (const line of roots) console.log("    •", line)
+    } else {
+      console.log("  ", String(err?.message ?? err).split("\n")[0])
+    }
+
+    if (kind === "auth") {
+      console.log("\n→ Wrong password/user in MONGODB_URI (same as Compass, no extra %40).")
+    } else if (kind === "network") {
       console.log("\n→ Network/IP whitelist. Add to Atlas:\n  " + formatAtlasWhitelistHint(ips).replace(/\n/g, "\n  "))
       console.log("  Quick test: add 0.0.0.0/0 AND ::/0 temporarily, then restrict to specific IPs.")
-    } else if (/ENOTFOUND|querySrv/i.test(msg)) {
+    } else if (kind === "dns") {
       console.log("\n→ DNS problem on VPS (cannot resolve MongoDB SRV/hostnames).")
     }
   } finally {
