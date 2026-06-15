@@ -24,6 +24,8 @@ export const env = {
   /** Mount path for REST routes (default /api). Empty when the reverse proxy strips /api. */
   apiPrefix: apiPrefixFromEnv(),
   corsOrigins: process.env.CORS_ORIGINS ?? "",
+  /** Allow any Origin (CORS_DISABLED=true). Dev/debug only — insecure in production. */
+  corsDisabled: process.env.CORS_DISABLED === "true",
   /** Proxy hops when behind nginx (rate limit / req.ip). TRUST_PROXY=false to disable. */
   trustProxy:
     process.env.TRUST_PROXY === "false"

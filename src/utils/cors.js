@@ -6,7 +6,9 @@ const DEV_ORIGINS = [
 ]
 
 /** Parse comma-separated CORS_ORIGINS; in production at least one origin is required. */
-export function parseCorsOrigins(raw = process.env.CORS_ORIGINS ?? "") {
+export function parseCorsOrigins(raw = process.env.CORS_ORIGINS ?? "", { corsDisabled = false } = {}) {
+  if (corsDisabled) return []
+
   const origins = raw
     .split(",")
     .map((s) => s.trim())
@@ -27,4 +29,12 @@ export function createCorsOptions(origins) {
     },
     credentials: true,
   }
+}
+
+/** Strict allow-list or permissive mode when CORS_DISABLED=true. */
+export function resolveCorsOptions({ corsDisabled = false, corsOriginsRaw = "" } = {}) {
+  if (corsDisabled) {
+    return { origin: true, credentials: true }
+  }
+  return createCorsOptions(parseCorsOrigins(corsOriginsRaw, { corsDisabled }))
 }
