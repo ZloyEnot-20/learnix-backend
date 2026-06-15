@@ -42,6 +42,7 @@ import {
   MENU_BUTTONS,
 } from "../services/telegram.service.js"
 import { redeemOwnerClaim } from "../services/ownerClaim.service.js"
+import { logDbConnectionFailure } from "../config/dbConnectHint.js"
 import { pathToFileURL } from "node:url"
 
 const TOKEN = env.telegram.botToken
@@ -484,8 +485,13 @@ async function main() {
     console.error("[bot] TELEGRAM_BOT_TOKEN is not set. Add it to backend/.env")
     process.exit(1)
   }
-  await connectDB()
-  await connectPlatformDB()
+  try {
+    await connectDB()
+    await connectPlatformDB()
+  } catch (err) {
+    await logDbConnectionFailure("bot startup", err)
+    process.exit(1)
+  }
   const me = await tg("getMe", {})
   console.log(`[bot] started as @${me.username}`)
 

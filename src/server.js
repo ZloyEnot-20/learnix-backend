@@ -4,6 +4,7 @@ import { logDbConnectionFailure } from "./config/dbConnectHint.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 import { validateSecurityConfig } from "./config/securityCheck.js"
+import { registerTelegramWebhook } from "./services/telegram-webhook.service.js"
 
 function start() {
   validateSecurityConfig()
@@ -20,7 +21,15 @@ function start() {
     console.log(`[server] MongoDB target db: ${env.dbName} (+ ${env.platformDbName})`)
   })
 
-  connectDB().catch((err) => logDbConnectionFailure("initial connection", err))
+  connectDB()
+    .then(async () => {
+      if (env.telegram.botToken && env.telegram.webhookUrl) {
+        await registerTelegramWebhook().catch((err) =>
+          console.error("[telegram] webhook registration failed:", err.message),
+        )
+      }
+    })
+    .catch((err) => logDbConnectionFailure("initial connection", err))
 
   connectPlatformDB().catch((err) => logDbConnectionFailure("platform connection", err))
 
