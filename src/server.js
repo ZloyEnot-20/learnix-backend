@@ -1,5 +1,6 @@
 import { createApp } from "./app.js"
 import { connectDB, disconnectDB } from "./config/db.js"
+import { logDbConnectionFailure } from "./config/dbConnectHint.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 import { validateSecurityConfig } from "./config/securityCheck.js"
@@ -16,17 +17,12 @@ function start() {
     console.log(`[server] API listening on http://localhost:${env.port}${env.apiPrefix || ""}`)
     console.log(`[server] health: http://localhost:${env.port}${env.apiPrefix}/health`)
     console.log(`[server] API_PREFIX=${prefix}`)
-    console.log(`[server] MONGODB_URI=${env.mongoUri}`)
+    console.log(`[server] MongoDB target db: ${env.dbName} (+ ${env.platformDbName})`)
   })
 
-  connectDB().catch((err) => {
-    console.error("[db] initial connection failed:", err?.message)
-    console.error("[db] is MongoDB running? Check MONGODB_URI in .env")
-  })
+  connectDB().catch((err) => logDbConnectionFailure("initial connection", err))
 
-  connectPlatformDB().catch((err) => {
-    console.error("[db] platform connection failed:", err?.message)
-  })
+  connectPlatformDB().catch((err) => logDbConnectionFailure("platform connection", err))
 
   const shutdown = async (signal) => {
     console.log(`[server] ${signal} received, shutting down`)
