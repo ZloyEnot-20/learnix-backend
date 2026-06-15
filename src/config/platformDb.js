@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
 import { env } from "./env.js"
+import { MONGO_DRIVER_OPTS } from "./mongoOptions.js"
 
 let platformConn = null
 
@@ -7,7 +8,7 @@ let platformConn = null
 export async function connectPlatformDB() {
   if (platformConn) return platformConn
   platformConn = mongoose.createConnection(env.mongoUri, {
-    serverSelectionTimeoutMS: 10_000,
+    ...MONGO_DRIVER_OPTS,
     dbName: env.platformDbName,
   })
   await platformConn.asPromise()

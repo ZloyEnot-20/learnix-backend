@@ -6,6 +6,7 @@ import dns from "node:dns/promises"
 import net from "node:net"
 import mongoose from "mongoose"
 import { env } from "../src/config/env.js"
+import { MONGO_DRIVER_OPTS } from "../src/config/mongoOptions.js"
 import { detectOutboundIps, formatAtlasWhitelistHint } from "../src/config/outboundIp.js"
 
 function maskUri(uri) {
@@ -87,7 +88,7 @@ async function main() {
   console.log("\nMongoose connect test…")
   mongoose.set("strictQuery", true)
   try {
-    await mongoose.connect(env.mongoUri, { serverSelectionTimeoutMS: 15_000, dbName: env.dbName })
+    await mongoose.connect(env.mongoUri, { ...MONGO_DRIVER_OPTS, dbName: env.dbName, serverSelectionTimeoutMS: 15_000 })
     await mongoose.connection.db.admin().ping()
     console.log("CONNECT: OK (db:", mongoose.connection.name + ")")
   } catch (err) {

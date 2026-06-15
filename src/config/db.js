@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
 import { env } from "./env.js"
+import { MONGO_DRIVER_OPTS } from "./mongoOptions.js"
 import { ensureUserIndexes } from "./userIndexes.js"
 
 mongoose.set("strictQuery", true)
@@ -8,7 +9,7 @@ export async function connectDB() {
   // Works for both mongodb:// and mongodb+srv:// connection strings.
   // dbName ensures we use a named database even if the URI omits the path.
   await mongoose.connect(env.mongoUri, {
-    serverSelectionTimeoutMS: 10_000,
+    ...MONGO_DRIVER_OPTS,
     dbName: env.dbName,
   })
   // Avoid logging the full URI (it may contain credentials).
