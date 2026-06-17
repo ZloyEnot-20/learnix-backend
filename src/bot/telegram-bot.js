@@ -10,8 +10,8 @@
  *      kod ishlatilgan deb belgilanadi. Bitta chat bir nechta farzandni
  *      kuzatishi mumkin. Kod noto'g'ri bo'lsa — qayta so'raydi (cheklov bilan).
  *   3. Bildirishnomalar backend tomonidan DARHOL yuboriladi (notify() →
- *      telegram.service). Yangilanishlar faqat webhook orqali keladi
- *      (TELEGRAM_WEBHOOK_URL → setWebhook). Bu jarayon zaxira reconcile uchun.
+ *      telegram.service). Yangilanishlar: webhook (TELEGRAM_WEBHOOK_URL) yoki
+ *      long-polling (getUpdates) — webhook bo'lmasa bot o'zi poll qiladi.
  *
  * Ishga tushirish:  npm run dev (pm2)  yoki  npm run bot
  */
@@ -42,6 +42,10 @@ import {
   MENU_BUTTONS,
 } from "../services/telegram.service.js"
 import { redeemOwnerClaim } from "../services/ownerClaim.service.js"
+import {
+  deleteTelegramWebhook,
+  isTelegramWebhookConfigured,
+} from "../services/telegram-webhook.service.js"
 import { logDbConnectionFailure } from "../config/dbConnectHint.js"
 import { pathToFileURL } from "node:url"
 
@@ -283,10 +287,8 @@ async function handleMessage(msg) {
       } else {
         await send(
           chatId,
-          card("👋 <b>Learnix botiga xush kelibsiz!</b>", [
-            "",
-            "Siz kimsiz? Quyidan tanlang 👇",
-            "",
+          card("👋 <b>Learnix botiga xush kelibsiz!</b>\n", [
+            "Siz kimsiz? Quyidan tanlang 👇\n",
             `${BTN_STUDENT} — kirish login va parolingizni olasiz.`,
             `${BTN_PARENT} — farzandingiz faoliyatini kuzatasiz.`,
             `${BTN_ORG} — tashkilot egasi sifatida login va parol olasiz.`,
@@ -480,6 +482,46 @@ export async function handleTelegramUpdate(update) {
   )
 }
 
+/** Long-polling: setTimeout zanjirida getUpdates (while yo'q, bir vaqtda bitta so'rov). */
+function startPolling(abortSignal) {
+  let offset = 0
+  let busy = false
+  const retryMs = env.telegram.pollIntervalMs
+  const timeoutSec = env.telegram.pollTimeoutSec
+
+  const schedule = (delayMs = 0) => {
+    if (abortSignal.aborted) return
+    setTimeout(tick, delayMs)
+  }
+
+  const tick = async () => {
+    if (abortSignal.aborted || busy) return
+    busy = true
+    try {
+      const updates = await tg(
+        "getUpdates",
+        { offset, timeout: timeoutSec, allowed_updates: ["message"] },
+        { signal: abortSignal },
+      )
+      for (const update of updates) {
+        offset = update.update_id + 1
+        handleTelegramUpdate(update).catch((err) =>
+          console.error("[bot] handler error:", err.message),
+        )
+      }
+      schedule(0)
+    } catch (err) {
+      if (abortSignal.aborted) return
+      console.error("[bot] getUpdates error:", err.message)
+      schedule(retryMs)
+    } finally {
+      busy = false
+    }
+  }
+
+  schedule(0)
+}
+
 async function main() {
   if (!TOKEN) {
     console.error("[bot] TELEGRAM_BOT_TOKEN is not set. Add it to backend/.env")
@@ -514,6 +556,14 @@ async function main() {
   }, env.telegram.reconcileIntervalMs)
 
   const abort = new AbortController()
+
+  if (isTelegramWebhookConfigured()) {
+    console.log("[bot] webhook mode — updates via ielts-backend, reconcile only here")
+  } else {
+    await deleteTelegramWebhook()
+    console.log("[bot] polling mode — getUpdates (set TELEGRAM_WEBHOOK_URL for webhook)")
+    startPolling(abort.signal)
+  }
   const shutdown = async () => {
     abort.abort()
     clearInterval(reconcileTimer)

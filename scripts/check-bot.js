@@ -50,7 +50,12 @@ async function main() {
     "\nWebhook secret:",
     env.telegram.webhookSecret ? "set (TELEGRAM_WEBHOOK_SECRET)" : "not set",
   )
-  console.log("\nMessages go to ielts-backend (POST webhook), not ielts-bot directly.")
+
+  if (expected) {
+    console.log("\nMode: webhook — messages go to ielts-backend (POST webhook).")
+  } else {
+    console.log("\nMode: polling — ielts-bot calls getUpdates (no TELEGRAM_WEBHOOK_URL).")
+  }
   console.log("Both processes need MongoDB — if API login fails, bot will fail too.")
   console.log("Run: npm run db:check")
 }

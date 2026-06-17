@@ -69,6 +69,9 @@ export const env = {
     // Notifications are pushed immediately on creation (notify() → telegram.service).
     // This interval is only a fallback reconcile for anything that failed to send.
     reconcileIntervalMs: Number(process.env.TELEGRAM_RECONCILE_INTERVAL_MS ?? 60_000),
+    // Long-polling (local dev): retry delay after getUpdates errors. Ignored when webhook is set.
+    pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS ?? 15_000),
+    pollTimeoutSec: Number(process.env.TELEGRAM_POLL_TIMEOUT_SEC ?? 30),
   },
   s3: {
     endpoint: process.env.S3_ENDPOINT ?? "",

@@ -45,9 +45,9 @@ export async function registerTelegramWebhook() {
   return result
 }
 
-export async function deleteTelegramWebhook() {
+export async function deleteTelegramWebhook({ dropPendingUpdates = true } = {}) {
   if (!env.telegram.botToken) return
-  await tg("deleteWebhook").catch((err) =>
+  await tg("deleteWebhook", { drop_pending_updates: dropPendingUpdates }).catch((err) =>
     console.warn("[telegram] deleteWebhook:", err.message),
   )
 }
