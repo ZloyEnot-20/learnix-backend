@@ -6,23 +6,16 @@ import dns from "node:dns/promises"
 import net from "node:net"
 import mongoose from "mongoose"
 import { env } from "../src/config/env.js"
-import { MONGO_DRIVER_OPTS, classifyMongoConnectError, collectMongoErrorMessages, mongoRootCauses } from "../src/config/mongoOptions.js"
+import {
+  MONGO_DRIVER_OPTS,
+  buildMongoConnectOptions,
+  classifyMongoConnectError,
+  collectMongoErrorMessages,
+  logMongoConnectDebug,
+  maskMongoUri,
+  mongoRootCauses,
+} from "../src/config/mongoOptions.js"
 import { detectOutboundIps, formatAtlasWhitelistHint } from "../src/config/outboundIp.js"
-
-function maskUri(uri) {
-  try {
-    const u = new URL(uri.replace(/^mongodb(\+srv)?:\/\//, "http://"))
-    return {
-      scheme: uri.startsWith("mongodb+srv") ? "mongodb+srv" : "mongodb",
-      user: u.username || "(none)",
-      host: u.hostname,
-      db: u.pathname.replace(/^\//, "") || "(default via dbName)",
-      hasPassword: Boolean(u.password),
-    }
-  } catch {
-    return { error: "URI parse failed — check quotes/special chars in .env" }
-  }
-}
 
 async function resolveSrv(host) {
   try {
@@ -52,7 +45,12 @@ async function main() {
   console.log("NODE_ENV:", env.nodeEnv)
   console.log("mongoose:", (await import("mongoose")).default.version)
   console.log("dbName:", env.dbName)
-  console.log("URI (masked):", maskUri(env.mongoUri))
+  console.log("platformDbName:", env.platformDbName)
+  logMongoConnectDebug("check-mongodb", {
+    mongoUri: env.mongoUri,
+    dbName: env.dbName,
+    platformDbName: env.platformDbName,
+  })
 
   const ips = await detectOutboundIps()
   console.log("\nOutbound IPs (whitelist ALL in Atlas → Network Access):")
@@ -61,8 +59,9 @@ async function main() {
     console.log("  ⚠ VPS uses IPv6 — adding only 0.0.0.0/0 will NOT help; add IPv6 or ::/0")
   }
 
-  const host = maskUri(env.mongoUri).host
-  if (host && !maskUri(env.mongoUri).error) {
+  const masked = maskMongoUri(env.mongoUri)
+  const host = masked.host
+  if (host && !masked.error) {
     if (env.mongoUri.startsWith("mongodb+srv")) {
       console.log("\nSRV lookup _mongodb._tcp." + host)
       const srv = await resolveSrv(host)
@@ -88,7 +87,10 @@ async function main() {
   console.log("\nMongoose connect test…")
   mongoose.set("strictQuery", true)
   try {
-    await mongoose.connect(env.mongoUri, { ...MONGO_DRIVER_OPTS, dbName: env.dbName, serverSelectionTimeoutMS: 15_000 })
+    await mongoose.connect(env.mongoUri, {
+      ...buildMongoConnectOptions(env.dbName),
+      serverSelectionTimeoutMS: 15_000,
+    })
     await mongoose.connection.db.admin().ping()
     console.log("CONNECT: OK (db:", mongoose.connection.name + ")")
   } catch (err) {

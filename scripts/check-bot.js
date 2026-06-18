@@ -21,18 +21,20 @@ async function main() {
   }
 
   const expected = env.telegram.webhookUrl
+  const useWebhook = env.telegram.useWebhook
   console.log("TELEGRAM_WEBHOOK_URL (.env):", expected || "(not set)")
+  console.log("Active mode:", useWebhook ? "webhook" : "polling (development default)")
 
   try {
     const info = await tg("getWebhookInfo", {})
     const registered = info.url || ""
     console.log("Webhook (Telegram):", registered || "(not registered — run: npm run bot:webhook)")
 
-    if (expected && registered && registered !== expected) {
+    if (useWebhook && expected && registered && registered !== expected) {
       console.log("\nMISMATCH: Telegram has a different URL than .env")
       console.log("  Fix: npm run bot:webhook")
     }
-    if (expected && !registered) {
+    if (useWebhook && expected && !registered) {
       console.log("\nWebhook not registered. On VPS after deploy run: npm run bot:webhook")
     }
     if (info.last_error_message) {
@@ -51,10 +53,13 @@ async function main() {
     env.telegram.webhookSecret ? "set (TELEGRAM_WEBHOOK_SECRET)" : "not set",
   )
 
-  if (expected) {
+  if (useWebhook) {
     console.log("\nMode: webhook — messages go to ielts-backend (POST webhook).")
   } else {
-    console.log("\nMode: polling — ielts-bot calls getUpdates (no TELEGRAM_WEBHOOK_URL).")
+    console.log("\nMode: polling — ielts-bot calls getUpdates (webhook ignored in development).")
+    if (expected) {
+      console.log("  TELEGRAM_WEBHOOK_URL is kept for production; set TELEGRAM_USE_WEBHOOK=true to test webhook locally.")
+    }
   }
   console.log("Both processes need MongoDB — if API login fails, bot will fail too.")
   console.log("Run: npm run db:check")

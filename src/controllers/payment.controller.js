@@ -1,9 +1,15 @@
 import { Payment } from "../models/Payment.js"
-import { User } from "../models/User.js"
 import { Group } from "../models/Group.js"
+import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { recordAudit } from "../services/audit.service.js"
+import {
+  derivePaymentStatus,
+  effectivePaidAmount,
+} from "../services/paymentStatus.service.js"
+import { resourceGroupIds } from "../services/group.service.js"
+import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import {
   assertOrgGroup,
   assertTenantDoc,
@@ -14,14 +20,35 @@ import {
 export const listPayments = asyncHandler(async (req, res) => {
   const filter = { ...tenantFilter(req) }
   if (req.query.studentId) filter.studentId = req.query.studentId
-  if (req.query.groupId) filter.groupId = req.query.groupId
+  if (req.query.groupId) {
+    await assertOrgGroup(req.query.groupId, req)
+    filter.groupId = req.query.groupId
+  } else {
+    const ids = await resourceGroupIds(req, STAFF_PERMISSIONS.PAYMENTS_VIEW_ALL)
+    if (ids !== null) filter.groupId = { $in: ids }
+  }
   const payments = await Payment.find(filter).sort({ dueDate: -1 })
   res.json(payments)
 })
 
 export const createPayment = asyncHandler(async (req, res) => {
   if (req.body.groupId) await assertOrgGroup(req.body.groupId, req)
-  const payment = await Payment.create(withOrgId(req, req.body))
+
+  const amount = Math.max(0, req.body.amount ?? 0)
+  let paidAmount = Math.max(0, req.body.paidAmount ?? 0)
+  if (req.body.status === "paid" && paidAmount === 0) paidAmount = amount
+
+  const payload = {
+    ...req.body,
+    amount,
+    paidAmount,
+    status:
+      req.body.status ??
+      derivePaymentStatus(amount, paidAmount, req.body.dueDate),
+  }
+  if (paidAmount > 0 && !payload.paidDate) payload.paidDate = new Date()
+
+  const payment = await Payment.create(withOrgId(req, payload))
   const [student, group] = await Promise.all([
     payment.studentId ? User.findById(payment.studentId).select("name") : null,
     payment.groupId ? Group.findById(payment.groupId).select("name") : null,
@@ -48,8 +75,9 @@ export const createPayment = asyncHandler(async (req, res) => {
 })
 
 export const updatePayment = asyncHandler(async (req, res) => {
-  await assertTenantDoc(Payment, req.params.id, req)
-  const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  const payment = await assertTenantDoc(Payment, req.params.id, req)
+  await assertOrgGroup(payment.groupId, req)
+  const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true })
 
   await recordAudit({
     req,
@@ -61,11 +89,12 @@ export const updatePayment = asyncHandler(async (req, res) => {
     details: { patch: req.body },
   })
 
-  res.json(payment)
+  res.json(updated)
 })
 
 export const deletePayment = asyncHandler(async (req, res) => {
   const payment = await assertTenantDoc(Payment, req.params.id, req)
+  await assertOrgGroup(payment.groupId, req)
   await Payment.findByIdAndDelete(payment._id)
 
   await recordAudit({
@@ -81,13 +110,19 @@ export const deletePayment = asyncHandler(async (req, res) => {
 })
 
 export const markPaid = asyncHandler(async (req, res) => {
-  await assertTenantDoc(Payment, req.params.id, req)
-  const payment = await Payment.findByIdAndUpdate(
-    req.params.id,
-    { status: "paid", paidDate: new Date() },
-    { new: true },
-  )
+  const payment = await assertTenantDoc(Payment, req.params.id, req)
+  await assertOrgGroup(payment.groupId, req)
   if (!payment) throw ApiError.notFound("Payment not found")
+
+  const currentPaid = effectivePaidAmount(payment)
+  const remaining = Math.max(0, payment.amount - currentPaid)
+  const increment = req.body?.paidAmount ?? remaining
+  const paidAmount = Math.min(payment.amount, currentPaid + increment)
+
+  payment.paidAmount = paidAmount
+  payment.status = derivePaymentStatus(payment.amount, paidAmount, payment.dueDate)
+  if (paidAmount > 0) payment.paidDate = new Date()
+  await payment.save()
 
   const [student, group] = await Promise.all([
     payment.studentId ? User.findById(payment.studentId).select("name") : null,
@@ -116,8 +151,9 @@ export const markPaid = asyncHandler(async (req, res) => {
 
 export const markUnpaid = asyncHandler(async (req, res) => {
   const payment = await assertTenantDoc(Payment, req.params.id, req)
-  const overdue = new Date(payment.dueDate).getTime() < Date.now()
-  payment.status = overdue ? "overdue" : "pending"
+  await assertOrgGroup(payment.groupId, req)
+  payment.paidAmount = 0
+  payment.status = derivePaymentStatus(payment.amount, 0, payment.dueDate)
   payment.paidDate = undefined
   await payment.save()
 
@@ -157,7 +193,9 @@ export const groupFinanceSummary = asyncHandler(async (req, res) => {
   let pendingTotal = 0
   for (const p of payments) {
     expectedTotal += p.amount
-    if (p.status === "paid") paidTotal += p.amount
+    const paid = effectivePaidAmount(p)
+    if (p.status === "paid" || paid >= p.amount) paidTotal += paid
+    else if (paid > 0) paidTotal += paid
     else if (p.status === "overdue") overdueTotal += p.amount
     else pendingTotal += p.amount
   }

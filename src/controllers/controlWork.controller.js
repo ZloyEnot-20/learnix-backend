@@ -19,7 +19,8 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
-import { findStudentIdsInGroup, assertSelectableGroup } from "../services/group.service.js"
+import { findStudentIdsInGroup, assertSelectableGroup, resourceGroupIds } from "../services/group.service.js"
+import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import { transcribeControlWorkStep } from "../services/speaking-transcription.service.js"
 import { env } from "../config/env.js"
 
@@ -177,12 +178,16 @@ function aggregateScore(stepResults) {
 }
 
 export const listControlWorks = asyncHandler(async (req, res) => {
-  const items = await ControlWork.find(tenantFilter(req)).sort({ createdAt: -1 })
+  const filter = { ...tenantFilter(req) }
+  const groupIds = await resourceGroupIds(req, STAFF_PERMISSIONS.CONTROL_WORKS_VIEW_ALL)
+  if (groupIds !== null) filter.groupId = { $in: groupIds }
+  const items = await ControlWork.find(filter).sort({ createdAt: -1 })
   res.json(items)
 })
 
 export const getControlWork = asyncHandler(async (req, res) => {
   const cw = await assertTenantDoc(ControlWork, req.params.id, req)
+  await assertOrgGroup(cw.groupId, req)
   res.json(cw)
 })
 

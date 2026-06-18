@@ -29,6 +29,7 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
     name: user.name,
     email: user.email,
     login: user.login ?? user.email,
+    permissions: Array.isArray(user.permissions) ? user.permissions : [],
   }
   next()
 })

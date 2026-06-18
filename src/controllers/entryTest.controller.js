@@ -23,6 +23,8 @@ import {
   tenantFilter,
 } from "../services/tenantScope.service.js"
 import { registerEntryTestCandidate } from "../services/entryTestCandidate.service.js"
+import { resourceGroupIds } from "../services/group.service.js"
+import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import { recordAudit } from "../services/audit.service.js"
 
 /** Ensure the caller can act on this entry test (owner student or staff). */
@@ -67,6 +69,17 @@ export const listEntryTests = asyncHandler(async (req, res) => {
   } else if (source === "student") {
     filter.$or = [{ source: "student" }, { source: { $exists: false } }]
   }
+  const groupIds = await resourceGroupIds(req, STAFF_PERMISSIONS.ENTRY_TESTS_VIEW_ALL)
+  if (groupIds !== null) {
+    const students = await User.find({
+      type: "student",
+      groupId: { $in: groupIds },
+      ...tenantFilter(req),
+    })
+      .select("_id")
+      .lean()
+    filter.studentId = { $in: students.map((s) => s._id) }
+  }
   const tests = await EntryTest.find(filter).sort({ assignedAt: -1 })
   res.json(await serializeEntryTests(tests))
 })
@@ -74,6 +87,9 @@ export const listEntryTests = asyncHandler(async (req, res) => {
 export const getEntryTest = asyncHandler(async (req, res) => {
   const doc = await assertTenantDoc(EntryTest, req.params.id, req)
   assertAccess(req, doc)
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(doc.studentId, req)
+  }
   res.json(await serializeEntryTestById(doc))
 })
 

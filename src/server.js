@@ -3,7 +3,10 @@ import { connectDB, disconnectDB } from "./config/db.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
 import { env } from "./config/env.js"
 import { validateSecurityConfig } from "./config/securityCheck.js"
-import { registerTelegramWebhook } from "./services/telegram-webhook.service.js"
+import {
+  isTelegramWebhookConfigured,
+  registerTelegramWebhook,
+} from "./services/telegram-webhook.service.js"
 
 function start() {
   validateSecurityConfig()
@@ -22,7 +25,7 @@ function start() {
 
   connectDB()
     .then(async () => {
-      if (env.telegram.botToken && env.telegram.webhookUrl) {
+      if (isTelegramWebhookConfigured()) {
         await registerTelegramWebhook().catch((err) =>
           console.error("[telegram] webhook registration failed:", err.message),
         )

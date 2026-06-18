@@ -203,6 +203,36 @@ export const recordAttemptSchema = {
         )
         .optional()
         .default([]),
+      listeningStats: z
+        .object({
+          totalListenSeconds: z.number().nonnegative(),
+          seekCount: z.number().int().nonnegative(),
+          rewindCount: z.number().int().nonnegative(),
+          forwardCount: z.number().int().nonnegative(),
+          seeks: z
+            .array(
+              z.object({
+                fromSeconds: z.number().nonnegative(),
+                toSeconds: z.number().nonnegative(),
+                atMs: z.number().nonnegative(),
+              }),
+            )
+            .optional()
+            .default([]),
+          listenedSegments: z
+            .array(
+              z.object({
+                startSeconds: z.number().nonnegative(),
+                endSeconds: z.number().nonnegative(),
+              }),
+            )
+            .optional()
+            .default([]),
+          podcastDurationSeconds: z.number().nonnegative(),
+          completedListening: z.boolean(),
+          wordsReviewed: z.number().int().nonnegative(),
+        })
+        .optional(),
     }),
   }),
 }
@@ -309,9 +339,10 @@ export const createPaymentSchema = {
     studentId: z.string().min(1),
     groupId: z.string().min(1),
     amount: z.number().nonnegative(),
+    paidAmount: z.number().nonnegative().optional(),
     periodLabel: z.string().min(1).max(60),
     dueDate: z.coerce.date(),
-    status: z.enum(["pending", "paid", "overdue"]).optional(),
+    status: z.enum(["pending", "partial", "paid", "overdue"]).optional(),
     notes: z.string().max(500).optional(),
   }),
 }
@@ -319,10 +350,81 @@ export const updatePaymentSchema = {
   params: idParam,
   body: z.object({
     amount: z.number().nonnegative().optional(),
-    status: z.enum(["pending", "paid", "overdue"]).optional(),
+    paidAmount: z.number().nonnegative().optional(),
+    status: z.enum(["pending", "partial", "paid", "overdue"]).optional(),
     paidDate: z.coerce.date().nullable().optional(),
     notes: z.string().max(500).optional(),
   }),
+}
+export const recordPaymentSchema = {
+  params: idParam,
+  body: z.object({
+    paidAmount: z.number().positive().optional(),
+  }),
+}
+
+// ---------- Lessons & attendance ----------
+const attendanceStatus = z.enum(["present", "absent", "late", "excused"])
+const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
+const monthOnly = z.string().regex(/^\d{4}-\d{2}$/, "Use YYYY-MM")
+
+export const listLessonsSchema = {
+  query: z.object({
+    groupId: z.string().min(1),
+    month: monthOnly.optional(),
+  }),
+}
+
+export const createLessonSchema = {
+  body: z.object({
+    groupId: z.string().min(1),
+    date: dateOnly,
+    topic: z.string().max(200).optional(),
+    notes: z.string().max(2000).optional(),
+  }),
+}
+
+export const deleteLessonSchema = {
+  params: idParam,
+  query: z.object({
+    scope: z.enum(["single", "weekday-future"]).optional().default("single"),
+  }),
+}
+
+export const updateLessonSchema = {
+  params: idParam,
+  body: z
+    .object({
+      topic: z.string().max(200).optional(),
+      notes: z.string().max(2000).optional(),
+      canceled: z.boolean().optional(),
+      cancelReason: z.string().max(1000).optional(),
+      attendance: z
+        .array(
+          z.object({
+            studentId: z.string().min(1),
+            status: attendanceStatus,
+            notes: z.string().max(500).optional(),
+          }),
+        )
+        .optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.canceled === true && !data.cancelReason?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Comment is required when canceling a lesson",
+          path: ["cancelReason"],
+        })
+      }
+      if (data.attendance?.length && !data.topic?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Topic is required when saving attendance",
+          path: ["topic"],
+        })
+      }
+    }),
 }
 
 // ---------- Analytics ----------
@@ -442,6 +544,37 @@ export const importVocabSchema = {
   }),
 }
 
+const podcastWordInput = z.object({
+  word: z.string().min(1).max(200).optional(),
+  term: z.string().min(1).max(200).optional(),
+  definition: z.string().max(2000).optional().default(""),
+  meaning: z.string().max(2000).optional(),
+}).refine((w) => Boolean((w.word ?? w.term ?? "").trim()), {
+  message: "word is required",
+}).transform((w) => ({
+  word: (w.word ?? w.term ?? "").trim(),
+  definition: (w.definition ?? w.meaning ?? "").trim(),
+}))
+
+const podcastInput = z.object({
+  slug: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(200),
+  topic: z.string().min(1).max(200),
+  description: z.string().max(2000).optional().default(""),
+  level: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional().default("A1"),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("easy"),
+  audioUrl: z.string().min(1).max(2000),
+  durationMinutes: z.number().nonnegative().optional().default(0),
+  words: z.array(podcastWordInput).max(500).optional().default([]),
+  order: z.number().int().optional(),
+})
+
+export const importPodcastSchema = {
+  body: z.object({
+    podcasts: z.array(podcastInput).max(500).optional().default([]),
+  }),
+}
+
 export const slugParamSchema = {
   params: z.object({ slug: z.string().min(1).max(200) }),
 }
@@ -545,6 +678,13 @@ export const updateUserSchema = {
     login: z.string().min(1).max(64).optional(),
     email: optionalEmail,
     type: staffTypeSuper.optional(),
+  }),
+}
+
+export const updateUserPermissionsSchema = {
+  params: idParam,
+  body: z.object({
+    permissions: z.array(z.string()).default([]),
   }),
 }
 

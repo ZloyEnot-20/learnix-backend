@@ -1,6 +1,11 @@
 import mongoose from "mongoose"
 import { env } from "./env.js"
-import { MONGO_DRIVER_OPTS, logMongoConnectError, logMongoConnectSuccess } from "./mongoOptions.js"
+import {
+  buildMongoConnectOptions,
+  logMongoConnectDebug,
+  logMongoConnectError,
+  logMongoConnectSuccess,
+} from "./mongoOptions.js"
 import { logMongoNetworkHint } from "./dbConnectHint.js"
 
 let platformConn = null
@@ -9,10 +14,14 @@ let platformConn = null
 export async function connectPlatformDB() {
   if (platformConn) return platformConn
   try {
-    platformConn = mongoose.createConnection(env.mongoUri, {
-      ...MONGO_DRIVER_OPTS,
+    logMongoConnectDebug("platform", {
+      mongoUri: env.mongoUri,
       dbName: env.platformDbName,
     })
+    platformConn = mongoose.createConnection(
+      env.mongoUri,
+      buildMongoConnectOptions(env.platformDbName),
+    )
     await platformConn.asPromise()
     logMongoConnectSuccess("platform", platformConn.name)
     return platformConn

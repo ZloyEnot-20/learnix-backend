@@ -21,7 +21,8 @@ module.exports = {
       // npm run dev  ->  pm2 start ... --watch
       watch: false,
       // Что НЕ отслеживать, когда watch включён (--watch в dev).
-      ignore_watch: ignoreWatch,
+      // Бот — отдельный процесс; перезапуск API при правках src/bot не нужен.
+      ignore_watch: [...ignoreWatch, "src/bot"],
       env: { NODE_ENV: "development" },
       env_production: { NODE_ENV: "production" },
     },
@@ -31,6 +32,7 @@ module.exports = {
       script: "src/bot/telegram-bot.js",
       cwd: __dirname,
       interpreter: "node",
+      exec_mode: "fork",
       instances: 1,
       autorestart: true,
       watch: false,

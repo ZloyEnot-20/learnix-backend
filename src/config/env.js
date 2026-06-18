@@ -66,6 +66,16 @@ export const env = {
     // Public HTTPS URL registered via setWebhook (path must match Express route).
     webhookUrl: (process.env.TELEGRAM_WEBHOOK_URL ?? "").replace(/\/$/, ""),
     webhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET ?? "",
+    /**
+     * Webhook mode: production when TELEGRAM_WEBHOOK_URL is set.
+     * Development defaults to long-polling (ielts-bot getUpdates) unless
+     * TELEGRAM_USE_WEBHOOK=true (e.g. ngrok webhook test).
+     */
+    get useWebhook() {
+      if (!this.webhookUrl) return false
+      if (process.env.TELEGRAM_USE_WEBHOOK === "true") return true
+      return (process.env.NODE_ENV ?? "development") === "production"
+    },
     // Notifications are pushed immediately on creation (notify() → telegram.service).
     // This interval is only a fallback reconcile for anything that failed to send.
     reconcileIntervalMs: Number(process.env.TELEGRAM_RECONCILE_INTERVAL_MS ?? 60_000),

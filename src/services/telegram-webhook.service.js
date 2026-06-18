@@ -18,7 +18,7 @@ export function getTelegramWebhookPath() {
 }
 
 export function isTelegramWebhookConfigured() {
-  return Boolean(env.telegram.botToken && env.telegram.webhookUrl)
+  return Boolean(env.telegram.botToken && env.telegram.useWebhook)
 }
 
 /** Register webhook URL with Telegram (setWebhook). Called on server/bot startup. */

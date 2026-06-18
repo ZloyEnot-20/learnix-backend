@@ -2,7 +2,8 @@ import mongoose from "mongoose"
 
 import { uid } from "../utils/ids.js"
 
-import { USER_TYPE_VALUES, USER_TYPES } from "../constants/userTypes.js"
+import { USER_TYPE_VALUES, USER_TYPES, STAFF_TYPES } from "../constants/userTypes.js"
+import { normalizePermissions } from "../services/permissions.service.js"
 
 
 
@@ -52,6 +53,9 @@ const userSchema = new mongoose.Schema(
 
     joinedAt: { type: Date, default: Date.now },
 
+    /** Set when the student is assigned to a group; cleared on removal. */
+    groupJoinedAt: { type: Date },
+
     monthlyFee: { type: Number, min: 0 },
 
     notes: { type: String, trim: true },
@@ -59,6 +63,12 @@ const userSchema = new mongoose.Schema(
     targetBand: { type: Number, min: 4, max: 9 },
 
     targetExamDate: { type: Date },
+
+    /** Extra capabilities granted by super admin (teachers only). */
+    permissions: {
+      type: [String],
+      default: [],
+    },
 
   },
 
@@ -130,6 +140,8 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
 
     joinedAt: this.joinedAt,
 
+    groupJoinedAt: this.groupJoinedAt ?? null,
+
     monthlyFee: this.monthlyFee,
 
     notes: this.notes,
@@ -137,6 +149,10 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     targetBand: this.targetBand ?? null,
 
     targetExamDate: this.targetExamDate ?? null,
+
+    permissions: STAFF_TYPES.includes(this.type)
+      ? normalizePermissions(this.permissions)
+      : [],
 
   }
 
@@ -163,6 +179,8 @@ userSchema.methods.toStudentJSON = function toStudentJSON() {
     groupId: this.groupId,
 
     joinedAt: this.joinedAt,
+
+    groupJoinedAt: this.groupJoinedAt ?? null,
 
     monthlyFee: this.monthlyFee,
 

@@ -5,6 +5,39 @@ export const MONGO_DRIVER_OPTS = {
   family: 4,
 }
 
+/** Mask credentials; show parsed URI fields for connect debugging. */
+export function maskMongoUri(uri) {
+  try {
+    const u = new URL(String(uri).replace(/^mongodb(\+srv)?:\/\//, "http://"))
+    return {
+      scheme: String(uri).startsWith("mongodb+srv") ? "mongodb+srv" : "mongodb",
+      user: u.username || "(none)",
+      passwordLength: u.password?.length ?? 0,
+      host: u.hostname || "(missing)",
+      uriPathDb: u.pathname.replace(/^\//, "") || "(none — dbName option applies)",
+      queryParams: u.search ? u.search.slice(1) : "(none)",
+      hasPassword: Boolean(u.password),
+    }
+  } catch {
+    return { error: "URI parse failed — check quotes/special chars in .env" }
+  }
+}
+
+export function buildMongoConnectOptions(dbName) {
+  return { ...MONGO_DRIVER_OPTS, dbName }
+}
+
+/** Log resolved URI (masked), db names, and driver options immediately before connect. */
+export function logMongoConnectDebug(label, { mongoUri, dbName, platformDbName }) {
+  console.log(`[db] ${label} connect config:`)
+  console.log("[db]   mongoUri (masked):", maskMongoUri(mongoUri))
+  console.log("[db]   dbName:", JSON.stringify(dbName))
+  if (platformDbName !== undefined) {
+    console.log("[db]   platformDbName:", JSON.stringify(platformDbName))
+  }
+  console.log("[db]   driver options:", buildMongoConnectOptions(dbName))
+}
+
 const ATLAS_GENERIC_RE =
   /could not connect to any servers in your mongodb atlas cluster/i
 

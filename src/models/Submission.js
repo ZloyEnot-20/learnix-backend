@@ -18,6 +18,38 @@ const mistakeSchema = new mongoose.Schema(
   { _id: false },
 )
 
+const listeningSeekSchema = new mongoose.Schema(
+  {
+    fromSeconds: Number,
+    toSeconds: Number,
+    atMs: Number,
+  },
+  { _id: false },
+)
+
+const listenedSegmentSchema = new mongoose.Schema(
+  {
+    startSeconds: Number,
+    endSeconds: Number,
+  },
+  { _id: false },
+)
+
+const listeningStatsSchema = new mongoose.Schema(
+  {
+    totalListenSeconds: { type: Number, default: 0 },
+    seekCount: { type: Number, default: 0 },
+    rewindCount: { type: Number, default: 0 },
+    forwardCount: { type: Number, default: 0 },
+    seeks: { type: [listeningSeekSchema], default: [] },
+    listenedSegments: { type: [listenedSegmentSchema], default: [] },
+    podcastDurationSeconds: { type: Number, default: 0 },
+    completedListening: { type: Boolean, default: false },
+    wordsReviewed: { type: Number, default: 0 },
+  },
+  { _id: false },
+)
+
 const attemptSchema = new mongoose.Schema(
   {
     totalQuestions: { type: Number, default: 0 },
@@ -28,6 +60,8 @@ const attemptSchema = new mongoose.Schema(
     answeredCount: Number,
     failedDueToCheating: Boolean,
     cheatingReason: String,
+    /** Podcast listening telemetry — seeks, cumulative play time, word review. */
+    listeningStats: listeningStatsSchema,
   },
   { _id: false },
 )

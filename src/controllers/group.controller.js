@@ -3,22 +3,33 @@ import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
-import { serializeGroupDoc, serializeGroups, assertSelectableGroup, ENTRY_TEST_GROUP_NAME } from "../services/group.service.js"
+import {
+  serializeGroupDoc,
+  serializeGroups,
+  assertSelectableGroup,
+  ENTRY_TEST_GROUP_NAME,
+  groupListFilter,
+  assertTeacherGroupAccess,
+  resolveGroupTeacherId,
+  assertValidTeacherId,
+} from "../services/group.service.js"
 import { recordAudit } from "../services/audit.service.js"
 import {
   assertOrgGroup,
   assertTenantDoc,
-  tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
+import { USER_TYPES } from "../constants/userTypes.js"
+import { pruneOrphanedScheduledLessons } from "../services/lesson-schedule.service.js"
 
 export const listGroups = asyncHandler(async (req, res) => {
-  const groups = await Group.find(tenantFilter(req)).sort({ createdAt: -1 })
+  const groups = await Group.find(groupListFilter(req)).sort({ createdAt: -1 })
   res.json(await serializeGroups(groups))
 })
 
 export const getGroup = asyncHandler(async (req, res) => {
   const group = await assertTenantDoc(Group, req.params.id, req)
+  assertTeacherGroupAccess(req, group)
   res.json(await serializeGroupDoc(group))
 })
 
@@ -40,8 +51,8 @@ export const createGroup = asyncHandler(async (req, res) => {
   if (req.body.name?.trim() === ENTRY_TEST_GROUP_NAME) {
     throw ApiError.badRequest("This group name is reserved for the entry test")
   }
-  const teacherId = req.user.type === "teacher" ? req.user.id : req.body.teacherId
-  const { studentIds, ...body } = normalizeGroupLessonFields(req.body)
+  const teacherId = await resolveGroupTeacherId(req, req.body.teacherId)
+  const { studentIds, teacherId: _teacherId, ...body } = normalizeGroupLessonFields(req.body)
   const group = await Group.create(
     withOrgId(req, {
       ...body,
@@ -68,9 +79,26 @@ export const createGroup = asyncHandler(async (req, res) => {
 })
 
 export const updateGroup = asyncHandler(async (req, res) => {
-  await assertTenantDoc(Group, req.params.id, req)
+  const existing = await assertTenantDoc(Group, req.params.id, req)
+  assertTeacherGroupAccess(req, existing)
   const { studentIds: _studentIds, ...patch } = normalizeGroupLessonFields(req.body)
+  if (req.user.type === USER_TYPES.TEACHER) {
+    delete patch.teacherId
+  } else if (patch.teacherId !== undefined) {
+    await assertValidTeacherId(req, patch.teacherId)
+  }
   const group = await Group.findByIdAndUpdate(req.params.id, { $set: patch }, { new: true, runValidators: true })
+
+  if (patch.monthlyFee !== undefined) {
+    await User.updateMany(
+      { type: "student", groupId: group._id },
+      { $set: { monthlyFee: patch.monthlyFee } },
+    )
+  }
+
+  if (patch.lessonWeekdays !== undefined) {
+    await pruneOrphanedScheduledLessons(group)
+  }
 
   await recordAudit({
     req,
@@ -89,7 +117,10 @@ export const deleteGroup = asyncHandler(async (req, res) => {
   const group = await assertTenantDoc(Group, req.params.id, req)
   assertSelectableGroup(group)
   await Group.findByIdAndDelete(group._id)
-  await User.updateMany({ type: "student", groupId: group._id }, { $unset: { groupId: "" } })
+  await User.updateMany(
+    { type: "student", groupId: group._id },
+    { $unset: { groupId: "", groupJoinedAt: "", monthlyFee: "" } },
+  )
 
   await recordAudit({
     req,
@@ -105,6 +136,7 @@ export const deleteGroup = asyncHandler(async (req, res) => {
 
 export const addMember = asyncHandler(async (req, res) => {
   const group = assertSelectableGroup(await assertOrgGroup(req.params.id, req))
+  assertTeacherGroupAccess(req, group)
   const student = await User.findOne({
     _id: req.body.studentId,
     type: "student",
@@ -132,6 +164,7 @@ export const addMember = asyncHandler(async (req, res) => {
 
 export const removeMember = asyncHandler(async (req, res) => {
   const group = await assertOrgGroup(req.params.id, req)
+  assertTeacherGroupAccess(req, group)
   const student = await User.findOne({
     _id: req.body.studentId,
     type: "student",

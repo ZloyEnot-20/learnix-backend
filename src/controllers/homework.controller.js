@@ -18,7 +18,8 @@ import {
   tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
-import { findStudentIdsInGroup, serializeGroupDoc, assertSelectableGroup } from "../services/group.service.js"
+import { findStudentIdsInGroup, serializeGroupDoc, assertSelectableGroup, resourceGroupIds } from "../services/group.service.js"
+import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import { transcribeHomeworkSubmission } from "../services/speaking-transcription.service.js"
 import { env } from "../config/env.js"
 
@@ -101,7 +102,10 @@ async function failForCheating(sub, homeworkId, studentId, reason, at = new Date
 }
 
 export const listHomework = asyncHandler(async (req, res) => {
-  const homework = await Homework.find(tenantFilter(req)).sort({ createdAt: -1 })
+  const filter = { ...tenantFilter(req) }
+  const groupIds = await resourceGroupIds(req, STAFF_PERMISSIONS.HOMEWORK_VIEW_ALL)
+  if (groupIds !== null) filter.groupId = { $in: groupIds }
+  const homework = await Homework.find(filter).sort({ createdAt: -1 })
   res.json(homework)
 })
 
@@ -116,6 +120,7 @@ export const getHomework = asyncHandler(async (req, res) => {
     hw = await Homework.findById(req.params.id)
   } else {
     hw = await assertTenantDoc(Homework, req.params.id, req)
+    await assertOrgGroup(hw.groupId, req)
   }
   if (!hw) throw ApiError.notFound("Homework not found")
   res.json(hw)
@@ -129,8 +134,7 @@ export const getHomework = asyncHandler(async (req, res) => {
  */
 export const getHomeworkDetails = asyncHandler(async (req, res) => {
   const homework = await assertTenantDoc(Homework, req.params.id, req)
-  const group = await findOrgGroup(homework.groupId, req)
-  if (!group) throw ApiError.forbidden("Homework not found in your organization")
+  const group = await assertOrgGroup(homework.groupId, req)
 
   const orgId = resolveOrgId(req)
   const submissionFilter = { homeworkId: homework._id, ...tenantFilter(req) }
@@ -599,8 +603,8 @@ export const reportViolation = asyncHandler(async (req, res) => {
     if (!orgId) throw ApiError.forbidden("Organization context required")
     const hw = await Homework.findById(homeworkId)
     return res.json({
-      action: "pause",
-      pauseUsed: true,
+      action: "warn",
+      pauseUsed: false,
       submission: await Submission.create({
         orgId,
         homeworkId,
@@ -610,11 +614,11 @@ export const reportViolation = asyncHandler(async (req, res) => {
         homeworkTitle: hw?.title,
         assignedAt: now,
         entryCount: 1,
-        status: "paused",
+        status: "in_progress",
         startedAt: now,
-        pausedAt: now,
+        sessionStartedAt: now,
         elapsedSeconds: 0,
-        pauseUsed: true,
+        pauseUsed: false,
         integrityStatus: "cheating_suspicion",
         violationCount: 1,
         events: [
@@ -640,12 +644,8 @@ export const reportViolation = asyncHandler(async (req, res) => {
     })
   }
 
-  // First leave: graceful pause (same as the Pause button).
-  if (!sub.pauseUsed) {
-    freezeActiveTime(sub, now)
-    sub.status = "paused"
-    sub.pausedAt = now
-    sub.pauseUsed = true
+  // First leave: warn only — the student keeps their pause until they choose it.
+  if (!sub.pauseUsed && sub.integrityStatus !== "cheating_suspicion") {
     sub.violationCount = (sub.violationCount ?? 0) + 1
     sub.integrityStatus = "cheating_suspicion"
     appendSubmissionEvent(sub, {
@@ -656,7 +656,7 @@ export const reportViolation = asyncHandler(async (req, res) => {
     })
     await sub.save()
 
-    return res.json({ action: "pause", submission: sub, pauseUsed: true })
+    return res.json({ action: "warn", submission: sub, pauseUsed: false })
   }
 
   sub.violationCount = (sub.violationCount ?? 0) + 1
@@ -676,9 +676,11 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   const alreadyDone = !!existing && ["submitted", "graded"].includes(existing.status)
   const hw = await Homework.findById(homeworkId)
   const isSpeaking = hw?.subject === "speaking"
-  const score = isSpeaking
-    ? undefined
-    : bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
+  const isListening = hw?.subject === "listening"
+  const score =
+    isSpeaking || isListening
+      ? undefined
+      : bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
   let result
   if (!existing) {
     const orgId = resolveOrgId(req)
@@ -747,14 +749,24 @@ export const recordAttempt = asyncHandler(async (req, res) => {
 
   // Notify (the student and, via the Telegram bot, their parents) that a task
   // was completed — this is one of the activities parents subscribe to.
+  const listenStats = attempt.listeningStats
+  const listeningMessage = listenStats
+    ? `Podcast completed. Listened ${Math.round(listenStats.totalListenSeconds)}s` +
+      (listenStats.seekCount > 0 ? `, ${listenStats.seekCount} seeks` : "") +
+      (listenStats.wordsReviewed > 0 ? `, ${listenStats.wordsReviewed} words reviewed` : "") +
+      "."
+    : "Podcast listening homework submitted."
+
   await notify(studentId, {
     type: "result",
     title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
     message: isSpeaking
       ? `Speaking homework submitted (${attempt.answeredCount ?? attempt.correctCount}/${attempt.totalQuestions} recordings). Awaiting teacher review.`
-      : typeof score === "number"
-        ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
-        : "Homework submitted.",
+      : isListening
+        ? listeningMessage
+        : typeof score === "number"
+          ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
+          : "Homework submitted.",
     data: {
       homeworkTitle: hw?.title,
       subject: hw?.subject,

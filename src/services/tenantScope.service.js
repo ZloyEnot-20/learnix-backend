@@ -1,6 +1,7 @@
 import { Group } from "../models/Group.js"
 import { User } from "../models/User.js"
 import { ApiError } from "../utils/ApiError.js"
+import { assertTeacherGroupAccess, assertTeacherStudentAccess } from "./group.service.js"
 
 /** Roles that may access data across all organizations. */
 const CROSS_TENANT_ROLES = new Set(["super_admin"])
@@ -39,6 +40,7 @@ export async function findOrgGroup(groupId, req) {
 export async function assertOrgGroup(groupId, req) {
   const group = await findOrgGroup(groupId, req)
   if (!group) throw ApiError.forbidden("Group not found in your organization")
+  assertTeacherGroupAccess(req, group)
   return group
 }
 
@@ -71,6 +73,7 @@ export async function assertStudentInOrg(studentId, req) {
   }
   const student = await User.findOne({ _id: studentId, type: "student", orgId })
   if (!student) throw ApiError.forbidden("Student not found in your organization")
+  await assertTeacherStudentAccess(req, student)
   return student
 }
 

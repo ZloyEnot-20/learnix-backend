@@ -110,6 +110,9 @@ export const studentSummary = asyncHandler(async (req, res) => {
   if (req.user.type === "student" && studentId !== req.user.id) {
     throw ApiError.forbidden()
   }
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(studentId, req)
+  }
   const summary = await buildStudentSummary(studentId)
   res.json(summary)
 })

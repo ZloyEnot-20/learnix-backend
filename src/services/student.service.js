@@ -1,16 +1,29 @@
 import { User } from "../models/User.js"
+import { Group } from "../models/Group.js"
 import { StudentClaim, generateClaimCode } from "../models/StudentClaim.js"
+
+/** Monthly fee copied from the group when a student is assigned. */
+export async function resolveMonthlyFeeFromGroup(groupId) {
+  if (!groupId) return undefined
+  const group = await Group.findById(groupId).select("monthlyFee")
+  return typeof group?.monthlyFee === "number" ? group.monthlyFee : undefined
+}
 
 /** Assign a student to a group (membership lives on User.groupId only). */
 export async function addStudentToGroup(groupId, studentId) {
-  await User.updateOne({ _id: studentId, type: "student" }, { $set: { groupId } })
+  const gid = String(groupId)
+  const monthlyFee = await resolveMonthlyFeeFromGroup(gid)
+  const update = { groupId: gid, groupJoinedAt: new Date() }
+  if (monthlyFee !== undefined) update.monthlyFee = monthlyFee
+
+  await User.updateOne({ _id: studentId, type: "student" }, { $set: update })
 }
 
 /** Remove a student from a group. */
 export async function removeStudentFromGroup(groupId, studentId) {
   await User.updateOne(
-    { _id: studentId, type: "student", groupId },
-    { $unset: { groupId: "" } },
+    { _id: studentId, type: "student", groupId: String(groupId) },
+    { $unset: { groupId: "", groupJoinedAt: "", monthlyFee: "" } },
   )
 }
 

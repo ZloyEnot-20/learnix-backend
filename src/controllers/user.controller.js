@@ -16,7 +16,10 @@ import {
   manageableTypes,
   STAFF_TYPES,
   USER_TYPES,
+  isAdminType,
 } from "../constants/userTypes.js"
+import { STAFF_PERMISSION_CATALOG } from "../constants/staffPermissions.js"
+import { normalizePermissions } from "../services/permissions.service.js"
 
 function assertCanManage(actor, target) {
   if (actor.id === target._id) {
@@ -232,4 +235,52 @@ export const resetUserPassword = asyncHandler(async (req, res) => {
   })
 
   res.json({ login: user.login, temporaryPassword: plainPassword })
+})
+
+function assertCanManagePermissions(actor, target) {
+  if (!isAdminType(actor.type)) {
+    throw ApiError.forbidden("Only admins can manage permissions")
+  }
+  if (actor.id === target._id) {
+    throw ApiError.badRequest("You cannot change your own permissions")
+  }
+  if (target.type === USER_TYPES.SUPER_ADMIN) {
+    throw ApiError.badRequest("Super admin permissions cannot be changed")
+  }
+  if (actor.type === USER_TYPES.ADMIN) {
+    if (target.type !== USER_TYPES.TEACHER) {
+      throw ApiError.forbidden("Organization admins can only manage teacher permissions")
+    }
+    if (actor.orgId && target.orgId && actor.orgId !== target.orgId) {
+      throw ApiError.forbidden("You don't have access to this user")
+    }
+  }
+}
+
+export const listPermissionCatalog = asyncHandler(async (req, res) => {
+  if (!isAdminType(req.user.type)) {
+    throw ApiError.forbidden("Only admins can manage permissions")
+  }
+  res.json(STAFF_PERMISSION_CATALOG)
+})
+
+export const updateUserPermissions = asyncHandler(async (req, res) => {
+  const target = await findStaffById(req.params.id, req)
+  if (!target) throw ApiError.notFound("User not found")
+  assertCanManagePermissions(req.user, target)
+
+  const permissions = normalizePermissions(req.body.permissions)
+  const user = await User.findByIdAndUpdate(target._id, { permissions }, { new: true })
+
+  await recordAudit({
+    req,
+    action: "update_permissions",
+    category: "users",
+    targetType: "user",
+    targetId: user._id,
+    targetLabel: user.name,
+    details: { permissions },
+  })
+
+  res.json(user.toSafeJSON())
 })

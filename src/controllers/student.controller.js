@@ -20,15 +20,14 @@ import {
   assertOrgGroup,
   assertStudentInOrg,
   resolveOrgId,
-  tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
 import { assertCanAddStudent } from "../services/orgLimits.service.js"
-import { assertSelectableGroup } from "../services/group.service.js"
+import { assertSelectableGroup, studentListFilter } from "../services/group.service.js"
 import { notify } from "../services/notification.service.js"
 
 export const listStudents = asyncHandler(async (req, res) => {
-  const users = await User.find({ type: "student", ...tenantFilter(req) }).sort({ joinedAt: -1 })
+  const users = await User.find(await studentListFilter(req)).sort({ joinedAt: -1 })
   for (const u of users) {
     if (!u.login && u.email) await ensureLoginField(u)
   }
@@ -52,7 +51,7 @@ export const getStudent = asyncHandler(async (req, res) => {
 })
 
 export const createStudent = asyncHandler(async (req, res) => {
-  const { name, login, email, phone, groupId, monthlyFee, notes } = req.body
+  const { name, login, email, phone, groupId, notes } = req.body
   const normalizedLogin = normalizeLogin(login)
   if (!normalizedLogin) throw ApiError.badRequest("Login is required")
 
@@ -83,14 +82,16 @@ export const createStudent = asyncHandler(async (req, res) => {
     type: "student",
     passwordHash,
     groupId: groupId || undefined,
-    monthlyFee,
     notes: notes?.trim() || undefined,
   })
   if (normalizedEmail) userPayload.email = normalizedEmail
 
-  const user = await User.create(userPayload)
+  let user = await User.create(userPayload)
 
-  if (groupId) await addStudentToGroup(groupId, user._id)
+  if (groupId) {
+    await addStudentToGroup(groupId, user._id)
+    user = await User.findById(user._id)
+  }
 
   let groupName = null
   if (groupId) {
@@ -146,6 +147,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
   if (!prev) throw ApiError.notFound("Student not found")
 
   const patch = { ...req.body }
+  delete patch.monthlyFee
   const orgId = prev.orgId
   if (patch.login !== undefined) {
     const normalizedLogin = normalizeLogin(patch.login)
@@ -185,7 +187,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
   const shouldUnsetEmail =
     patch.email === undefined && Object.prototype.hasOwnProperty.call(req.body, "email")
 
-  const student = shouldUnsetEmail
+  let student = shouldUnsetEmail
     ? await User.findByIdAndUpdate(
         prev._id,
         Object.keys(unset).length
@@ -200,6 +202,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
   if (nextGroup !== undefined && nextGroup !== prev.groupId) {
     if (prev.groupId) await removeStudentFromGroup(prev.groupId, student._id)
     if (nextGroup) await addStudentToGroup(nextGroup, student._id)
+    student = await User.findById(student._id)
   }
 
   const auditDetails = {}
@@ -310,6 +313,9 @@ export const getStudentContext = asyncHandler(async (req, res) => {
   if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(studentId, req)
+  }
 
   const student = await findStudentById(studentId)
   if (!student) throw ApiError.notFound("Student not found")
@@ -347,6 +353,9 @@ export const getStudentLevel = asyncHandler(async (req, res) => {
   if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
   }
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(studentId, req)
+  }
   const summary = await computeStudentLevel(studentId)
   res.json(summary)
 })
@@ -356,6 +365,9 @@ export const getStudentProgress = asyncHandler(async (req, res) => {
   const studentId = req.params.id
   if (req.user.type === "student" && req.user.id !== studentId) {
     throw ApiError.forbidden()
+  }
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(studentId, req)
   }
 
   const [subs, payments] = await Promise.all([
@@ -402,7 +414,7 @@ export const getIeltsProfile = asyncHandler(async (req, res) => {
 
 /** Compact IELTS summaries for all students (staff list view). */
 export const getIeltsSummaries = asyncHandler(async (req, res) => {
-  const users = await User.find({ type: "student", ...tenantFilter(req) }).lean()
+  const users = await User.find(await studentListFilter(req)).lean()
   const summaries = await buildIeltsSummaries(users)
   res.json(summaries)
 })

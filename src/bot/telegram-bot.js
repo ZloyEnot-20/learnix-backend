@@ -47,7 +47,8 @@ import {
   isTelegramWebhookConfigured,
 } from "../services/telegram-webhook.service.js"
 import { logDbConnectionFailure } from "../config/dbConnectHint.js"
-import { pathToFileURL } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
+import path from "node:path"
 
 const TOKEN = env.telegram.botToken
 
@@ -450,13 +451,20 @@ async function handleMessage(msg) {
 
   // Yangi bildirishnomalardan boshlash uchun "hozir" dan watermark qo'yamiz
   // (eski tarix qayta yuborilmaydi); o'rniga joriy holatni ko'rsatamiz.
-  await ParentLink.create({
-    chatId,
-    studentId: student._id,
-    parentName,
-    username,
-    lastNotifiedAt: new Date(),
-  })
+  try {
+    await ParentLink.create({
+      orgId: invite.orgId,
+      chatId,
+      studentId: student._id,
+      parentName,
+      username,
+      lastNotifiedAt: new Date(),
+    })
+  } catch (err) {
+    console.error("[bot] ParentLink.create error:", err.message)
+    await send(chatId, "❌ Ulanishda xatolik yuz berdi. Iltimos, birozdan so'ng qayta urinib ko'ring yoki markazga murojaat qiling.")
+    return
+  }
   // Kodni bir martalik qilib belgilash.
   invite.usedAt = new Date()
   invite.usedByChatId = chatId
@@ -495,7 +503,11 @@ function startPolling(abortSignal) {
   }
 
   const tick = async () => {
-    if (abortSignal.aborted || busy) return
+    if (abortSignal.aborted) return
+    if (busy) {
+      schedule(100)
+      return
+    }
     busy = true
     try {
       const updates = await tg(
@@ -561,7 +573,7 @@ async function main() {
     console.log("[bot] webhook mode — updates via ielts-backend, reconcile only here")
   } else {
     await deleteTelegramWebhook()
-    console.log("[bot] polling mode — getUpdates (set TELEGRAM_WEBHOOK_URL for webhook)")
+    console.log("[bot] polling mode — getUpdates (webhook disabled in development)")
     startPolling(abort.signal)
   }
   const shutdown = async () => {
@@ -579,9 +591,20 @@ async function main() {
   })
 }
 
-const isDirectRun =
-  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href
-if (isDirectRun) {
+/** node src/bot/telegram-bot.js — да; import из API — нет; PM2 — да (argv[1] = ProcessContainerFork.js). */
+function shouldStartBot() {
+  const modulePath = fileURLToPath(import.meta.url)
+  const entry = process.argv[1]
+  if (entry) {
+    if (import.meta.url === pathToFileURL(entry).href) return true
+    if (path.resolve(entry) === modulePath) return true
+  }
+  const pmExec = process.env.pm_exec_path
+  if (pmExec && path.resolve(pmExec) === modulePath) return true
+  return process.env.name === "ielts-bot"
+}
+
+if (shouldStartBot()) {
   main().catch((err) => {
     console.error("[bot] fatal:", err.message)
     process.exit(1)
