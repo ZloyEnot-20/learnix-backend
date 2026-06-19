@@ -71,10 +71,10 @@ cd backend
 npm ci
 cp .env.example .env        # fill in real production values
 
-npm run prod                # foreground (--no-daemon), без дублей процессов
+npm run prod                # daemon mode, без дублей процессов (для VPS)
 npm run prod:stop           # pm2 delete all && pm2 kill
 
-npm run pm2:start           # daemon mode (фон), если нужен отдельный терминал
+npm run pm2:start           # то же, что prod (daemon)
 npm run pm2:logs            # tail logs
 npm run pm2:restart         # restart after a deploy
 npm run pm2:stop            # stop without killing PM2 daemon

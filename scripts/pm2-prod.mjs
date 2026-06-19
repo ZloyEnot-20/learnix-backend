@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * PM2 production: foreground start/stop без дублирования процессов.
+ * PM2 production: daemon start/stop без дублирования процессов.
  *
- *   npm run prod       — pm2 delete ecosystem → start --no-daemon (терминал занят)
+ *   npm run prod       — pm2 delete ecosystem → start --env production (daemon, для VPS)
  *   npm run prod:stop  — pm2 delete all → pm2 kill
  */
 import { spawnSync } from "node:child_process"
@@ -35,7 +35,7 @@ if (command === "stop") {
 if (command === "start") {
   // Убираем старые ielts-backend / ielts-bot, чтобы не плодить дубликаты.
   pm2(["delete", ecosystem], { ignoreError: true })
-  pm2(["start", ecosystem, "--env", "production", "--no-daemon"])
+  pm2(["start", ecosystem, "--env", "production"])
   process.exit(0)
 }
 
