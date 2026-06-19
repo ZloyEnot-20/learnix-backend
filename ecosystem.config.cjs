@@ -1,5 +1,7 @@
 /**
- * PM2: backend. Запуск: pm2 start ecosystem.config.cjs --env production
+ * PM2: backend.
+ * Прод (foreground, без дублей): npm run prod
+ * Остановка: npm run prod:stop  (pm2 delete all && pm2 kill)
  *
  * Проект на чистом JS (ESM) — сборки нет, PM2 запускает src/server.js напрямую.
  * Файл назван .cjs, потому что package.json содержит "type": "module"

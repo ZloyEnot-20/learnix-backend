@@ -71,10 +71,13 @@ cd backend
 npm ci
 cp .env.example .env        # fill in real production values
 
-npm run pm2:start           # = pm2 start ecosystem.config.cjs --env production
+npm run prod                # foreground (--no-daemon), без дублей процессов
+npm run prod:stop           # pm2 delete all && pm2 kill
+
+npm run pm2:start           # daemon mode (фон), если нужен отдельный терминал
 npm run pm2:logs            # tail logs
 npm run pm2:restart         # restart after a deploy
-npm run pm2:stop            # stop
+npm run pm2:stop            # stop without killing PM2 daemon
 ```
 
 Autostart on server reboot (run once, manually):
