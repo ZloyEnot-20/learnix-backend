@@ -33,8 +33,9 @@ if (command === "stop") {
 }
 
 if (command === "start") {
-  // Убираем старые ielts-backend / ielts-bot, чтобы не плодить дубликаты.
-  pm2(["delete", ecosystem], { ignoreError: true })
+  // По имени — надёжнее, чем delete ecosystem (старые id не остаются на порту).
+  pm2(["delete", "ielts-backend"], { ignoreError: true })
+  pm2(["delete", "ielts-bot"], { ignoreError: true })
   pm2(["start", ecosystem, "--env", "production"])
   process.exit(0)
 }

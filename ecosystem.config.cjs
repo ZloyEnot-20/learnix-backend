@@ -17,6 +17,7 @@ module.exports = {
       script: "src/server.js",
       cwd: __dirname,
       interpreter: "node",
+      exec_mode: "fork",
       instances: 1,
       autorestart: true,
       // По умолчанию без watch (прод). Для разработки watch включается флагом:
