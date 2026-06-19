@@ -19,6 +19,20 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
     throw ApiError.unauthorized("Invalid or expired token")
   }
 
+  if (payload.sub === "guest" || payload.type === "guest") {
+    req.user = {
+      id: "guest",
+      type: "guest",
+      orgId: null,
+      name: "Guest",
+      email: "",
+      login: "guest",
+      permissions: [],
+      isGuest: true,
+    }
+    return next()
+  }
+
   const user = await User.findById(payload.sub)
   if (!user) throw ApiError.unauthorized("Account no longer exists")
 

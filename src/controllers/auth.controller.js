@@ -1,6 +1,11 @@
 import { User } from "../models/User.js"
 import { hashPassword, verifyPassword } from "../utils/password.js"
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
+import {
+  signAccessToken,
+  signGuestAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt.js"
 import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ensureLoginField } from "../services/student.service.js"
@@ -93,8 +98,45 @@ export const refresh = asyncHandler(async (req, res) => {
 })
 
 export const me = asyncHandler(async (req, res) => {
+  if (req.user?.type === "guest") {
+    res.json({
+      user: {
+        id: "guest",
+        orgId: null,
+        login: "guest",
+        email: "",
+        name: "Guest",
+        type: "guest",
+        isPremium: false,
+        avatarUrl: null,
+        permissions: [],
+      },
+      orgStatus: null,
+    })
+    return
+  }
+
   const user = await User.findById(req.user.id)
   if (!user) throw ApiError.unauthorized()
   const orgStatus = await orgStatusFor(user)
   res.json({ user: user.toSafeJSON(), orgStatus })
+})
+
+export const guest = asyncHandler(async (_req, res) => {
+  const accessToken = signGuestAccessToken()
+  res.json({
+    user: {
+      id: "guest",
+      orgId: null,
+      login: "guest",
+      email: "",
+      name: "Guest",
+      type: "guest",
+      isPremium: false,
+      avatarUrl: null,
+      permissions: [],
+    },
+    orgStatus: null,
+    accessToken,
+  })
 })

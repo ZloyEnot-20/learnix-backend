@@ -23,5 +23,6 @@ router.post("/register", authLimiter, validate(registerSchema), auth.register)
 router.get("/refresh", postOnly("/auth/refresh"))
 router.post("/refresh", authLimiter, validate(refreshSchema), auth.refresh)
 router.get("/me", authenticate, auth.me)
+router.post("/guest", authLimiter, auth.guest)
 
 export default router

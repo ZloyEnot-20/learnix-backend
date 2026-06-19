@@ -19,6 +19,14 @@ export function signRefreshToken(user) {
   })
 }
 
+/** Long-lived token for anonymous guest sessions (no DB user). */
+export function signGuestAccessToken() {
+  return jwt.sign({ type: "guest" }, env.jwt.accessSecret, {
+    subject: "guest",
+    expiresIn: "30d",
+  })
+}
+
 export function verifyAccessToken(token) {
   return jwt.verify(token, env.jwt.accessSecret)
 }
