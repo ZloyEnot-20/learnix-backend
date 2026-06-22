@@ -63,6 +63,7 @@ export const login = asyncHandler(async (req, res) => {
 
   const ok = user ? await verifyPassword(user.passwordHash, password) : false
   if (!user || !ok) throw ApiError.unauthorized("Invalid login or password")
+  if (user.deletedAt) throw ApiError.forbidden("This account has been deactivated")
 
   if (!user.login && user.email) await ensureLoginField(user)
 
@@ -93,6 +94,7 @@ export const refresh = asyncHandler(async (req, res) => {
 
   const user = await User.findById(payload.sub)
   if (!user) throw ApiError.unauthorized("Account no longer exists")
+  if (user.deletedAt) throw ApiError.forbidden("This account has been deactivated")
 
   res.json(tokensFor(user))
 })
@@ -118,6 +120,7 @@ export const me = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user.id)
   if (!user) throw ApiError.unauthorized()
+  if (user.deletedAt) throw ApiError.forbidden("This account has been deactivated")
   const orgStatus = await orgStatusFor(user)
   res.json({ user: user.toSafeJSON(), orgStatus })
 })

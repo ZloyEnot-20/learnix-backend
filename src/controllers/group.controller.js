@@ -2,7 +2,7 @@ import { Group } from "../models/Group.js"
 import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
-import { addStudentToGroup, removeStudentFromGroup } from "../services/student.service.js"
+import { addStudentToGroup, removeStudentFromGroup, isStudentActive } from "../services/student.service.js"
 import {
   serializeGroupDoc,
   serializeGroups,
@@ -141,7 +141,11 @@ export const addMember = asyncHandler(async (req, res) => {
     _id: req.body.studentId,
     type: "student",
     orgId: group.orgId,
-  }).select("name")
+  }).select("name deletedAt")
+  if (!student) throw ApiError.notFound("Student not found")
+  if (!isStudentActive(student)) {
+    throw ApiError.badRequest("Inactive students cannot be added to a group")
+  }
   await addStudentToGroup(group._id, req.body.studentId)
 
   await recordAudit({

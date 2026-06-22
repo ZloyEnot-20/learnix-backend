@@ -1,6 +1,7 @@
 import { connectPlatformDB } from "../config/platformDb.js"
 import { getOrganizationModel } from "../models/platform/Organization.js"
 import { User } from "../models/User.js"
+import { ACTIVE_STUDENT_FILTER } from "./student.service.js"
 import { ApiError } from "../utils/ApiError.js"
 
 const DEFAULT_LIMITS = { maxStudents: 50, maxTeachers: 5 }
@@ -17,7 +18,7 @@ async function getOrgLimits(orgId) {
 }
 
 export async function countStudents(orgId) {
-  return User.countDocuments({ orgId, type: "student" })
+  return User.countDocuments({ orgId, type: "student", ...ACTIVE_STUDENT_FILTER })
 }
 
 export async function countTeachers(orgId) {

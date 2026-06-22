@@ -35,6 +35,7 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
 
   const user = await User.findById(payload.sub)
   if (!user) throw ApiError.unauthorized("Account no longer exists")
+  if (user.deletedAt) throw ApiError.forbidden("This account has been deactivated")
 
   req.user = {
     id: user._id,

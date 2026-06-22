@@ -1,6 +1,7 @@
 import { Submission } from "../models/Submission.js"
 import { ExerciseEvent } from "../models/ExerciseEvent.js"
 import { User } from "../models/User.js"
+import { ACTIVE_STUDENT_FILTER } from "./student.service.js"
 
 /**
  * Gamification rules. Points are DERIVED from existing activity (completed
@@ -83,7 +84,9 @@ export async function computeStudentLevel(studentId) {
 
 /** Org-wide student ranking by derived XP (top N). */
 export async function computeOrgLeaderboard(orgId, limit = 30) {
-  const students = await User.find({ orgId, type: "student" }).select("_id name avatarUrl").lean()
+  const students = await User.find({ orgId, type: "student", ...ACTIVE_STUDENT_FILTER })
+    .select("_id name avatarUrl")
+    .lean()
   if (students.length === 0) return []
 
   const studentIds = students.map((s) => s._id)

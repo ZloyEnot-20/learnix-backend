@@ -70,6 +70,9 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
+    /** Set when the student deletes their account from the mobile app. */
+    deletedAt: { type: Date },
+
   },
 
   { timestamps: true, _id: false },
@@ -154,6 +157,10 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
       ? normalizePermissions(this.permissions)
       : [],
 
+    isActive: !this.deletedAt,
+
+    deletedAt: this.deletedAt ?? null,
+
   }
 
 }
@@ -189,6 +196,10 @@ userSchema.methods.toStudentJSON = function toStudentJSON() {
     targetBand: this.targetBand ?? null,
 
     targetExamDate: this.targetExamDate ?? null,
+
+    isActive: !this.deletedAt,
+
+    deletedAt: this.deletedAt ?? null,
 
   }
 

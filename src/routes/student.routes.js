@@ -35,6 +35,7 @@ router.post(
   ctrl.sendStudentNotification,
 )
 router.post("/:id/claim", isStaff, validate(idParamSchema), ctrl.regenerateClaim)
+router.post("/:id/delete-account", validate(idParamSchema), ctrl.deleteMyAccount)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteStudent)
 
 export default router

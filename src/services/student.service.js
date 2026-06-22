@@ -2,6 +2,13 @@ import { User } from "../models/User.js"
 import { Group } from "../models/Group.js"
 import { StudentClaim, generateClaimCode } from "../models/StudentClaim.js"
 
+/** Mongo filter for active (non-deleted) students. */
+export const ACTIVE_STUDENT_FILTER = { deletedAt: null }
+
+export function isStudentActive(student) {
+  return Boolean(student && !student.deletedAt)
+}
+
 /** Monthly fee copied from the group when a student is assigned. */
 export async function resolveMonthlyFeeFromGroup(groupId) {
   if (!groupId) return undefined
@@ -74,4 +81,25 @@ export async function createStudentClaim(studentId, plainPassword) {
     }
   }
   throw new Error("Could not allocate a confirmation code")
+}
+
+/** Soft-delete a student account (self-service from mobile). */
+export async function softDeleteStudent(student) {
+  if (!student || student.type !== "student") {
+    throw new Error("Student not found")
+  }
+  if (student.deletedAt) return student
+
+  const deletedAt = new Date()
+  if (student.groupId) {
+    await removeStudentFromGroup(student.groupId, student._id)
+  }
+  await StudentClaim.deleteMany({ studentId: student._id })
+
+  student.deletedAt = deletedAt
+  student.groupId = undefined
+  student.groupJoinedAt = undefined
+  student.monthlyFee = undefined
+  await student.save()
+  return student
 }

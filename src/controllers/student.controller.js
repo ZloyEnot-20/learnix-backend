@@ -11,6 +11,8 @@ import {
   ensureLoginField,
   findStudentById,
   createStudentClaim,
+  softDeleteStudent,
+  isStudentActive,
 } from "../services/student.service.js"
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 import { computeStudentLevel } from "../services/gamification.service.js"
@@ -305,6 +307,40 @@ export const deleteStudent = asyncHandler(async (req, res) => {
   })
 
   res.json({ ok: true })
+})
+
+/** Student: soft-delete own account (sets deletedAt, marks inactive). */
+export const deleteMyAccount = asyncHandler(async (req, res) => {
+  const studentId = req.params.id
+  if (req.user.type !== "student" || req.user.id !== studentId) {
+    throw ApiError.forbidden()
+  }
+
+  const student = await findStudentById(studentId)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (!isStudentActive(student)) {
+    throw ApiError.badRequest("Account is already deactivated")
+  }
+
+  let groupName = null
+  if (student.groupId) {
+    const g = await Group.findById(student.groupId).select("name")
+    groupName = g?.name ?? null
+  }
+
+  await softDeleteStudent(student)
+
+  await recordAudit({
+    req,
+    action: "self_delete",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+    details: groupName ? { groupName } : null,
+  })
+
+  res.json({ ok: true, deletedAt: student.deletedAt })
 })
 
 /** Group + teacher names for the student's own profile (no group list access). */
