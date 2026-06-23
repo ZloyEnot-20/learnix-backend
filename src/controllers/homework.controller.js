@@ -1,5 +1,7 @@
 import { Homework } from "../models/Homework.js"
 import { Submission } from "../models/Submission.js"
+import { Exercise } from "../models/Exercise.js"
+import { Podcast } from "../models/Podcast.js"
 import { Group } from "../models/Group.js"
 import { User } from "../models/User.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -29,6 +31,67 @@ const PAUSE_MAX_SECONDS = 30 * 60
 const MAX_HOMEWORK_ENTRIES = 2
 /** Duplicate start calls within this window count as the same visit (remount). */
 const SESSION_REENTRY_GRACE_MS = 60_000
+const PODCAST_SLUG_PREFIX = "podcast:"
+
+function parsePodcastHomeworkSlug(exerciseSlug) {
+  if (!exerciseSlug) return null
+  return exerciseSlug.startsWith(PODCAST_SLUG_PREFIX)
+    ? exerciseSlug.slice(PODCAST_SLUG_PREFIX.length)
+    : null
+}
+
+function leanListeningStats(stats) {
+  if (!stats) return undefined
+  return {
+    totalListenSeconds: stats.totalListenSeconds ?? 0,
+    seekCount: stats.seekCount ?? 0,
+    rewindCount: stats.rewindCount ?? 0,
+    forwardCount: stats.forwardCount ?? 0,
+    podcastDurationSeconds: stats.podcastDurationSeconds ?? 0,
+    completedListening: stats.completedListening ?? false,
+    wordsReviewed: stats.wordsReviewed ?? 0,
+  }
+}
+
+function leanHomeworkListSubmission(sub) {
+  const attempt = sub.attempt
+  return {
+    id: sub._id,
+    homeworkId: sub.homeworkId,
+    studentId: sub.studentId,
+    topic: sub.topic,
+    subject: sub.subject,
+    status: sub.status,
+    integrityStatus: sub.integrityStatus,
+    pauseUsed: sub.pauseUsed,
+    submittedAt: sub.submittedAt,
+    elapsedSeconds: sub.elapsedSeconds,
+    sessionStartedAt: sub.sessionStartedAt,
+    startedAt: sub.startedAt,
+    attempt: attempt
+      ? {
+          correctCount: attempt.correctCount,
+          totalQuestions: attempt.totalQuestions,
+          failedDueToCheating: attempt.failedDueToCheating,
+          answeredCount: attempt.answeredCount,
+          listeningStats: leanListeningStats(attempt.listeningStats),
+        }
+      : undefined,
+  }
+}
+
+function leanHomeworkDoc(hw) {
+  return {
+    id: hw._id,
+    title: hw.title,
+    description: hw.description,
+    subject: hw.subject,
+    dueAt: hw.dueAt,
+    createdAt: hw.createdAt,
+    exerciseSlug: hw.exerciseSlug,
+    timeLimitMinutes: hw.timeLimitMinutes,
+  }
+}
 
 function homeworkTopic(hw) {
   return hw?.exerciseSlug ?? hw?.subject ?? "unknown"
@@ -434,6 +497,91 @@ export const myHomework = asyncHandler(async (req, res) => {
   const entries = subs
     .filter((s) => byId.has(s.homeworkId))
     .map((s) => ({ homework: byId.get(s.homeworkId), submission: s }))
+  res.json(entries)
+})
+
+/** Lightweight homework list for mobile — no events/telemetry arrays, includes route hints. */
+export const myHomeworkSummary = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const subs = await Submission.find({ studentId })
+    .select(
+      "homeworkId status integrityStatus pauseUsed submittedAt elapsedSeconds sessionStartedAt startedAt topic subject attempt.correctCount attempt.totalQuestions attempt.failedDueToCheating attempt.answeredCount attempt.listeningStats.wordsReviewed attempt.listeningStats.totalListenSeconds attempt.listeningStats.seekCount attempt.listeningStats.rewindCount attempt.listeningStats.forwardCount attempt.listeningStats.podcastDurationSeconds attempt.listeningStats.completedListening",
+    )
+    .lean()
+
+  const ids = subs.map((s) => s.homeworkId)
+  const hwDocs = await Homework.find({ _id: { $in: ids } })
+    .select("title description subject dueAt createdAt exerciseSlug timeLimitMinutes")
+    .lean()
+  const byId = new Map(hwDocs.map((h) => [h._id, h]))
+
+  const exerciseSlugs = [
+    ...new Set(
+      hwDocs
+        .filter(
+          (h) =>
+            (h.subject === "grammar" || h.subject === "speaking") && h.exerciseSlug,
+        )
+        .map((h) => h.exerciseSlug),
+    ),
+  ]
+
+  const exerciseMeta = new Map()
+  if (exerciseSlugs.length > 0) {
+    const exercises = await Exercise.find({ _id: { $in: exerciseSlugs } })
+      .select("slug topic title category")
+      .lean()
+    for (const ex of exercises) {
+      exerciseMeta.set(ex.slug, ex)
+    }
+  }
+
+  const podcastReviewSlugs = new Map()
+  for (const sub of subs) {
+    const hw = byId.get(sub.homeworkId)
+    if (!hw) continue
+    const podcastSlug = parsePodcastHomeworkSlug(hw.exerciseSlug)
+    const wordsReviewed = sub.attempt?.listeningStats?.wordsReviewed ?? 0
+    if (podcastSlug && wordsReviewed > 0) {
+      podcastReviewSlugs.set(podcastSlug, wordsReviewed)
+    }
+  }
+
+  const podcastWordsBySlug = new Map()
+  if (podcastReviewSlugs.size > 0) {
+    const podcasts = await Podcast.find({ _id: { $in: [...podcastReviewSlugs.keys()] } })
+      .select("slug words")
+      .lean()
+    for (const episode of podcasts) {
+      const words = (episode.words ?? [])
+        .map((w) => (w.word ?? w.term ?? "").trim())
+        .filter(Boolean)
+      podcastWordsBySlug.set(episode.slug, words)
+    }
+  }
+
+  const entries = subs
+    .filter((s) => byId.has(s.homeworkId))
+    .map((s) => {
+      const hw = byId.get(s.homeworkId)
+      const meta = hw.exerciseSlug ? exerciseMeta.get(hw.exerciseSlug) : undefined
+      const podcastSlug = parsePodcastHomeworkSlug(hw.exerciseSlug)
+      const wordsReviewed = s.attempt?.listeningStats?.wordsReviewed ?? 0
+      let reviewedWordLabels
+      if (podcastSlug && wordsReviewed > 0) {
+        const words = podcastWordsBySlug.get(podcastSlug) ?? []
+        reviewedWordLabels = words.slice(0, wordsReviewed)
+      }
+
+      return {
+        homework: leanHomeworkDoc(hw),
+        submission: leanHomeworkListSubmission(s),
+        exerciseTopic: meta?.topic,
+        exerciseTitle: meta?.title,
+        reviewedWordLabels,
+      }
+    })
+
   res.json(entries)
 })
 

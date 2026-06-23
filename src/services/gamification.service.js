@@ -36,27 +36,7 @@ export function tierForLevel(level) {
   return TIERS.find((t) => level >= t.minLevel && level <= t.maxLevel) ?? TIERS[0]
 }
 
-/** Compute the full progress/level summary for a student from their activity. */
-export async function computeStudentLevel(studentId) {
-  const [submissions, events] = await Promise.all([
-    Submission.find({
-      studentId,
-      status: { $in: ["submitted", "graded"] },
-    }).lean(),
-    ExerciseEvent.find({ studentId }).lean(),
-  ])
-
-  let homeworkPoints = 0
-  for (const s of submissions) {
-    homeworkPoints += HOMEWORK_COMPLETION_POINTS
-    homeworkPoints += (s.attempt?.correctCount ?? 0) * POINTS_PER_HOMEWORK_CORRECT
-  }
-
-  let exercisePoints = 0
-  for (const e of events) {
-    exercisePoints += (e.correctCount ?? 0) * POINTS_PER_EXERCISE_CORRECT
-  }
-
+function buildLevelSummary(homeworkPoints, exercisePoints, completedHomework) {
   const totalPoints = homeworkPoints + exercisePoints
   const level = Math.floor(totalPoints / POINTS_PER_LEVEL) + 1
   const tier = tierForLevel(level)
@@ -76,10 +56,50 @@ export async function computeStudentLevel(studentId) {
     pointsIntoLevel,
     pointsForNextLevel,
     pointsToNextLevel: pointsForNextLevel - pointsIntoLevel,
-    breakdown: { homeworkPoints, exercisePoints, completedHomework: submissions.length },
+    breakdown: { homeworkPoints, exercisePoints, completedHomework },
     requirements: CEFR_LEVEL_REQUIREMENT,
     unlockedCefrLevels,
   }
+}
+
+/** Compute the full progress/level summary for a student from their activity. */
+export async function computeStudentLevel(studentId) {
+  const [homeworkAgg, exerciseAgg] = await Promise.all([
+    Submission.aggregate([
+      {
+        $match: {
+          studentId,
+          status: { $in: ["submitted", "graded"] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          completedHomework: { $sum: 1 },
+          correctSum: { $sum: { $ifNull: ["$attempt.correctCount", 0] } },
+        },
+      },
+    ]),
+    ExerciseEvent.aggregate([
+      { $match: { studentId } },
+      {
+        $group: {
+          _id: null,
+          correctSum: { $sum: { $ifNull: ["$correctCount", 0] } },
+        },
+      },
+    ]),
+  ])
+
+  const homeworkRow = homeworkAgg[0]
+  const exerciseRow = exerciseAgg[0]
+  const completedHomework = homeworkRow?.completedHomework ?? 0
+  const homeworkPoints =
+    completedHomework * HOMEWORK_COMPLETION_POINTS +
+    (homeworkRow?.correctSum ?? 0) * POINTS_PER_HOMEWORK_CORRECT
+  const exercisePoints = (exerciseRow?.correctSum ?? 0) * POINTS_PER_EXERCISE_CORRECT
+
+  return buildLevelSummary(homeworkPoints, exercisePoints, completedHomework)
 }
 
 /** Org-wide student ranking by derived XP (top N). */

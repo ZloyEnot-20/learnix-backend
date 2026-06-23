@@ -19,6 +19,7 @@ router.use(...protect)
 // Student-facing
 router.get("/check", isStaff, ctrl.homeworkCheck)
 router.get("/mine", ctrl.myHomework)
+router.get("/mine/summary", ctrl.myHomeworkSummary)
 router.post("/entry", validate(recordHomeworkEntrySchema), ctrl.recordHomeworkEntry)
 router.post("/start", validate(startHomeworkSchema), ctrl.startHomework)
 router.post("/pause", validate(startHomeworkSchema), ctrl.pauseHomework)

@@ -579,6 +579,12 @@ export const slugParamSchema = {
   params: z.object({ slug: z.string().min(1).max(200) }),
 }
 
+export const exerciseMetaBatchSchema = {
+  body: z.object({
+    slugs: z.array(z.string().min(1).max(200)).max(50).optional().default([]),
+  }),
+}
+
 export const idParamSchema = { params: idParam }
 
 const controlSectionSubject = z.enum([

@@ -35,6 +35,56 @@ export const listExercises = asyncHandler(async (req, res) => {
   res.json(docs.map(serializeExercise))
 })
 
+/** Lightweight catalogue rows for list/browse screens (no question payloads). */
+export const listExerciseSummaries = asyncHandler(async (req, res) => {
+  const filter = {}
+  if (req.query.topic) filter.topic = req.query.topic
+  if (req.query.category) filter.category = req.query.category
+  const docs = await Exercise.find(filter)
+    .select(
+      "slug title topic subtopic category level type estimatedTime totalQuestions data.passingScore",
+    )
+    .sort({ topic: 1, slug: 1 })
+    .lean()
+  res.json(
+    docs.map((doc) => ({
+      slug: doc.slug,
+      title: doc.title,
+      topic: doc.topic,
+      subtopic: doc.subtopic ?? "",
+      category: doc.category ?? "grammar",
+      level: doc.level ?? "",
+      type: doc.type,
+      estimatedTime: doc.estimatedTime ?? 0,
+      totalQuestions: doc.totalQuestions ?? 0,
+      passingScore: doc.data?.passingScore ?? 0,
+    })),
+  )
+})
+
+/** Resolve route metadata for a batch of exercise slugs (one DB round-trip). */
+export const getExerciseMetaBatch = asyncHandler(async (req, res) => {
+  const slugs = [...new Set((req.body.slugs ?? []).filter(Boolean))].slice(0, 50)
+  if (slugs.length === 0) return res.json([])
+
+  const docs = await Exercise.find({ _id: { $in: slugs } })
+    .select("slug title topic subtopic category level totalQuestions data.passingScore")
+    .lean()
+
+  res.json(
+    docs.map((doc) => ({
+      slug: doc.slug,
+      title: doc.title,
+      topic: doc.topic,
+      subtopic: doc.subtopic ?? "",
+      category: doc.category ?? "grammar",
+      level: doc.level ?? "",
+      totalQuestions: doc.totalQuestions ?? 0,
+      passingScore: doc.data?.passingScore ?? 0,
+    })),
+  )
+})
+
 /** List all topic folders, ordered for display. */
 export const listTopics = asyncHandler(async (_req, res) => {
   const docs = await Topic.find().sort({ order: 1, title: 1 })
@@ -75,6 +125,34 @@ function serializeVocabDeck(doc) {
     })),
   }
 }
+
+function serializeVocabDeckSummary(doc) {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    description: doc.description ?? "",
+    level: doc.level ?? "A1",
+    wordCount: doc.wordCount ?? (doc.words ?? []).length,
+  }
+}
+
+/** List vocabulary deck metadata without embedded words. */
+export const listVocabDeckSummaries = asyncHandler(async (_req, res) => {
+  const docs = await VocabDeck.aggregate([
+    {
+      $project: {
+        slug: 1,
+        title: 1,
+        description: 1,
+        level: 1,
+        order: 1,
+        wordCount: { $size: { $ifNull: ["$words", []] } },
+      },
+    },
+    { $sort: { order: 1, title: 1 } },
+  ])
+  res.json(docs.map(serializeVocabDeckSummary))
+})
 
 /** List all vocabulary decks — available to any authenticated user. */
 export const listVocabDecks = asyncHandler(async (_req, res) => {

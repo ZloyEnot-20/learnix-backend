@@ -292,6 +292,66 @@ export const myControlWorks = asyncHandler(async (req, res) => {
   res.json(entries)
 })
 
+/** Lightweight control-work list for mobile homework screen. */
+export const myControlWorksSummary = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const subs = await ControlWorkSubmission.find({ studentId })
+    .select(
+      "controlWorkId status integrityStatus pauseUsed submittedAt elapsedSeconds sessionStartedAt startedAt stepResults.stepIndex stepResults.status stepResults.attempt.correctCount stepResults.attempt.totalQuestions",
+    )
+    .lean()
+
+  const ids = subs.map((s) => s.controlWorkId)
+  const works = await ControlWork.find({ _id: { $in: ids } })
+    .select("title description dueAt createdAt timeLimitMinutes steps")
+    .lean()
+  const byId = new Map(works.map((w) => [w._id, w]))
+
+  const entries = subs
+    .filter((s) => byId.has(s.controlWorkId))
+    .map((s) => {
+      const cw = byId.get(s.controlWorkId)
+      return {
+        controlWork: {
+          id: cw._id,
+          title: cw.title,
+          description: cw.description,
+          dueAt: cw.dueAt,
+          createdAt: cw.createdAt,
+          timeLimitMinutes: cw.timeLimitMinutes,
+          steps: (cw.steps ?? []).map((step) => ({
+            subject: step.subject,
+            title: step.title,
+          })),
+        },
+        submission: {
+          id: s._id,
+          controlWorkId: s.controlWorkId,
+          studentId: s.studentId,
+          status: s.status,
+          integrityStatus: s.integrityStatus,
+          pauseUsed: s.pauseUsed,
+          submittedAt: s.submittedAt,
+          elapsedSeconds: s.elapsedSeconds,
+          sessionStartedAt: s.sessionStartedAt,
+          startedAt: s.startedAt,
+          stepResults: (s.stepResults ?? []).map((step) => ({
+            stepIndex: step.stepIndex,
+            status: step.status,
+            attempt: step.attempt
+              ? {
+                  correctCount: step.attempt.correctCount,
+                  totalQuestions: step.attempt.totalQuestions,
+                }
+              : undefined,
+          })),
+        },
+      }
+    })
+
+  res.json(entries)
+})
+
 export const startControlWork = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { controlWorkId } = req.body

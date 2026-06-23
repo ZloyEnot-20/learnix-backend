@@ -10,6 +10,7 @@ import {
   importVocabSchema,
   importPodcastSchema,
   slugParamSchema,
+  exerciseMetaBatchSchema,
 } from "../validators/schemas.js"
 
 const podcastUpload = multer({
@@ -22,13 +23,17 @@ const router = Router()
 router.use(...protect)
 
 // Read paths — available to any authenticated user (students included).
+router.get("/summary", ctrl.listExerciseSummaries)
 router.get("/", ctrl.listExercises)
 router.get("/topics", ctrl.listTopics)
 router.get("/levels", ctrl.listLevels)
+router.get("/vocab/summary", ctrl.listVocabDeckSummaries)
 router.get("/vocab", ctrl.listVocabDecks)
 router.get("/vocab/:slug", validate(slugParamSchema), ctrl.getVocabDeck)
+router.get("/podcasts/summary", podcastCtrl.listPodcastSummaries)
 router.get("/podcasts", podcastCtrl.listPodcasts)
 router.get("/podcasts/:slug", validate(slugParamSchema), podcastCtrl.getPodcast)
+router.post("/meta", validate(exerciseMetaBatchSchema), ctrl.getExerciseMetaBatch)
 
 // Org admin + super admin bulk import into the shared catalogue.
 router.post("/import", isAdmin, validate(importCatalogSchema), ctrl.importCatalog)

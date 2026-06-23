@@ -88,3 +88,16 @@ export function serializePodcast(doc) {
     words,
   }
 }
+
+export function serializePodcastSummary(doc) {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    topic: doc.topic ?? "",
+    description: doc.description ?? "",
+    level: doc.level ?? "A1",
+    difficulty: doc.difficulty ?? "easy",
+    durationMinutes: doc.durationMinutes ?? 0,
+    wordCount: doc.wordCount ?? (doc.words ?? []).length,
+  }
+}

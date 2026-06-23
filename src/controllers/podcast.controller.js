@@ -6,6 +6,7 @@ import { uploadSpeakingAudio } from "../services/s3.service.js"
 import {
   parsePodcastWordsJson,
   serializePodcast,
+  serializePodcastSummary,
   validatePodcastMeta,
   normalizePodcastWord,
   slugifyPodcast,
@@ -26,6 +27,27 @@ const ALLOWED_AUDIO_TYPES = new Set([
 export const listPodcasts = asyncHandler(async (_req, res) => {
   const docs = await Podcast.find().sort({ order: 1, title: 1 })
   res.json(docs.map(serializePodcast))
+})
+
+/** Podcast catalogue metadata for list screens (no audio URLs or word payloads). */
+export const listPodcastSummaries = asyncHandler(async (_req, res) => {
+  const docs = await Podcast.aggregate([
+    {
+      $project: {
+        slug: 1,
+        title: 1,
+        topic: 1,
+        description: 1,
+        level: 1,
+        difficulty: 1,
+        durationMinutes: 1,
+        order: 1,
+        wordCount: { $size: { $ifNull: ["$words", []] } },
+      },
+    },
+    { $sort: { order: 1, title: 1 } },
+  ])
+  res.json(docs.map(serializePodcastSummary))
 })
 
 export const getPodcast = asyncHandler(async (req, res) => {

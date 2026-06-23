@@ -15,6 +15,7 @@ const router = Router()
 router.use(...protect)
 
 router.get("/mine", ctrl.myControlWorks)
+router.get("/mine/summary", ctrl.myControlWorksSummary)
 router.post("/start", validate(startControlWorkSchema), ctrl.startControlWork)
 router.post("/pause", validate(startControlWorkSchema), ctrl.pauseControlWork)
 router.post(
