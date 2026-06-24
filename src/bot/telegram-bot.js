@@ -40,6 +40,7 @@ import {
   BTN_CONTACT,
   BTN_HELP,
   MENU_BUTTONS,
+  invalidateKeyboardCache,
 } from "../services/telegram.service.js"
 import { redeemOwnerClaim } from "../services/ownerClaim.service.js"
 import {
@@ -268,10 +269,10 @@ async function handleMessage(msg) {
   // Buyruqlar
   if (text.startsWith("/")) {
     const cmd = text.split(/\s+/)[0].toLowerCase().replace(/@.*$/, "")
-    const children = await getChildren(chatId)
 
     if (cmd === "/start") {
       pendingRole.delete(chatId)
+      const children = await getChildren(chatId)
       if (children.length > 0) {
         const names = children.map((c) => `• ${esc(c.student.name)}`).join("\n")
         await send(
@@ -301,6 +302,7 @@ async function handleMessage(msg) {
 
     if (cmd === "/yordam") return void send(chatId, HELP)
 
+    const children = await getChildren(chatId)
     if (children.length === 0) {
       await send(
         chatId,
@@ -310,13 +312,19 @@ async function handleMessage(msg) {
     }
 
     if (cmd === "/vazifalar") {
-      for (const c of children)
-        await send(chatId, await buildTasksMessage(c.student._id, c.student.name))
+      await Promise.all(
+        children.map(async (c) =>
+          send(chatId, await buildTasksMessage(c.student._id, c.student.name)),
+        ),
+      )
       return
     }
     if (cmd === "/natijalar") {
-      for (const c of children)
-        await send(chatId, await buildResultsMessage(c.student._id, c.student.name))
+      await Promise.all(
+        children.map(async (c) =>
+          send(chatId, await buildResultsMessage(c.student._id, c.student.name)),
+        ),
+      )
       return
     }
     if (cmd === "/farzandlarim") {
@@ -327,6 +335,7 @@ async function handleMessage(msg) {
     }
     if (cmd === "/uzish") {
       await ParentLink.deleteMany({ chatId })
+      invalidateKeyboardCache(chatId)
       return void send(
         chatId,
         card("🔌 <b>Kuzatuv to'xtatildi</b>", ["", "Qayta ulanish uchun taklif kodini yuboring."]),
@@ -460,6 +469,7 @@ async function handleMessage(msg) {
       username,
       lastNotifiedAt: new Date(),
     })
+    invalidateKeyboardCache(chatId)
   } catch (err) {
     console.error("[bot] ParentLink.create error:", err.message)
     await send(chatId, "❌ Ulanishda xatolik yuz berdi. Iltimos, birozdan so'ng qayta urinib ko'ring yoki markazga murojaat qiling.")
@@ -517,7 +527,7 @@ function startPolling(abortSignal) {
       )
       for (const update of updates) {
         offset = update.update_id + 1
-        handleTelegramUpdate(update).catch((err) =>
+        await handleTelegramUpdate(update).catch((err) =>
           console.error("[bot] handler error:", err.message),
         )
       }
@@ -539,6 +549,14 @@ async function main() {
     console.error("[bot] TELEGRAM_BOT_TOKEN is not set. Add it to backend/.env")
     process.exit(1)
   }
+
+  if (isTelegramWebhookConfigured()) {
+    console.log(
+      "[bot] webhook mode — updates handled by ielts-backend (POST webhook), bot process not needed",
+    )
+    process.exit(0)
+  }
+
   try {
     await connectDB()
     await connectPlatformDB()
@@ -560,8 +578,7 @@ async function main() {
     ],
   }).catch((err) => console.warn("[bot] setMyCommands:", err.message))
 
-  // Bildirishnomalar backend tomonidan DARHOL yuboriladi. Bu yerda faqat zaxira:
-  // ishga tushganda va vaqti-vaqti bilan yuborilmay qolganlarini yetkazamiz.
+  // Dev polling: zaxira reconcile shu jarayonda (prod webhook — backend da).
   reconcilePending().catch((err) => console.error("[bot] reconcile error:", err.message))
   const reconcileTimer = setInterval(() => {
     reconcilePending().catch((err) => console.error("[bot] reconcile error:", err.message))
@@ -569,13 +586,9 @@ async function main() {
 
   const abort = new AbortController()
 
-  if (isTelegramWebhookConfigured()) {
-    console.log("[bot] webhook mode — updates via ielts-backend, reconcile only here")
-  } else {
-    await deleteTelegramWebhook()
-    console.log("[bot] polling mode — getUpdates (webhook disabled in development)")
-    startPolling(abort.signal)
-  }
+  await deleteTelegramWebhook()
+  console.log("[bot] polling mode — getUpdates (development only)")
+  startPolling(abort.signal)
   const shutdown = async () => {
     abort.abort()
     clearInterval(reconcileTimer)

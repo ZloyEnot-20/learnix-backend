@@ -41,9 +41,10 @@ module.exports = {
       watch: false,
       ignore_watch: ignoreWatch,
       // Бот завершается с кодом 1, если TELEGRAM_BOT_TOKEN не задан в .env.
-      // Ограничиваем рестарты и делаем паузу, чтобы не было бесконечного цикла.
+      // В webhook-режиме (prod) бот сразу выходит с 0 — PM2 не перезапускает.
       max_restarts: 5,
       restart_delay: 5000,
+      stop_exit_codes: [0],
       env: { NODE_ENV: "development" },
       env_production: { NODE_ENV: "production" },
     },

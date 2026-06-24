@@ -16,18 +16,33 @@ import { Submission } from "../models/Submission.js"
 import { Homework } from "../models/Homework.js"
 
 const API = `https://api.telegram.org/bot${env.telegram.botToken}`
+const TG_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS ?? 15_000)
+const KEYBOARD_CACHE_TTL_MS = 60_000
+
+let reconcileRunning = false
+const keyboardCache = new Map() // chatId -> { linked, expiresAt }
 
 // ─── Telegram API ─────────────────────────────────────────────────────────────
-export async function tg(method, body, { signal } = {}) {
-  const res = await fetch(`${API}/${method}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  })
-  const data = await res.json()
-  if (!data.ok) throw new Error(`Telegram ${method} failed: ${data.description}`)
-  return data.result
+export async function tg(method, body, { signal, timeoutMs = TG_TIMEOUT_MS } = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  if (signal) {
+    if (signal.aborted) controller.abort()
+    else signal.addEventListener("abort", () => controller.abort(), { once: true })
+  }
+  try {
+    const res = await fetch(`${API}/${method}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+    const data = await res.json()
+    if (!data.ok) throw new Error(`Telegram ${method} failed: ${data.description}`)
+    return data.result
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export function sendMessage(chatId, text, extra = {}) {
@@ -80,10 +95,22 @@ export const MENU_BUTTONS = {
   [BTN_HELP]: "/yordam",
 }
 
-/** Chat holatiga qarab doimiy klaviaturani qaytaradi. */
+/** Chat holatiga qarab doimiy klaviaturani qaytaradi (qisqa TTL kesh). */
 export async function getKeyboardForChat(chatId) {
-  const linked = await ParentLink.exists({ chatId: String(chatId) })
+  const key = String(chatId)
+  const cached = keyboardCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.linked ? MENU_KEYBOARD : ROLE_KEYBOARD
+  }
+  const linked = await ParentLink.exists({ chatId: key })
+  keyboardCache.set(key, { linked: Boolean(linked), expiresAt: Date.now() + KEYBOARD_CACHE_TTL_MS })
   return linked ? MENU_KEYBOARD : ROLE_KEYBOARD
+}
+
+/** ParentLink o'zgarganda keshni tozalash. */
+export function invalidateKeyboardCache(chatId) {
+  if (chatId != null) keyboardCache.delete(String(chatId))
+  else keyboardCache.clear()
 }
 
 /** Xabar yuboradi va doimiy menyuni biriktiradi (agar boshqa markup berilmagan bo'lsa). */
@@ -296,41 +323,55 @@ export async function deliverNotification(note) {
  * yuborish vaqtida Telegram ishlamay qolgan bo'lsa). Idempotent — dublikat yo'q.
  */
 export async function reconcilePending(limitPerLink = 20) {
-  if (!env.telegram.botToken) return
-  const links = await ParentLink.find().lean()
-  if (links.length === 0) return
+  if (!env.telegram.botToken || reconcileRunning) return
+  reconcileRunning = true
+  try {
+    const links = await ParentLink.find().lean()
+    if (links.length === 0) return
 
-  const students = await User.find({
-    _id: { $in: links.map((l) => l.studentId) },
-    type: "student",
-  }).lean()
-  const nameById = new Map(students.map((s) => [s._id, s.name]))
+    const students = await User.find({
+      _id: { $in: links.map((l) => l.studentId) },
+      type: "student",
+    }).lean()
+    const nameById = new Map(students.map((s) => [s._id, s.name]))
 
-  for (const link of links) {
-    // Ulanishdan oldingi eski tarix yuborilmaydi (lastNotifiedAt — pastki chegara).
-    const since = link.lastNotifiedAt ?? link.createdAt ?? new Date(0)
-    const notes = await Notification.find({
-      studentId: link.studentId,
-      createdAt: { $gt: since },
-      deliveredChatIds: { $ne: link.chatId },
-    })
-      .sort({ createdAt: 1 })
-      .limit(limitPerLink)
-      .lean()
-    if (notes.length === 0) continue
+    for (const link of links) {
+      const since = link.lastNotifiedAt ?? link.createdAt ?? new Date(0)
+      const notes = await Notification.find({
+        studentId: link.studentId,
+        createdAt: { $gt: since },
+        deliveredChatIds: { $ne: link.chatId },
+      })
+        .sort({ createdAt: 1 })
+        .limit(limitPerLink)
+        .lean()
+      if (notes.length === 0) continue
 
-    const childName = nameById.get(link.studentId) ?? "Farzand"
-    let newest = since
-    for (const n of notes) {
-      try {
-        await deliverToChat(link.chatId, childName, n)
-        if (new Date(n.createdAt) > new Date(newest)) newest = n.createdAt
-      } catch (err) {
-        console.error("[tg] reconcile send error:", err.message)
+      const childName = nameById.get(link.studentId) ?? "Farzand"
+      let newest = since
+      for (const n of notes) {
+        try {
+          await deliverToChat(link.chatId, childName, n)
+          if (new Date(n.createdAt) > new Date(newest)) newest = n.createdAt
+        } catch (err) {
+          console.error("[tg] reconcile send error:", err.message)
+        }
+      }
+      if (new Date(newest) > new Date(since)) {
+        await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: newest }).catch(() => {})
       }
     }
-    if (new Date(newest) > new Date(since)) {
-      await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: newest }).catch(() => {})
-    }
+  } finally {
+    reconcileRunning = false
   }
+}
+
+/** Zaxira reconcile — faqat backend jarayonida (webhook rejimida). */
+export function startReconcileTimer() {
+  if (!env.telegram.botToken) return () => {}
+  reconcilePending().catch((err) => console.error("[tg] reconcile error:", err.message))
+  const timer = setInterval(() => {
+    reconcilePending().catch((err) => console.error("[tg] reconcile error:", err.message))
+  }, env.telegram.reconcileIntervalMs)
+  return () => clearInterval(timer)
 }

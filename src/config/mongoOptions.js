@@ -35,7 +35,6 @@ export function logMongoConnectDebug(label, { mongoUri, dbName, platformDbName }
   if (platformDbName !== undefined) {
     console.log("[db]   platformDbName:", JSON.stringify(platformDbName))
   }
-  console.log("[db]   driver options:", buildMongoConnectOptions(dbName))
 }
 
 const ATLAS_GENERIC_RE =

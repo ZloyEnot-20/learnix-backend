@@ -19,12 +19,10 @@ router.post(getTelegramWebhookPath(), async (req, res) => {
     return
   }
 
-  try {
-    res.status(200).end("ok")
-    await handleTelegramUpdate(req.body)
-  } catch (err) {
-    console.error("[telegram] webhook handler error:", err.message)
-  }
+  res.status(200).end("ok")
+  handleTelegramUpdate(req.body).catch((err) =>
+    console.error("[telegram] webhook handler error:", err.message),
+  )
 })
 
 export default router

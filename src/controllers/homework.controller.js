@@ -409,14 +409,18 @@ export const retrySubmission = asyncHandler(async (req, res) => {
   sub.elapsedSeconds = 0
   sub.pauseUsed = false
   sub.entryCount = 0
-  sub.unset("score")
-  sub.unset("feedback")
-  sub.unset("attempt")
-  sub.unset("startedAt")
-  sub.unset("sessionStartedAt")
-  sub.unset("pausedAt")
-  sub.unset("submittedAt")
-  sub.unset("lastEntryAt")
+  for (const field of [
+    "score",
+    "feedback",
+    "attempt",
+    "startedAt",
+    "sessionStartedAt",
+    "pausedAt",
+    "submittedAt",
+    "lastEntryAt",
+  ]) {
+    sub.set(field, undefined)
+  }
 
   appendSubmissionEvent(sub, {
     type: "retry",

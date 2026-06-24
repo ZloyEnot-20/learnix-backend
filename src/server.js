@@ -7,6 +7,7 @@ import {
   isTelegramWebhookConfigured,
   registerTelegramWebhook,
 } from "./services/telegram-webhook.service.js"
+import { startReconcileTimer } from "./services/telegram.service.js"
 
 function start() {
   validateSecurityConfig()
@@ -23,12 +24,16 @@ function start() {
     console.log(`[server] MongoDB target db: ${env.dbName} (+ ${env.platformDbName})`)
   })
 
+  let stopReconcile = () => {}
+
   connectDB()
     .then(async () => {
       if (isTelegramWebhookConfigured()) {
         await registerTelegramWebhook().catch((err) =>
           console.error("[telegram] webhook registration failed:", err.message),
         )
+        stopReconcile = startReconcileTimer()
+        console.log("[telegram] webhook mode — updates via POST webhook, reconcile in backend")
       }
     })
     .catch(() => {
@@ -41,6 +46,7 @@ function start() {
 
   const shutdown = async (signal) => {
     console.log(`[server] ${signal} received, shutting down`)
+    stopReconcile()
     server.close(async () => {
       await Promise.all([disconnectDB().catch(() => {}), disconnectPlatformDB().catch(() => {})])
       process.exit(0)
