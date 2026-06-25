@@ -23,7 +23,7 @@ function buildThresholds() {
 
 export const LEVEL_THRESHOLDS = buildThresholds()
 
-/** Points awarded per activity (derived — never stored as a balance). */
+/** Points awarded per activity (stored on User, updated on activity). */
 export const POINTS = {
   HOMEWORK_COMPLETION: 50,
   HOMEWORK_CORRECT: 5,

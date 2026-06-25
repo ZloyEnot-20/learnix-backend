@@ -3,7 +3,7 @@ import { StudentDeckProgress } from "../models/StudentDeckProgress.js"
 import { WordAnswerEvent } from "../models/WordAnswerEvent.js"
 import { StudentActivity } from "../models/StudentActivity.js"
 import { User } from "../models/User.js"
-import { MASTERY_CORRECT_THRESHOLD } from "../config/level-thresholds.js"
+import { MASTERY_CORRECT_THRESHOLD, POINTS } from "../config/level-thresholds.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
@@ -13,6 +13,22 @@ async function resolveOrgId(studentId, orgId) {
   if (orgId) return orgId
   const student = await User.findById(studentId).select("orgId")
   return student?.orgId ?? null
+}
+
+function learnPointsDeltaForWordAnswer({ correct, source, newlyMastered }) {
+  let learnPoints = 0
+  if (correct && source === "review") learnPoints += POINTS.WORD_REVIEW_CORRECT
+  if (correct && source === "quiz") learnPoints += POINTS.VOCAB_QUIZ_CORRECT
+  if (newlyMastered) learnPoints += POINTS.WORD_MASTERED
+  return learnPoints
+}
+
+async function applyLearnPointsDelta(studentId, learnPoints) {
+  if (learnPoints <= 0) return
+  const { applyStudentPointsDelta } = await import("./gamification.service.js")
+  await applyStudentPointsDelta(studentId, { learnPoints }).catch((err) => {
+    console.error("[gamification] learn points update failed", err)
+  })
 }
 
 /**
@@ -64,6 +80,11 @@ export async function recordWordAnswer({
       )
     }
 
+    await applyLearnPointsDelta(
+      studentId,
+      learnPointsDeltaForWordAnswer({ correct, source, newlyMastered }),
+    )
+
     return { word: existing.toObject(), newlyMastered }
   }
 
@@ -91,6 +112,11 @@ export async function recordWordAnswer({
       { upsert: true },
     )
   }
+
+  await applyLearnPointsDelta(
+    studentId,
+    learnPointsDeltaForWordAnswer({ correct, source, newlyMastered }),
+  )
 
   return { word: word.toObject(), newlyMastered }
 }
@@ -133,6 +159,8 @@ export async function recordDeckQuizCompletion({
       interactionType: answer.interactionType ?? "multiple_choice",
     })
   }
+
+  await applyLearnPointsDelta(studentId, POINTS.VOCAB_DECK_COMPLETE)
 }
 
 /**

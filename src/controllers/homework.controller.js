@@ -11,7 +11,8 @@ import { recordAudit } from "../services/audit.service.js"
 import {
   recordVocabActivity,
 } from "../services/activity.service.js"
-import { appendSubmissionEvent } from "../services/submission.service.js"
+import { appendSubmissionEvent, isCheatingSubmission } from "../services/submission.service.js"
+import { recomputeHomeworkGamification } from "../services/gamification.service.js"
 import {
   assertOrgGroup,
   assertTenantDoc,
@@ -140,6 +141,10 @@ async function failForCheating(sub, homeworkId, studentId, reason, at = new Date
     metadata: { violationCount: sub.violationCount ?? 0 },
   })
   await sub.save()
+
+  await recomputeHomeworkGamification(studentId).catch((err) => {
+    console.error("[gamification] homework recompute failed", err)
+  })
 
   const hw = await Homework.findById(homeworkId)
 
@@ -884,6 +889,12 @@ export const recordAttempt = asyncHandler(async (req, res) => {
     })
     await existing.save()
     result = existing
+  }
+
+  if (!isCheatingSubmission(result)) {
+    await recomputeHomeworkGamification(studentId).catch((err) => {
+      console.error("[gamification] homework recompute failed", err)
+    })
   }
 
   if (alreadyDone) return res.json(result)

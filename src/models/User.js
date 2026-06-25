@@ -73,6 +73,14 @@ const userSchema = new mongoose.Schema(
     /** Set when the student deletes their account from the mobile app. */
     deletedAt: { type: Date },
 
+    /** Gamification — stored on student users, updated incrementally or via recompute. */
+    totalPoints: { type: Number, default: 0, min: 0 },
+    level: { type: Number, default: 1, min: 1, max: 30 },
+    homeworkPoints: { type: Number, default: 0, min: 0 },
+    exercisePoints: { type: Number, default: 0, min: 0 },
+    learnPoints: { type: Number, default: 0, min: 0 },
+    completedHomework: { type: Number, default: 0, min: 0 },
+
   },
 
   { timestamps: true, _id: false },
@@ -102,6 +110,11 @@ userSchema.index(
 )
 
 userSchema.index({ orgId: 1, groupId: 1, type: 1 })
+
+userSchema.index(
+  { orgId: 1, type: 1, totalPoints: -1 },
+  { partialFilterExpression: { type: "student", deletedAt: { $exists: false } } },
+)
 
 
 

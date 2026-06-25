@@ -16,6 +16,8 @@ import {
   getVocabWordStats,
   getVocabDeckStats,
 } from "../services/vocabulary-progress.service.js"
+import { applyStudentPointsDelta, recomputeLearnGamification } from "../services/gamification.service.js"
+import { POINTS } from "../config/level-thresholds.js"
 import { assertStudentInOrg, tenantFilter } from "../services/tenantScope.service.js"
 import { isStaffType } from "../constants/userTypes.js"
 
@@ -56,6 +58,15 @@ export const recordEvent = asyncHandler(async (req, res) => {
     timedOut: body.timedOut,
     durationSeconds,
   })
+
+  const correctCount = body.correctCount ?? 0
+  if (correctCount > 0) {
+    await applyStudentPointsDelta(studentId, {
+      exercisePoints: correctCount * POINTS.EXERCISE_CORRECT,
+    }).catch((err) => {
+      console.error("[gamification] exercise points update failed", err)
+    })
+  }
 
   res.status(201).json({ id: event._id })
 })
@@ -115,6 +126,10 @@ export const syncLearn = asyncHandler(async (req, res) => {
   const result = await syncLearnProgress(studentId, req.user.orgId ?? null, {
     studyWords,
     vocabResults,
+  })
+
+  await recomputeLearnGamification(studentId).catch((err) => {
+    console.error("[gamification] learn recompute after sync failed", err)
   })
 
   res.json(result)

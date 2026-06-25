@@ -42,35 +42,141 @@ function computeLearnPoints({ reviewCorrect, quizCorrect, masteredCount, deckCom
   )
 }
 
-function buildLevelSummary(homeworkPoints, exercisePoints, learnPoints, completedHomework) {
-  const totalPoints = homeworkPoints + exercisePoints + learnPoints
-  const { level, isMaxLevel, pointsIntoLevel, pointsForNextLevel, pointsToNextLevel } =
-    levelFromPoints(totalPoints)
-  const tier = tierForLevel(level)
-
-  const unlockedCefrLevels = Object.entries(CEFR_LEVEL_REQUIREMENT)
-    .filter(([, required]) => level >= required)
-    .map(([cefr]) => cefr)
-
+function homeworkPointsFromAgg(row) {
+  const completedHomework = row?.completedHomework ?? row?.submissions ?? 0
+  const correctSum = row?.correctSum ?? 0
   return {
-    totalPoints,
-    level,
-    maxLevel: MAX_LEVEL,
-    isMaxLevel,
-    tier: tier.id,
-    tierLabel: tier.label,
-    levelName: `${tier.label} · Lvl ${level}`,
-    pointsIntoLevel,
-    pointsForNextLevel,
-    pointsToNextLevel,
-    breakdown: { homeworkPoints, exercisePoints, learnPoints, completedHomework },
-    requirements: CEFR_LEVEL_REQUIREMENT,
-    unlockedCefrLevels,
+    completedHomework,
+    homeworkPoints:
+      completedHomework * POINTS.HOMEWORK_COMPLETION + correctSum * POINTS.HOMEWORK_CORRECT,
   }
 }
 
-/** Compute the full progress/level summary for a student from their activity. */
-export async function computeStudentLevel(studentId) {
+function totalAndLevel(homeworkPoints, exercisePoints, learnPoints) {
+  const totalPoints = homeworkPoints + exercisePoints + learnPoints
+  const { level } = levelFromPoints(totalPoints)
+  return { totalPoints, level }
+}
+
+async function persistGamificationFields(studentId, fields) {
+  await User.updateOne({ _id: studentId, type: "student" }, { $set: fields })
+}
+
+/** Recompute totalPoints and level from the three breakdown fields on User. */
+export async function refreshStudentTotalAndLevel(studentId) {
+  const user = await User.findOne({ _id: studentId, type: "student" })
+    .select("homeworkPoints exercisePoints learnPoints completedHomework")
+    .lean()
+  if (!user) return null
+
+  const homeworkPoints = user.homeworkPoints ?? 0
+  const exercisePoints = user.exercisePoints ?? 0
+  const learnPoints = user.learnPoints ?? 0
+  const { totalPoints, level } = totalAndLevel(homeworkPoints, exercisePoints, learnPoints)
+
+  await persistGamificationFields(studentId, {
+    totalPoints,
+    level,
+    homeworkPoints,
+    exercisePoints,
+    learnPoints,
+    completedHomework: user.completedHomework ?? 0,
+  })
+
+  return {
+    homeworkPoints,
+    exercisePoints,
+    learnPoints,
+    completedHomework: user.completedHomework ?? 0,
+    totalPoints,
+    level,
+  }
+}
+
+/** Apply incremental point deltas (append-only activity). */
+export async function applyStudentPointsDelta(
+  studentId,
+  { homeworkPoints = 0, exercisePoints = 0, learnPoints = 0, completedHomework = 0 } = {},
+) {
+  if (
+    !studentId ||
+    (homeworkPoints === 0 &&
+      exercisePoints === 0 &&
+      learnPoints === 0 &&
+      completedHomework === 0)
+  ) {
+    return null
+  }
+
+  const user = await User.findOneAndUpdate(
+    { _id: studentId, type: "student" },
+    {
+      $inc: {
+        homeworkPoints,
+        exercisePoints,
+        learnPoints,
+        completedHomework,
+      },
+    },
+    { new: true },
+  )
+    .select("homeworkPoints exercisePoints learnPoints completedHomework")
+    .lean()
+
+  if (!user) return null
+  return refreshStudentTotalAndLevel(studentId)
+}
+
+/** Recompute homework slice from submissions (handles resubmits with new scores). */
+export async function recomputeHomeworkGamification(studentId) {
+  const homeworkAgg = await Submission.aggregate([
+    {
+      $match: {
+        studentId,
+        status: { $in: ["submitted", "graded"] },
+        ...EXCLUDE_CHEATING_HOMEWORK_MATCH,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        completedHomework: { $sum: 1 },
+        correctSum: { $sum: { $ifNull: ["$attempt.correctCount", 0] } },
+      },
+    },
+  ])
+
+  const { homeworkPoints, completedHomework } = homeworkPointsFromAgg(homeworkAgg[0])
+  await persistGamificationFields(studentId, { homeworkPoints, completedHomework })
+  return refreshStudentTotalAndLevel(studentId)
+}
+
+/** Recompute learn slice from vocabulary aggregates. */
+export async function recomputeLearnGamification(studentId) {
+  const learnRaw = await aggregateLearnPoints(studentId)
+  const learnPoints = computeLearnPoints(learnRaw)
+  await persistGamificationFields(studentId, { learnPoints })
+  return refreshStudentTotalAndLevel(studentId)
+}
+
+/** Recompute exercise slice from exercise events. */
+export async function recomputeExerciseGamification(studentId) {
+  const exerciseAgg = await ExerciseEvent.aggregate([
+    { $match: { studentId } },
+    {
+      $group: {
+        _id: null,
+        correctSum: { $sum: { $ifNull: ["$correctCount", 0] } },
+      },
+    },
+  ])
+  const exercisePoints = (exerciseAgg[0]?.correctSum ?? 0) * POINTS.EXERCISE_CORRECT
+  await persistGamificationFields(studentId, { exercisePoints })
+  return refreshStudentTotalAndLevel(studentId)
+}
+
+/** Full recompute from activity collections and persist on User. */
+export async function recomputeStudentGamification(studentId) {
   const [homeworkAgg, exerciseAgg, learnRaw] = await Promise.all([
     Submission.aggregate([
       {
@@ -100,34 +206,126 @@ export async function computeStudentLevel(studentId) {
     aggregateLearnPoints(studentId),
   ])
 
-  const homeworkRow = homeworkAgg[0]
-  const exerciseRow = exerciseAgg[0]
-  const completedHomework = homeworkRow?.completedHomework ?? 0
-  const homeworkPoints =
-    completedHomework * POINTS.HOMEWORK_COMPLETION +
-    (homeworkRow?.correctSum ?? 0) * POINTS.HOMEWORK_CORRECT
-  const exercisePoints = (exerciseRow?.correctSum ?? 0) * POINTS.EXERCISE_CORRECT
+  const { homeworkPoints, completedHomework } = homeworkPointsFromAgg(homeworkAgg[0])
+  const exercisePoints = (exerciseAgg[0]?.correctSum ?? 0) * POINTS.EXERCISE_CORRECT
   const learnPoints = computeLearnPoints(learnRaw)
+  const { totalPoints, level } = totalAndLevel(homeworkPoints, exercisePoints, learnPoints)
 
+  await persistGamificationFields(studentId, {
+    homeworkPoints,
+    exercisePoints,
+    learnPoints,
+    completedHomework,
+    totalPoints,
+    level,
+  })
+
+  return {
+    homeworkPoints,
+    exercisePoints,
+    learnPoints,
+    completedHomework,
+    totalPoints,
+    level,
+  }
+}
+
+function buildLevelSummary(homeworkPoints, exercisePoints, learnPoints, completedHomework) {
+  const totalPoints = homeworkPoints + exercisePoints + learnPoints
+  const { level, isMaxLevel, pointsIntoLevel, pointsForNextLevel, pointsToNextLevel } =
+    levelFromPoints(totalPoints)
+  const tier = tierForLevel(level)
+
+  const unlockedCefrLevels = Object.entries(CEFR_LEVEL_REQUIREMENT)
+    .filter(([, required]) => level >= required)
+    .map(([cefr]) => cefr)
+
+  return {
+    totalPoints,
+    level,
+    maxLevel: MAX_LEVEL,
+    isMaxLevel,
+    tier: tier.id,
+    tierLabel: tier.label,
+    levelName: `${tier.label} · Lvl ${level}`,
+    pointsIntoLevel,
+    pointsForNextLevel,
+    pointsToNextLevel,
+    breakdown: { homeworkPoints, exercisePoints, learnPoints, completedHomework },
+    requirements: CEFR_LEVEL_REQUIREMENT,
+    unlockedCefrLevels,
+  }
+}
+
+function summaryFromUser(user) {
+  const homeworkPoints = user.homeworkPoints ?? 0
+  const exercisePoints = user.exercisePoints ?? 0
+  const learnPoints = user.learnPoints ?? 0
+  const completedHomework = user.completedHomework ?? 0
   return buildLevelSummary(homeworkPoints, exercisePoints, learnPoints, completedHomework)
 }
 
-/** Org-wide student ranking by derived XP (top N). */
+/** Read stored gamification from User; recompute once if not yet migrated. */
+export async function computeStudentLevel(studentId) {
+  let user = await User.findOne({ _id: studentId, type: "student" })
+    .select("totalPoints level homeworkPoints exercisePoints learnPoints completedHomework")
+    .lean()
+
+  if (!user) {
+    return buildLevelSummary(0, 0, 0, 0)
+  }
+
+  if (user.totalPoints == null) {
+    const stored = await recomputeStudentGamification(studentId)
+    return buildLevelSummary(
+      stored.homeworkPoints,
+      stored.exercisePoints,
+      stored.learnPoints,
+      stored.completedHomework,
+    )
+  }
+
+  return summaryFromUser(user)
+}
+
+/** Org-wide student ranking from stored User gamification fields (top N). */
 export async function computeOrgLeaderboard(orgId, limit = 30) {
   const students = await User.find({ orgId, type: "student", ...ACTIVE_STUDENT_FILTER })
-    .select("_id name avatarUrl")
+    .select("_id name avatarUrl totalPoints level homeworkPoints exercisePoints learnPoints")
+    .sort({ totalPoints: -1, name: 1 })
+    .limit(limit)
     .lean()
+
   if (students.length === 0) return []
 
-  const studentIds = students.map((s) => s._id)
-  const nameById = new Map(students.map((s) => [s._id, s.name]))
-  const avatarById = new Map(students.map((s) => [s._id, s.avatarUrl ?? null]))
+  const unmigrated = students.filter((s) => s.totalPoints == null)
+  if (unmigrated.length > 0) {
+    await Promise.all(unmigrated.map((s) => recomputeStudentGamification(s._id)))
+    return computeOrgLeaderboard(orgId, limit)
+  }
 
+  return students.map((student, index) => {
+    const level = student.level ?? levelFromPoints(student.totalPoints ?? 0).level
+    const tier = tierForLevel(level)
+    return {
+      rank: index + 1,
+      studentId: student._id,
+      name: student.name ?? "Student",
+      avatarUrl: student.avatarUrl ?? null,
+      totalPoints: student.totalPoints ?? 0,
+      level,
+      tier: tier.id,
+      tierLabel: tier.label,
+    }
+  })
+}
+
+/** Batch backfill for migration scripts. */
+export async function recomputeStudentGamificationBatch(studentIds) {
   const [homeworkAgg, exerciseAgg, learnByStudent] = await Promise.all([
     Submission.aggregate([
       {
         $match: {
-          orgId,
           studentId: { $in: studentIds },
           status: { $in: ["submitted", "graded"] },
           ...EXCLUDE_CHEATING_HOMEWORK_MATCH,
@@ -136,7 +334,7 @@ export async function computeOrgLeaderboard(orgId, limit = 30) {
       {
         $group: {
           _id: "$studentId",
-          submissions: { $sum: 1 },
+          completedHomework: { $sum: 1 },
           correctSum: { $sum: { $ifNull: ["$attempt.correctCount", 0] } },
         },
       },
@@ -153,59 +351,43 @@ export async function computeOrgLeaderboard(orgId, limit = 30) {
     aggregateLearnPointsBatch(studentIds),
   ])
 
-  const pointsByStudent = new Map(
-    studentIds.map((id) => [
-      id,
-      { homeworkPoints: 0, exercisePoints: 0, learnPoints: 0 },
-    ]),
-  )
+  const homeworkByStudent = new Map(homeworkAgg.map((row) => [row._id, row]))
+  const exerciseByStudent = new Map(exerciseAgg.map((row) => [row._id, row]))
 
-  for (const row of homeworkAgg) {
-    const cur = pointsByStudent.get(row._id)
-    if (!cur) continue
-    cur.homeworkPoints =
-      row.submissions * POINTS.HOMEWORK_COMPLETION + row.correctSum * POINTS.HOMEWORK_CORRECT
-  }
+  const ops = studentIds.map((studentId) => {
+    const { homeworkPoints, completedHomework } = homeworkPointsFromAgg(
+      homeworkByStudent.get(studentId),
+    )
+    const exercisePoints =
+      (exerciseByStudent.get(studentId)?.correctSum ?? 0) * POINTS.EXERCISE_CORRECT
+    const learnPoints = computeLearnPoints(
+      learnByStudent.get(studentId) ?? {
+        reviewCorrect: 0,
+        quizCorrect: 0,
+        masteredCount: 0,
+        deckCompleteBonus: 0,
+      },
+    )
+    const { totalPoints, level } = totalAndLevel(homeworkPoints, exercisePoints, learnPoints)
 
-  for (const row of exerciseAgg) {
-    const cur = pointsByStudent.get(row._id)
-    if (!cur) continue
-    cur.exercisePoints = row.correctSum * POINTS.EXERCISE_CORRECT
-  }
-
-  for (const [id, learnRaw] of learnByStudent) {
-    const cur = pointsByStudent.get(id)
-    if (!cur) continue
-    cur.learnPoints = computeLearnPoints(learnRaw)
-  }
-
-  const entries = studentIds.map((id) => {
-    const { homeworkPoints, exercisePoints, learnPoints } = pointsByStudent.get(id) ?? {
-      homeworkPoints: 0,
-      exercisePoints: 0,
-      learnPoints: 0,
-    }
-    const totalPoints = homeworkPoints + exercisePoints + learnPoints
-    const { level } = levelFromPoints(totalPoints)
-    const tier = tierForLevel(level)
     return {
-      studentId: id,
-      name: nameById.get(id) ?? "Student",
-      avatarUrl: avatarById.get(id) ?? null,
-      totalPoints,
-      level,
-      tier: tier.id,
-      tierLabel: tier.label,
+      updateOne: {
+        filter: { _id: studentId, type: "student" },
+        update: {
+          $set: {
+            homeworkPoints,
+            exercisePoints,
+            learnPoints,
+            completedHomework,
+            totalPoints,
+            level,
+          },
+        },
+      },
     }
   })
 
-  entries.sort((a, b) => {
-    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
-    return a.name.localeCompare(b.name)
-  })
-
-  return entries.slice(0, limit).map((entry, index) => ({
-    rank: index + 1,
-    ...entry,
-  }))
+  if (ops.length > 0) {
+    await User.bulkWrite(ops, { ordered: false })
+  }
 }
