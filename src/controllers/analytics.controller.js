@@ -8,6 +8,14 @@ import {
   buildStudentSummary,
   buildExerciseStats,
 } from "../services/activity.service.js"
+import {
+  recordWordAnswer,
+  recordDeckQuizCompletion,
+  syncLearnProgress,
+  getStudentLearnProgress,
+  getVocabWordStats,
+  getVocabDeckStats,
+} from "../services/vocabulary-progress.service.js"
 import { assertStudentInOrg, tenantFilter } from "../services/tenantScope.service.js"
 import { isStaffType } from "../constants/userTypes.js"
 
@@ -55,7 +63,7 @@ export const recordEvent = asyncHandler(async (req, res) => {
 /** Record vocabulary quiz completion + words learned. */
 export const recordVocab = asyncHandler(async (req, res) => {
   const studentId = req.user.id
-  const { deckSlug, deckTitle, correct, total, source, words } = req.body
+  const { deckSlug, deckTitle, correct, total, source, words, wordAnswers, totalWords } = req.body
 
   await recordVocabActivity({
     studentId,
@@ -67,7 +75,93 @@ export const recordVocab = asyncHandler(async (req, res) => {
     words,
   })
 
+  await recordDeckQuizCompletion({
+    studentId,
+    orgId: req.user.orgId ?? null,
+    deckSlug,
+    deckTitle,
+    correct,
+    total,
+    totalWords: totalWords ?? words?.length ?? 0,
+    wordAnswers: wordAnswers ?? [],
+  })
+
   res.status(201).json({ ok: true })
+})
+
+/** Record a single vocabulary word answer (review). */
+export const recordVocabWord = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { term, deckSlug, correct, interactionType } = req.body
+
+  const result = await recordWordAnswer({
+    studentId,
+    orgId: req.user.orgId ?? null,
+    term,
+    deckSlug,
+    correct,
+    source: "review",
+    interactionType: interactionType ?? "multiple_choice",
+  })
+
+  res.status(201).json(result)
+})
+
+/** Bulk sync learn progress from mobile AsyncStorage. */
+export const syncLearn = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { studyWords, vocabResults } = req.body
+
+  const result = await syncLearnProgress(studentId, req.user.orgId ?? null, {
+    studyWords,
+    vocabResults,
+  })
+
+  res.json(result)
+})
+
+/** Get student learn/vocabulary progress. */
+export const learnProgress = asyncHandler(async (req, res) => {
+  const studentId = resolveStudentId(req)
+  if (!studentId) throw ApiError.badRequest("studentId is required")
+  if (req.user.type === "student" && studentId !== req.user.id) {
+    throw ApiError.forbidden()
+  }
+  if (req.user.type !== "student") {
+    await assertStudentInOrg(studentId, req)
+  }
+
+  const progress = await getStudentLearnProgress(studentId)
+  res.json(progress)
+})
+
+/** Staff: vocabulary words ranked by error rate. */
+export const vocabWordStats = asyncHandler(async (req, res) => {
+  if (!isStaffType(req.user.type)) {
+    throw ApiError.forbidden("Staff access required")
+  }
+  const orgId = req.user.orgId
+  if (!orgId) throw ApiError.badRequest("Organization context required")
+
+  const stats = await getVocabWordStats(orgId, {
+    deckSlug: req.query.deckSlug,
+    limit: Number(req.query.limit) || 50,
+  })
+  res.json(stats)
+})
+
+/** Staff: deck engagement stats. */
+export const vocabDeckStats = asyncHandler(async (req, res) => {
+  if (!isStaffType(req.user.type)) {
+    throw ApiError.forbidden("Staff access required")
+  }
+  const orgId = req.user.orgId
+  if (!orgId) throw ApiError.badRequest("Organization context required")
+
+  const stats = await getVocabDeckStats(orgId, {
+    limit: Number(req.query.limit) || 50,
+  })
+  res.json(stats)
 })
 
 /** List student activity events (staff or own). */

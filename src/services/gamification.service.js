@@ -2,24 +2,20 @@ import { Submission } from "../models/Submission.js"
 import { ExerciseEvent } from "../models/ExerciseEvent.js"
 import { User } from "../models/User.js"
 import { ACTIVE_STUDENT_FILTER } from "./student.service.js"
+import {
+  MAX_LEVEL,
+  POINTS,
+  levelFromPoints,
+} from "../config/level-thresholds.js"
+import { aggregateLearnPoints, aggregateLearnPointsBatch } from "./vocabulary-progress.service.js"
 
-/**
- * Gamification rules. Points are DERIVED from existing activity (completed
- * homework + finished exercise/game attempts) so they cannot be inflated by
- * replaying a client request — there is no stored, mutable balance.
- */
-export const POINTS_PER_LEVEL = 100
-const HOMEWORK_COMPLETION_POINTS = 50
-const POINTS_PER_HOMEWORK_CORRECT = 5
-const POINTS_PER_EXERCISE_CORRECT = 10
-
-/** Level → rank tiers. Each tier covers an inclusive range of levels. */
+/** Level → rank tiers. Max level 30 = Legend (single level). */
 export const TIERS = [
   { id: "bronze", label: "Bronze", minLevel: 1, maxLevel: 5 },
   { id: "silver", label: "Silver", minLevel: 6, maxLevel: 10 },
   { id: "gold", label: "Gold", minLevel: 11, maxLevel: 20 },
-  { id: "diamond", label: "Diamond", minLevel: 21, maxLevel: 30 },
-  { id: "master", label: "Master", minLevel: 31, maxLevel: Infinity },
+  { id: "diamond", label: "Diamond", minLevel: 21, maxLevel: 29 },
+  { id: "legend", label: "Legend", minLevel: 30, maxLevel: 30 },
 ]
 
 /** Minimum student level required to unlock each CEFR folder. */
@@ -36,12 +32,20 @@ export function tierForLevel(level) {
   return TIERS.find((t) => level >= t.minLevel && level <= t.maxLevel) ?? TIERS[0]
 }
 
-function buildLevelSummary(homeworkPoints, exercisePoints, completedHomework) {
-  const totalPoints = homeworkPoints + exercisePoints
-  const level = Math.floor(totalPoints / POINTS_PER_LEVEL) + 1
+function computeLearnPoints({ reviewCorrect, quizCorrect, masteredCount, deckCompleteBonus }) {
+  return (
+    reviewCorrect * POINTS.WORD_REVIEW_CORRECT +
+    quizCorrect * POINTS.VOCAB_QUIZ_CORRECT +
+    masteredCount * POINTS.WORD_MASTERED +
+    deckCompleteBonus * POINTS.VOCAB_DECK_COMPLETE
+  )
+}
+
+function buildLevelSummary(homeworkPoints, exercisePoints, learnPoints, completedHomework) {
+  const totalPoints = homeworkPoints + exercisePoints + learnPoints
+  const { level, isMaxLevel, pointsIntoLevel, pointsForNextLevel, pointsToNextLevel } =
+    levelFromPoints(totalPoints)
   const tier = tierForLevel(level)
-  const pointsIntoLevel = totalPoints % POINTS_PER_LEVEL
-  const pointsForNextLevel = POINTS_PER_LEVEL
 
   const unlockedCefrLevels = Object.entries(CEFR_LEVEL_REQUIREMENT)
     .filter(([, required]) => level >= required)
@@ -50,13 +54,15 @@ function buildLevelSummary(homeworkPoints, exercisePoints, completedHomework) {
   return {
     totalPoints,
     level,
+    maxLevel: MAX_LEVEL,
+    isMaxLevel,
     tier: tier.id,
     tierLabel: tier.label,
     levelName: `${tier.label} · Lvl ${level}`,
     pointsIntoLevel,
     pointsForNextLevel,
-    pointsToNextLevel: pointsForNextLevel - pointsIntoLevel,
-    breakdown: { homeworkPoints, exercisePoints, completedHomework },
+    pointsToNextLevel,
+    breakdown: { homeworkPoints, exercisePoints, learnPoints, completedHomework },
     requirements: CEFR_LEVEL_REQUIREMENT,
     unlockedCefrLevels,
   }
@@ -64,7 +70,7 @@ function buildLevelSummary(homeworkPoints, exercisePoints, completedHomework) {
 
 /** Compute the full progress/level summary for a student from their activity. */
 export async function computeStudentLevel(studentId) {
-  const [homeworkAgg, exerciseAgg] = await Promise.all([
+  const [homeworkAgg, exerciseAgg, learnRaw] = await Promise.all([
     Submission.aggregate([
       {
         $match: {
@@ -89,17 +95,19 @@ export async function computeStudentLevel(studentId) {
         },
       },
     ]),
+    aggregateLearnPoints(studentId),
   ])
 
   const homeworkRow = homeworkAgg[0]
   const exerciseRow = exerciseAgg[0]
   const completedHomework = homeworkRow?.completedHomework ?? 0
   const homeworkPoints =
-    completedHomework * HOMEWORK_COMPLETION_POINTS +
-    (homeworkRow?.correctSum ?? 0) * POINTS_PER_HOMEWORK_CORRECT
-  const exercisePoints = (exerciseRow?.correctSum ?? 0) * POINTS_PER_EXERCISE_CORRECT
+    completedHomework * POINTS.HOMEWORK_COMPLETION +
+    (homeworkRow?.correctSum ?? 0) * POINTS.HOMEWORK_CORRECT
+  const exercisePoints = (exerciseRow?.correctSum ?? 0) * POINTS.EXERCISE_CORRECT
+  const learnPoints = computeLearnPoints(learnRaw)
 
-  return buildLevelSummary(homeworkPoints, exercisePoints, completedHomework)
+  return buildLevelSummary(homeworkPoints, exercisePoints, learnPoints, completedHomework)
 }
 
 /** Org-wide student ranking by derived XP (top N). */
@@ -113,7 +121,7 @@ export async function computeOrgLeaderboard(orgId, limit = 30) {
   const nameById = new Map(students.map((s) => [s._id, s.name]))
   const avatarById = new Map(students.map((s) => [s._id, s.avatarUrl ?? null]))
 
-  const [homeworkAgg, exerciseAgg] = await Promise.all([
+  const [homeworkAgg, exerciseAgg, learnByStudent] = await Promise.all([
     Submission.aggregate([
       {
         $match: {
@@ -139,32 +147,43 @@ export async function computeOrgLeaderboard(orgId, limit = 30) {
         },
       },
     ]),
+    aggregateLearnPointsBatch(studentIds),
   ])
 
   const pointsByStudent = new Map(
-    studentIds.map((id) => [id, { homeworkPoints: 0, exercisePoints: 0 }]),
+    studentIds.map((id) => [
+      id,
+      { homeworkPoints: 0, exercisePoints: 0, learnPoints: 0 },
+    ]),
   )
 
   for (const row of homeworkAgg) {
     const cur = pointsByStudent.get(row._id)
     if (!cur) continue
     cur.homeworkPoints =
-      row.submissions * HOMEWORK_COMPLETION_POINTS + row.correctSum * POINTS_PER_HOMEWORK_CORRECT
+      row.submissions * POINTS.HOMEWORK_COMPLETION + row.correctSum * POINTS.HOMEWORK_CORRECT
   }
 
   for (const row of exerciseAgg) {
     const cur = pointsByStudent.get(row._id)
     if (!cur) continue
-    cur.exercisePoints = row.correctSum * POINTS_PER_EXERCISE_CORRECT
+    cur.exercisePoints = row.correctSum * POINTS.EXERCISE_CORRECT
+  }
+
+  for (const [id, learnRaw] of learnByStudent) {
+    const cur = pointsByStudent.get(id)
+    if (!cur) continue
+    cur.learnPoints = computeLearnPoints(learnRaw)
   }
 
   const entries = studentIds.map((id) => {
-    const { homeworkPoints, exercisePoints } = pointsByStudent.get(id) ?? {
+    const { homeworkPoints, exercisePoints, learnPoints } = pointsByStudent.get(id) ?? {
       homeworkPoints: 0,
       exercisePoints: 0,
+      learnPoints: 0,
     }
-    const totalPoints = homeworkPoints + exercisePoints
-    const level = Math.floor(totalPoints / POINTS_PER_LEVEL) + 1
+    const totalPoints = homeworkPoints + exercisePoints + learnPoints
+    const { level } = levelFromPoints(totalPoints)
     const tier = tierForLevel(level)
     return {
       studentId: id,

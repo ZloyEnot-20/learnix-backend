@@ -452,6 +452,17 @@ export const recordVocabSchema = {
     correct: z.number().int().nonnegative(),
     total: z.number().int().positive(),
     source: z.enum(["game", "homework"]).optional(),
+    totalWords: z.number().int().nonnegative().optional(),
+    wordAnswers: z
+      .array(
+        z.object({
+          term: z.string().min(1),
+          correct: z.boolean(),
+          interactionType: z.string().optional(),
+          deckSlug: z.string().optional(),
+        }),
+      )
+      .optional(),
     words: z
       .array(
         z.object({
@@ -463,6 +474,46 @@ export const recordVocabSchema = {
         }),
       )
       .optional(),
+  }),
+}
+
+export const recordVocabWordSchema = {
+  body: z.object({
+    term: z.string().min(1),
+    deckSlug: z.string().min(1),
+    correct: z.boolean(),
+    interactionType: z.string().optional(),
+  }),
+}
+
+export const syncLearnSchema = {
+  body: z.object({
+    studyWords: z
+      .array(
+        z.object({
+          term: z.string().min(1),
+          deckSlug: z.string().min(1),
+          correctCount: z.number().int().nonnegative().optional(),
+          totalAttempts: z.number().int().nonnegative().optional(),
+          masteredAt: z.string().optional(),
+          wantToLearn: z.boolean().optional(),
+          lastReviewedAt: z.string().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
+    vocabResults: z
+      .array(
+        z.object({
+          deckSlug: z.string().min(1),
+          deckTitle: z.string().optional(),
+          correct: z.number().int().nonnegative(),
+          total: z.number().int().positive(),
+          completedAt: z.string().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
   }),
 }
 
