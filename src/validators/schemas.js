@@ -258,6 +258,32 @@ export const reportViolationSchema = {
   }),
 }
 
+export const createIssueReportSchema = {
+  body: z
+    .object({
+      homeworkId: z.string().min(1).optional(),
+      controlWorkId: z.string().min(1).optional(),
+      stepIndex: z.number().int().min(0).optional(),
+      exerciseSlug: z.string().min(1).max(200),
+      exerciseTitle: z.string().min(1).max(300),
+      exerciseKind: z.enum(["grammar", "vocabulary", "podcast", "speaking"]),
+      questionIndex: z.number().int().min(0).optional(),
+      questionId: z.number().int().min(0).optional(),
+      questionPrompt: z.string().max(2000).optional(),
+      message: z.string().max(50).optional(),
+    })
+    .refine((b) => !!(b.homeworkId || b.controlWorkId), {
+      message: "homeworkId or controlWorkId is required",
+    }),
+}
+
+export const updateIssueReportSchema = {
+  params: idParam,
+  body: z.object({
+    status: z.enum(["open", "resolved", "dismissed"]),
+  }),
+}
+
 // ---------- Entry test ----------
 export const assignEntrySchema = {
   body: z.object({ studentId: z.string().min(1) }),
