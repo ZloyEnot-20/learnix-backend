@@ -19,6 +19,16 @@ export function appendSubmissionEvent(sub, { type, reason, entryCount, metadata 
   }
 }
 
+export function isCheatingSubmission(sub) {
+  return sub.integrityStatus === "cheating_detected" || !!sub.attempt?.failedDueToCheating
+}
+
+/** Mongo $match fragment: homework failed for cheating must not earn XP. */
+export const EXCLUDE_CHEATING_HOMEWORK_MATCH = {
+  integrityStatus: { $ne: "cheating_detected" },
+  "attempt.failedDueToCheating": { $ne: true },
+}
+
 /** Aggregate integrity stats from submission records (homework check / student summary). */
 export function aggregateHomeworkIntegrity(submissions) {
   const byReason = {}
@@ -27,7 +37,7 @@ export function aggregateHomeworkIntegrity(submissions) {
 
   for (const sub of submissions) {
     violations += sub.violationCount ?? 0
-    if (sub.integrityStatus === "cheating_detected" || sub.attempt?.failedDueToCheating) {
+    if (isCheatingSubmission(sub)) {
       cheating += 1
     }
     for (const ev of sub.events ?? []) {

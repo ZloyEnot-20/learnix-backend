@@ -6,7 +6,7 @@ import { ControlWorkSubmission } from "../models/ControlWorkSubmission.js"
 import { TestResult } from "../models/TestResult.js"
 import { Homework } from "../models/Homework.js"
 import { Exercise } from "../models/Exercise.js"
-import { aggregateHomeworkIntegrity } from "./submission.service.js"
+import { aggregateHomeworkIntegrity, isCheatingSubmission } from "./submission.service.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
@@ -421,10 +421,6 @@ export async function buildStudentSummary(studentId) {
       at: a.at,
     })),
   }
-}
-
-function isCheatingSubmission(sub) {
-  return sub.integrityStatus === "cheating_detected" || !!sub.attempt?.failedDueToCheating
 }
 
 function avgRounded(nums) {

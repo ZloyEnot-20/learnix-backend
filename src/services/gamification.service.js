@@ -8,6 +8,7 @@ import {
   levelFromPoints,
 } from "../config/level-thresholds.js"
 import { aggregateLearnPoints, aggregateLearnPointsBatch } from "./vocabulary-progress.service.js"
+import { EXCLUDE_CHEATING_HOMEWORK_MATCH } from "./submission.service.js"
 
 /** Level → rank tiers. Max level 30 = Legend (single level). */
 export const TIERS = [
@@ -76,6 +77,7 @@ export async function computeStudentLevel(studentId) {
         $match: {
           studentId,
           status: { $in: ["submitted", "graded"] },
+          ...EXCLUDE_CHEATING_HOMEWORK_MATCH,
         },
       },
       {
@@ -128,6 +130,7 @@ export async function computeOrgLeaderboard(orgId, limit = 30) {
           orgId,
           studentId: { $in: studentIds },
           status: { $in: ["submitted", "graded"] },
+          ...EXCLUDE_CHEATING_HOMEWORK_MATCH,
         },
       },
       {
