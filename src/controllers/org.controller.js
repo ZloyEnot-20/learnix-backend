@@ -8,7 +8,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { resolveOrgId } from "../services/tenantScope.service.js"
 import { computeOrgLeaderboard } from "../services/gamification.service.js"
 import { recordAudit } from "../services/audit.service.js"
-import { formatOrgSettings, getOrgSettings } from "../services/orgSettings.service.js"
+import { formatOrgSettings, getOrgSettings as fetchOrgSettings } from "../services/orgSettings.service.js"
 
 async function ensurePlatformDb() {
   await connectPlatformDB()
@@ -180,5 +180,5 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
     details,
   })
 
-  res.json(await getOrgSettings(orgId))
+  res.json(await fetchOrgSettings(orgId))
 })
