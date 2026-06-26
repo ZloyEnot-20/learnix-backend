@@ -6,10 +6,20 @@ function studentIdOf(req) {
   return req.user.id
 }
 
+const MOBILE_EXCLUDED_TYPES = ["attendance"]
+
+function isMobileClient(req) {
+  return req.get("x-learnix-client") === "mobile"
+}
+
 /** Notifications for the authenticated student, newest first. */
 export const listMyNotifications = asyncHandler(async (req, res) => {
   const studentId = studentIdOf(req)
-  const items = await Notification.find({ studentId }).sort({ createdAt: -1 }).limit(50)
+  const filter = { studentId }
+  if (isMobileClient(req)) {
+    filter.type = { $nin: MOBILE_EXCLUDED_TYPES }
+  }
+  const items = await Notification.find(filter).sort({ createdAt: -1 }).limit(50)
   res.json(items)
 })
 
