@@ -202,15 +202,15 @@ function attendanceStatusLine(status, childName) {
   const name = esc(childName)
   switch (status) {
     case "present":
-      return `✅ Farzandingiz <b>${name}</b> darsga keldi`
+      return `Farzandingiz <b>${name}</b> darsga keldi ✅`
     case "absent":
-      return `❌ Farzandingiz <b>${name}</b> darsga kelmadi`
+      return `Farzandingiz <b>${name}</b> darsga kelmadi ❌`
     case "late":
-      return `⏰ Farzandingiz <b>${name}</b> darsga kechikib keldi`
+      return `Farzandingiz <b>${name}</b> darsga kechikib keldi ⏰`
     case "excused":
-      return `📋 Farzandingiz <b>${name}</b> sababli yo'q`
+      return `Farzandingiz <b>${name}</b> sababli yo'q 📋`
     default:
-      return `📌 Farzandingiz <b>${name}</b> uchun davomat belgilandi`
+      return `Farzandingiz <b>${name}</b> uchun davomat belgilandi 📌`
   }
 }
 
@@ -270,7 +270,16 @@ export function parentNotificationText(childName, note) {
         : null
       const statusLine = attendanceStatusLine(d.status, childName)
       const canceledLine = d.canceled ? "⚠️ Dars bekor qilindi" : null
-      return card("<b>Davomat haqida xabar</b>", ["", statusLine, "", dateLine, canceledLine])
+      return [
+        "<b>Davomat haqida xabar</b>",
+        "",
+        statusLine,
+        dateLine ? "" : null,
+        dateLine,
+        canceledLine,
+      ]
+        .filter((line) => line !== null)
+        .join("\n")
     }
     default:
       return card("🔔 <b>Xabar</b>", ["", child, subjLine, taskLine])
