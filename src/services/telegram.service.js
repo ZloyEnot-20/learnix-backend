@@ -170,6 +170,13 @@ const STATUS_PLAIN = {
   graded: "Tekshirildi",
 }
 
+const ATTENDANCE_STATUS_UZ = {
+  present: "✅ Darsga <b>keldi</b>",
+  absent: "❌ Darsga <b>kelmadi</b>",
+  late: "⏰ Darsga <b>kechikib keldi</b>",
+  excused: "📋 Sababli <b>yo'q</b>",
+}
+
 export const STATUS_UZ = {
   pending: "🕓 Boshlanmagan",
   in_progress: "⏳ Bajarilyapti",
@@ -220,6 +227,22 @@ export function parentNotificationText(childName, note) {
       return card("🏆 <b>Yangi yutuq</b>", ["", child, subjLine, taskLine])
     case "entry_test":
       return card("📝 <b>Kirish testi</b>", ["", child, subjLine, taskLine])
+    case "attendance": {
+      const dateLine = d.lessonDate ? `📅 Sana: <b>${esc(d.lessonDate)}</b>` : null
+      const groupLine = d.groupName ? `👥 Guruh: ${esc(d.groupName)}` : null
+      const topicLine = d.topic ? `📚 Mavzu: <b>${esc(d.topic)}</b>` : null
+      const statusLine = ATTENDANCE_STATUS_UZ[d.status] ?? "📌 Davomat belgilandi"
+      const canceledLine = d.canceled ? "⚠️ Dars bekor qilindi" : null
+      return card("📋 <b>Davomat haqida xabar</b>", [
+        "",
+        child,
+        groupLine,
+        dateLine,
+        topicLine,
+        statusLine,
+        canceledLine,
+      ])
+    }
     default:
       return card("🔔 <b>Xabar</b>", ["", child, subjLine, taskLine])
   }

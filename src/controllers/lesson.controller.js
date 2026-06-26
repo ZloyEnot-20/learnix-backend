@@ -8,6 +8,8 @@ import { recordAudit } from "../services/audit.service.js"
 
 import { findStudentIdsInGroup } from "../services/group.service.js"
 
+import { notify } from "../services/notification.service.js"
+
 import {
 
   assertOrgGroup,
@@ -60,6 +62,52 @@ function serializeLesson(doc) {
 
   return json
 
+}
+
+
+
+function attendanceRowsToNotify(previousAttendance, nextAttendance) {
+  const oldByStudent = new Map(
+    (previousAttendance ?? []).map((row) => [row.studentId, row.status ?? null]),
+  )
+  return (nextAttendance ?? []).filter((row) => {
+    if (!row?.studentId || !row.status) return false
+    return oldByStudent.get(row.studentId) !== row.status
+  })
+}
+
+
+
+async function notifyAttendanceChanges({
+  group,
+  lessonDate,
+  topic,
+  canceled,
+  previousAttendance,
+  nextAttendance,
+}) {
+  const rows = attendanceRowsToNotify(previousAttendance, nextAttendance)
+  if (rows.length === 0) return
+
+  const lessonDateLabel = formatDateOnly(lessonDate)
+  const topicLabel = topic?.trim() || undefined
+
+  await Promise.all(
+    rows.map((row) =>
+      notify(row.studentId, {
+        type: "attendance",
+        title: `Attendance: ${row.status}`,
+        message: `Lesson on ${lessonDateLabel}: ${row.status}`,
+        data: {
+          status: row.status,
+          lessonDate: lessonDateLabel,
+          topic: topicLabel,
+          groupName: group?.name,
+          canceled: canceled === true,
+        },
+      }).catch(() => {}),
+    ),
+  )
 }
 
 
@@ -190,7 +238,9 @@ export const updateLesson = asyncHandler(async (req, res) => {
 
   const lesson = await assertTenantDoc(LessonSession, req.params.id, req)
 
-  await assertOrgGroup(lesson.groupId, req)
+  const group = await assertOrgGroup(lesson.groupId, req)
+
+  let attendanceNotifyPayload = null
 
 
 
@@ -212,6 +262,12 @@ export const updateLesson = asyncHandler(async (req, res) => {
         studentIds.map((studentId) => ({ studentId, status: "excused" })),
       )
       patch.attendanceMarked = true
+      attendanceNotifyPayload = {
+        previousAttendance: lesson.attendance,
+        nextAttendance: patch.attendance,
+        topic: lesson.topic,
+        canceled: true,
+      }
     } else {
       patch.canceled = false
       patch.cancelReason = undefined
@@ -262,6 +318,12 @@ export const updateLesson = asyncHandler(async (req, res) => {
 
     patch.attendance = buildAttendance(studentIds, next)
     patch.attendanceMarked = true
+    attendanceNotifyPayload = {
+      previousAttendance: lesson.attendance,
+      nextAttendance: patch.attendance,
+      topic: patch.topic ?? lesson.topic,
+      canceled: false,
+    }
 
   }
 
@@ -300,6 +362,16 @@ export const updateLesson = asyncHandler(async (req, res) => {
     details: { groupId: updated.groupId },
 
   })
+
+
+
+  if (attendanceNotifyPayload) {
+    await notifyAttendanceChanges({
+      group,
+      lessonDate: updated.date,
+      ...attendanceNotifyPayload,
+    }).catch(() => {})
+  }
 
 
 

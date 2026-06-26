@@ -1,4 +1,5 @@
 import { User } from "../models/User.js"
+import { getOrgSettings } from "./orgSettings.service.js"
 
 
 
@@ -86,7 +87,11 @@ export async function serializeEntryTestById(doc) {
 
     : null
 
-  return serializeEntryTest(doc, user)
+  const serialized = serializeEntryTest(doc, user)
+  const settings = await getOrgSettings(doc.orgId)
+  serialized.entryTestAutocomplete = settings.entryTestAutocomplete
+
+  return serialized
 
 }
 

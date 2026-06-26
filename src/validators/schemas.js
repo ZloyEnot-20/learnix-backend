@@ -773,9 +773,16 @@ export const updateUserPermissionsSchema = {
 
 // ---------- Organization settings ----------
 export const updateOrgSettingsSchema = {
-  body: z.object({
-    allowScreenshots: z.boolean(),
-  }),
+  body: z
+    .object({
+      allowScreenshots: z.boolean().optional(),
+      entryTestAutocomplete: z.boolean().optional(),
+    })
+    .refine(
+      (data) =>
+        data.allowScreenshots !== undefined || data.entryTestAutocomplete !== undefined,
+      { message: "At least one setting is required" },
+    ),
 }
 
 // ---------- Telegram bot invites ----------

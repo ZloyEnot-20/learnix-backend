@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { resolveOrgId } from "../services/tenantScope.service.js"
 import { computeOrgLeaderboard } from "../services/gamification.service.js"
 import { recordAudit } from "../services/audit.service.js"
+import { formatOrgSettings, getOrgSettings } from "../services/orgSettings.service.js"
 
 async function ensurePlatformDb() {
   await connectPlatformDB()
@@ -35,12 +36,6 @@ function activeAnnouncementFilter(orgId) {
         ],
       },
     ],
-  }
-}
-
-function formatOrgSettings(org) {
-  return {
-    allowScreenshots: org?.settings?.allowScreenshots === true,
   }
 }
 
@@ -150,7 +145,7 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
   const orgId = resolveOrgId(req)
   if (!orgId) throw ApiError.forbidden("Organization context required")
 
-  const { allowScreenshots } = req.body
+  const { allowScreenshots, entryTestAutocomplete } = req.body
 
   await ensurePlatformDb()
   const Organization = getOrganizationModel()
@@ -158,10 +153,22 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
   if (!org) throw ApiError.notFound("Organization not found")
 
   const previous = formatOrgSettings(org)
+  const $set = {}
+  const details = {}
 
-  await Organization.findByIdAndUpdate(orgId, {
-    $set: { "settings.allowScreenshots": allowScreenshots },
-  })
+  if (allowScreenshots !== undefined) {
+    $set["settings.allowScreenshots"] = allowScreenshots
+    details.allowScreenshots = { from: previous.allowScreenshots, to: allowScreenshots }
+  }
+  if (entryTestAutocomplete !== undefined) {
+    $set["settings.entryTestAutocomplete"] = entryTestAutocomplete
+    details.entryTestAutocomplete = {
+      from: previous.entryTestAutocomplete,
+      to: entryTestAutocomplete,
+    }
+  }
+
+  await Organization.findByIdAndUpdate(orgId, { $set })
 
   await recordAudit({
     req,
@@ -170,10 +177,8 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
     targetType: "organization",
     targetId: orgId,
     targetLabel: org.name,
-    details: {
-      allowScreenshots: { from: previous.allowScreenshots, to: allowScreenshots },
-    },
+    details,
   })
 
-  res.json({ allowScreenshots })
+  res.json(await getOrgSettings(orgId))
 })

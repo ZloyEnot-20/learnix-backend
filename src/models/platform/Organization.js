@@ -16,6 +16,8 @@ const organizationSchema = new Schema(
     settings: {
       /** When true, students may take screenshots during homework on mobile. */
       allowScreenshots: { type: Boolean, default: false },
+      /** When true, entry test UI shows demo autocomplete buttons for staff testing. */
+      entryTestAutocomplete: { type: Boolean, default: false },
     },
   },
   { timestamps: true, _id: false },

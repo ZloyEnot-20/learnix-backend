@@ -8,7 +8,7 @@ const notificationSchema = new mongoose.Schema(
     studentId: { type: String, ref: "User", required: true, index: true },
     type: {
       type: String,
-      enum: ["homework", "result", "reminder", "achievement", "system", "entry_test"],
+      enum: ["homework", "result", "reminder", "achievement", "system", "entry_test", "attendance"],
       default: "system",
     },
     title: { type: String, required: true },
