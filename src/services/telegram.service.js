@@ -134,6 +134,34 @@ export function fmtDate(date) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
 }
 
+const MONTHS_UZ = [
+  "yanvar",
+  "fevral",
+  "mart",
+  "aprel",
+  "may",
+  "iyun",
+  "iyul",
+  "avgust",
+  "sentabr",
+  "oktabr",
+  "noyabr",
+  "dekabr",
+]
+
+/** ISO yoki Date → «12 aprel 2026 yil». */
+export function fmtDateUzLong(date) {
+  if (!date) return "—"
+  const iso = String(date).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) {
+    const [, y, m, day] = iso
+    return `${Number(day)} ${MONTHS_UZ[Number(m) - 1]} ${y} yil`
+  }
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return String(date)
+  return `${d.getUTCDate()} ${MONTHS_UZ[d.getUTCMonth()]} ${d.getUTCFullYear()} yil`
+}
+
 /** Sarlavha + qatorlardan toza "karta" tuzish (bo'sh qatorlar tashlanadi). */
 export function card(title, lines = []) {
   return [title, ...lines.filter(Boolean)].join("\n")
@@ -170,11 +198,20 @@ const STATUS_PLAIN = {
   graded: "Tekshirildi",
 }
 
-const ATTENDANCE_STATUS_UZ = {
-  present: "✅ Darsga <b>keldi</b>",
-  absent: "❌ Darsga <b>kelmadi</b>",
-  late: "⏰ Darsga <b>kechikib keldi</b>",
-  excused: "📋 Sababli <b>yo'q</b>",
+function attendanceStatusLine(status, childName) {
+  const name = esc(childName)
+  switch (status) {
+    case "present":
+      return `✅ Farzandingiz <b>${name}</b> darsga keldi`
+    case "absent":
+      return `❌ Farzandingiz <b>${name}</b> darsga kelmadi`
+    case "late":
+      return `⏰ Farzandingiz <b>${name}</b> darsga kechikib keldi`
+    case "excused":
+      return `📋 Farzandingiz <b>${name}</b> sababli yo'q`
+    default:
+      return `📌 Farzandingiz <b>${name}</b> uchun davomat belgilandi`
+  }
 }
 
 export const STATUS_UZ = {
@@ -228,20 +265,12 @@ export function parentNotificationText(childName, note) {
     case "entry_test":
       return card("📝 <b>Kirish testi</b>", ["", child, subjLine, taskLine])
     case "attendance": {
-      const dateLine = d.lessonDate ? `📅 Sana: <b>${esc(d.lessonDate)}</b>` : null
-      const groupLine = d.groupName ? `👥 Guruh: ${esc(d.groupName)}` : null
-      const topicLine = d.topic ? `📚 Mavzu: <b>${esc(d.topic)}</b>` : null
-      const statusLine = ATTENDANCE_STATUS_UZ[d.status] ?? "📌 Davomat belgilandi"
+      const dateLine = d.lessonDate
+        ? `Dars sanasi: <b>${esc(fmtDateUzLong(d.lessonDate))}</b>`
+        : null
+      const statusLine = attendanceStatusLine(d.status, childName)
       const canceledLine = d.canceled ? "⚠️ Dars bekor qilindi" : null
-      return card("📋 <b>Davomat haqida xabar</b>", [
-        "",
-        child,
-        groupLine,
-        dateLine,
-        topicLine,
-        statusLine,
-        canceledLine,
-      ])
+      return card("<b>Davomat haqida xabar</b>", ["", statusLine, "", dateLine, canceledLine])
     }
     default:
       return card("🔔 <b>Xabar</b>", ["", child, subjLine, taskLine])
