@@ -10,7 +10,7 @@ import { fileURLToPath } from "url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_SOURCE = "d:/Downloads/reading"
-const DEFAULT_OUTPUT = path.resolve(__dirname, "../../../exercises/ielts/reading")
+const DEFAULT_OUTPUT = path.resolve(__dirname, "../../exercises/ielts/reading")
 
 function slugify(title, testId) {
   const base = String(title)
