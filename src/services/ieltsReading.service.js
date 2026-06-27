@@ -13,15 +13,30 @@ export function countReadingQuestions(data) {
   return data.parts.reduce((sum, part) => sum + (part.questions?.length ?? 0), 0)
 }
 
+export function collectReadingQuestionTypes(data) {
+  const types = new Set()
+  for (const part of data?.parts ?? []) {
+    for (const q of part.questions ?? []) {
+      if (q?.type) types.add(String(q.type))
+    }
+  }
+  return [...types].sort()
+}
+
 export function serializeReadingSummary(doc) {
   const data = doc.data ?? {}
   const questionCount = doc.questionCount ?? countReadingQuestions(data)
+  const questionTypes =
+    doc.questionTypes?.length > 0
+      ? doc.questionTypes
+      : collectReadingQuestionTypes(data)
   return {
     slug: doc.slug,
     title: doc.title,
     subtitle: doc.subtitle || `${questionCount} questions`,
     totalTimeMinutes: doc.totalTimeMinutes ?? data.totalTimeMinutes ?? 20,
     questionCount,
+    questionTypes,
     order: doc.order ?? 0,
   }
 }
@@ -47,12 +62,14 @@ export function normalizeReadingInput(raw, idx = 0) {
   const data = raw.data ?? raw
   const slug = slugifyReading(raw.slug || data.id || raw.title) || `reading-${idx}`
   const questionCount = raw.questionCount ?? countReadingQuestions(data)
+  const questionTypes = collectReadingQuestionTypes(data)
   return {
     slug,
     title: raw.title ?? data.title ?? slug,
     subtitle: raw.subtitle ?? "",
     totalTimeMinutes: raw.totalTimeMinutes ?? data.totalTimeMinutes ?? 20,
     questionCount,
+    questionTypes,
     data: {
       id: data.id ?? slug,
       title: data.title ?? raw.title ?? slug,
@@ -60,6 +77,5 @@ export function normalizeReadingInput(raw, idx = 0) {
       parts: data.parts ?? [],
     },
     order: raw.order ?? idx,
-    subtitle: raw.subtitle,
   }
 }

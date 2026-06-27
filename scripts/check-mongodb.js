@@ -3,6 +3,7 @@
  * Usage: npm run db:check
  */
 import dns from "node:dns/promises"
+import { setServers } from "node:dns"
 import net from "node:net"
 import mongoose from "mongoose"
 import { env } from "../src/config/env.js"
@@ -41,6 +42,9 @@ function tcpProbe(host, port, ms = 5000) {
 }
 
 async function main() {
+  // Windows/local DNS often refuses SRV lookups that mongodb+srv requires.
+  setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"])
+
   console.log("=== MongoDB diagnostics ===\n")
   console.log("NODE_ENV:", env.nodeEnv)
   console.log("mongoose:", (await import("mongoose")).default.version)

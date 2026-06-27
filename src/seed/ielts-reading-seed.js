@@ -17,7 +17,7 @@ import { countReadingQuestions, normalizeReadingInput } from "../services/ieltsR
 setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"])
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const READING_DIR = path.resolve(__dirname, "../../exercises/ielts/reading")
+const READING_DIR = path.resolve(__dirname, "../../../exercises/ielts/reading")
 
 function loadCatalogItems() {
   const indexPath = path.join(READING_DIR, "index.json")

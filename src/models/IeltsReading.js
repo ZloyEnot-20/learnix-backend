@@ -12,6 +12,7 @@ const ieltsReadingSchema = new mongoose.Schema(
     subtitle: { type: String, default: "" },
     totalTimeMinutes: { type: Number, default: 20, min: 0 },
     questionCount: { type: Number, default: 0, min: 0 },
+    questionTypes: { type: [String], default: [] },
     /** Full `IeltsReadingTest` payload returned verbatim to the client. */
     data: { type: mongoose.Schema.Types.Mixed, required: true },
     order: { type: Number, default: 0 },
