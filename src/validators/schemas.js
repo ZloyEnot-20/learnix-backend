@@ -652,6 +652,43 @@ export const importPodcastSchema = {
   }),
 }
 
+const readingPartInput = z.object({
+  partNumber: z.number().int().positive(),
+  title: z.string().min(1).max(200),
+  instruction: z.string().max(2000).optional().default(""),
+  passageTitle: z.string().max(200).optional(),
+  questionInstruction: z.string().max(4000).optional(),
+  passage: z.string().min(1),
+  totalQuestions: z.number().int().nonnegative().optional(),
+  questions: z.array(z.record(z.unknown())).min(1).max(100),
+})
+
+const readingTestDataInput = z.object({
+  id: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(200),
+  totalTimeMinutes: z.number().nonnegative().optional().default(20),
+  parts: z.array(readingPartInput).min(1).max(10),
+})
+
+const readingInput = z.object({
+  slug: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(200).optional(),
+  totalTimeMinutes: z.number().nonnegative().optional(),
+  questionCount: z.number().int().nonnegative().optional(),
+  subtitle: z.string().max(500).optional(),
+  order: z.number().int().optional(),
+  data: readingTestDataInput.optional(),
+  parts: z.array(readingPartInput).min(1).max(10).optional(),
+}).refine((v) => v.data != null || v.parts != null, {
+  message: "data or parts is required",
+})
+
+export const importReadingSchema = {
+  body: z.object({
+    readings: z.array(readingInput).max(500).optional().default([]),
+  }),
+}
+
 export const slugParamSchema = {
   params: z.object({ slug: z.string().min(1).max(200) }),
 }

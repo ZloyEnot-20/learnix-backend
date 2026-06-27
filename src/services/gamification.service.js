@@ -10,7 +10,8 @@ import {
 import { aggregateLearnPoints, aggregateLearnPointsBatch } from "./vocabulary-progress.service.js"
 import { EXCLUDE_CHEATING_HOMEWORK_MATCH } from "./submission.service.js"
 
-/** Level → rank tiers. Max level 30 = Legend (single level). */
+/** Level → rank tiers. Max level 30 = Legend (single level).
+ *  Tier entry (~homework-only): Silver L6 ≈ 50, Gold L11 ≈ 250, Diamond L21 ≈ 750. */
 export const TIERS = [
   { id: "bronze", label: "Bronze", minLevel: 1, maxLevel: 5 },
   { id: "silver", label: "Silver", minLevel: 6, maxLevel: 10 },

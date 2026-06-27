@@ -10,6 +10,7 @@
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
     "seed:speaking": "node src/seed/speaking-seed.js",
+    "seed:reading": "node src/seed/ielts-reading-seed.js",
     "bot": "node src/bot/telegram-bot.js",
     "bot:webhook": "node src/scripts/register-telegram-webhook.js",
     "prod": "node scripts/pm2-prod.mjs start",
