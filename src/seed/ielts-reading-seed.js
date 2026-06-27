@@ -63,6 +63,7 @@ async function seedReadings() {
           subtitle: normalized.subtitle ?? "",
           totalTimeMinutes: normalized.totalTimeMinutes,
           questionCount: normalized.questionCount ?? countReadingQuestions(normalized.data),
+          questionTypes: normalized.questionTypes,
           data: normalized.data,
           order: normalized.order,
         },
