@@ -233,6 +233,14 @@ export const recordAttemptSchema = {
           wordsReviewed: z.number().int().nonnegative(),
         })
         .optional(),
+      readingAnswers: z
+        .array(
+          z.object({
+            questionId: z.number(),
+            userAnswer: z.string(),
+          }),
+        )
+        .optional(),
     }),
   }),
 }

@@ -62,6 +62,19 @@ const attemptSchema = new mongoose.Schema(
     cheatingReason: String,
     /** Podcast listening telemetry — seeks, cumulative play time, word review. */
     listeningStats: listeningStatsSchema,
+    /** Per-question answers for IELTS reading homework review. */
+    readingAnswers: {
+      type: [
+        new mongoose.Schema(
+          {
+            questionId: Number,
+            userAnswer: String,
+          },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
   },
   { _id: false },
 )
