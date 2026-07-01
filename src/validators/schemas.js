@@ -150,6 +150,21 @@ export const sendStudentNotificationSchema = {
   }),
 }
 
+export const pushTokenRegisterSchema = {
+  params: idParam,
+  body: z.object({
+    token: z.string().min(1).max(4096),
+    platform: z.enum(["ios", "android"]),
+  }),
+}
+
+export const pushTokenUnregisterSchema = {
+  params: idParam,
+  body: z.object({
+    token: z.string().min(1).max(4096),
+  }),
+}
+
 // ---------- Homework ----------
 export const createHomeworkSchema = {
   body: z.object({

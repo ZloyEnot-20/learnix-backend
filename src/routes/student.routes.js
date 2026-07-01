@@ -8,6 +8,8 @@ import {
   updateStudentSchema,
   loginSuggestionsSchema,
   sendStudentNotificationSchema,
+  pushTokenRegisterSchema,
+  pushTokenUnregisterSchema,
   idParamSchema,
 } from "../validators/schemas.js"
 
@@ -36,6 +38,8 @@ router.post(
 )
 router.post("/:id/claim", isStaff, validate(idParamSchema), ctrl.regenerateClaim)
 router.post("/:id/delete-account", validate(idParamSchema), ctrl.deleteMyAccount)
+router.post("/:id/push-token", validate(pushTokenRegisterSchema), ctrl.registerPushToken)
+router.delete("/:id/push-token", validate(pushTokenUnregisterSchema), ctrl.unregisterPushToken)
 router.delete("/:id", isStaff, validate(idParamSchema), ctrl.deleteStudent)
 
 export default router

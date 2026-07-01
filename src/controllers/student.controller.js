@@ -27,6 +27,10 @@ import {
 import { assertCanAddStudent } from "../services/orgLimits.service.js"
 import { assertSelectableGroup, studentListFilter } from "../services/group.service.js"
 import { notify } from "../services/notification.service.js"
+import {
+  registerPushToken as savePushToken,
+  unregisterPushToken as removePushToken,
+} from "../services/push-token.service.js"
 
 export const listStudents = asyncHandler(async (req, res) => {
   const users = await User.find(await studentListFilter(req)).sort({ joinedAt: -1 })
@@ -341,6 +345,39 @@ export const deleteMyAccount = asyncHandler(async (req, res) => {
   })
 
   res.json({ ok: true, deletedAt: student.deletedAt })
+})
+
+/** Student: register an FCM device token for push notifications. */
+export const registerPushToken = asyncHandler(async (req, res) => {
+  const studentId = req.params.id
+  if (req.user.type !== "student" || req.user.id !== studentId) {
+    throw ApiError.forbidden()
+  }
+
+  const student = await findStudentById(studentId)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (!isStudentActive(student)) {
+    throw ApiError.badRequest("Account is deactivated")
+  }
+
+  const { token, platform } = req.body
+  await savePushToken(studentId, student.orgId, { token, platform })
+  res.json({ ok: true })
+})
+
+/** Student: remove a single FCM device token (e.g. on logout). */
+export const unregisterPushToken = asyncHandler(async (req, res) => {
+  const studentId = req.params.id
+  if (req.user.type !== "student" || req.user.id !== studentId) {
+    throw ApiError.forbidden()
+  }
+
+  const student = await findStudentById(studentId)
+  if (!student) throw ApiError.notFound("Student not found")
+
+  const { token } = req.body
+  await removePushToken(studentId, token)
+  res.json({ ok: true })
 })
 
 /** Group + teacher names for the student's own profile (no group list access). */

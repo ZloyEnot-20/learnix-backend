@@ -108,6 +108,23 @@ export const env = {
       return Boolean(this.url)
     },
   },
+  firebase: {
+    /**
+     * Full service account JSON (single line). Alternative to individual fields below.
+     * Never commit this value — set only in .env or deployment secrets.
+     */
+    serviceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON ?? "",
+    projectId: process.env.FIREBASE_PROJECT_ID ?? "",
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? "",
+    /** PEM private key; use literal \\n for newlines in .env */
+    privateKey: process.env.FIREBASE_PRIVATE_KEY ?? "",
+    get enabled() {
+      return Boolean(
+        this.serviceAccountJson ||
+          (this.projectId && this.clientEmail && this.privateKey),
+      )
+    },
+  },
 }
 
 export const isProd = env.nodeEnv === "production"

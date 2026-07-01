@@ -1,6 +1,7 @@
 import { User } from "../models/User.js"
 import { Group } from "../models/Group.js"
 import { StudentClaim, generateClaimCode } from "../models/StudentClaim.js"
+import { deletePushTokensForStudent } from "./push-token.service.js"
 
 /** Mongo filter for active (non-deleted) students. */
 export const ACTIVE_STUDENT_FILTER = { deletedAt: null }
@@ -95,6 +96,7 @@ export async function softDeleteStudent(student) {
     await removeStudentFromGroup(student.groupId, student._id)
   }
   await StudentClaim.deleteMany({ studentId: student._id })
+  await deletePushTokensForStudent(student._id)
 
   student.deletedAt = deletedAt
   student.groupId = undefined
