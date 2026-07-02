@@ -2,7 +2,6 @@ import "./config/mongoose.js" // must load before any model is compiled
 import express from "express"
 import cors from "cors"
 import helmet from "helmet"
-import morgan from "morgan"
 import cookieParser from "cookie-parser"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -40,9 +39,6 @@ export function createApp() {
   app.use(cors(resolveCorsOptions({ corsDisabled: env.corsDisabled, corsOriginsRaw: env.corsOrigins })))
   app.use(express.json({ limit: "1mb" }))
   app.use(cookieParser())
-
-  // Request logging — `morgan` does not log request bodies, so no secrets leak.
-  app.use(morgan(isProd ? "combined" : "dev"))
 
   // Health checks are mounted before the rate limiter so monitoring/uptime
   // probes (and PM2/load balancers) are never throttled.

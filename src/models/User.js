@@ -113,7 +113,7 @@ userSchema.index({ orgId: 1, groupId: 1, type: 1 })
 
 userSchema.index(
   { orgId: 1, type: 1, totalPoints: -1 },
-  { partialFilterExpression: { type: "student", deletedAt: { $exists: false } } },
+  { partialFilterExpression: { type: "student", deletedAt: null } },
 )
 
 
