@@ -9,8 +9,8 @@ const INVALID_TOKEN_CODES = new Set([
   "messaging/invalid-registration-token",
 ])
 
-/** Attendance alerts go to parents via Telegram, not the student mobile app. */
-const MOBILE_HIDDEN_NOTIFICATION_TYPES = new Set(["attendance"])
+/** All notification types are delivered to the student mobile app. */
+const MOBILE_HIDDEN_NOTIFICATION_TYPES = new Set()
 
 function stringifyDataPayload(data) {
   const out = {}

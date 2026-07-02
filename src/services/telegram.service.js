@@ -354,77 +354,16 @@ async function deliverToChat(chatId, childName, note) {
 }
 
 /**
- * Yangi yaratilgan bildirishnomani shu o'quvchining barcha ota-onalariga DARHOL
- * yuboradi. Backend `notify()` dan keyin chaqiriladi (eng-best-effort).
+ * Parent Telegram delivery is disabled — notifications are delivered to students
+ * via the mobile app only.
  */
-export async function deliverNotification(note) {
-  if (!env.telegram.botToken || !note?.studentId) return
-  const links = await ParentLink.find({ studentId: note.studentId }).lean()
-  if (links.length === 0) return
-
-  const student = await User.findOne({ _id: note.studentId, type: "student" }).lean()
-  const childName = student?.name ?? "Farzand"
-
-  await Promise.all(
-    links.map((link) =>
-      deliverToChat(link.chatId, childName, note)
-        .then(() =>
-          ParentLink.updateOne(
-            { _id: link._id, lastNotifiedAt: { $lt: note.createdAt } },
-            { lastNotifiedAt: note.createdAt },
-          ).catch(() => {}),
-        )
-        .catch((err) => console.error("[tg] deliver error:", err.message)),
-    ),
-  )
+export async function deliverNotification(_note) {
+  return
 }
 
-/**
- * Zaxira: yuborilmay qolgan bildirishnomalarni yetkazadi (masalan, darhol
- * yuborish vaqtida Telegram ishlamay qolgan bo'lsa). Idempotent — dublikat yo'q.
- */
-export async function reconcilePending(limitPerLink = 20) {
-  if (!env.telegram.botToken || reconcileRunning) return
-  reconcileRunning = true
-  try {
-    const links = await ParentLink.find().lean()
-    if (links.length === 0) return
-
-    const students = await User.find({
-      _id: { $in: links.map((l) => l.studentId) },
-      type: "student",
-    }).lean()
-    const nameById = new Map(students.map((s) => [s._id, s.name]))
-
-    for (const link of links) {
-      const since = link.lastNotifiedAt ?? link.createdAt ?? new Date(0)
-      const notes = await Notification.find({
-        studentId: link.studentId,
-        createdAt: { $gt: since },
-        deliveredChatIds: { $ne: link.chatId },
-      })
-        .sort({ createdAt: 1 })
-        .limit(limitPerLink)
-        .lean()
-      if (notes.length === 0) continue
-
-      const childName = nameById.get(link.studentId) ?? "Farzand"
-      let newest = since
-      for (const n of notes) {
-        try {
-          await deliverToChat(link.chatId, childName, n)
-          if (new Date(n.createdAt) > new Date(newest)) newest = n.createdAt
-        } catch (err) {
-          console.error("[tg] reconcile send error:", err.message)
-        }
-      }
-      if (new Date(newest) > new Date(since)) {
-        await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: newest }).catch(() => {})
-      }
-    }
-  } finally {
-    reconcileRunning = false
-  }
+/** Disabled while parent Telegram notifications are off. */
+export async function reconcilePending(_limitPerLink = 20) {
+  return
 }
 
 /** Zaxira reconcile — faqat backend jarayonida (webhook rejimida). */

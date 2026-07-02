@@ -30,7 +30,6 @@ export function isFirebaseEnabled() {
 
 export function initializeFirebase() {
   if (initialized) {
-    console.log("[firebase] already initialized, reusing messaging client")
     return getFcmMessaging()
   }
 
