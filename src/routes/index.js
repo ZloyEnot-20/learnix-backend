@@ -18,6 +18,7 @@ import uploadRoutes from "./upload.routes.js"
 import speechRoutes from "./speech.routes.js"
 import lessonRoutes from "./lesson.routes.js"
 import issueReportRoutes from "./issueReport.routes.js"
+import debugRoutes from "./debug.routes.js"
 
 const router = Router()
 
@@ -40,5 +41,6 @@ router.use("/uploads", uploadRoutes)
 router.use("/speech", speechRoutes)
 router.use("/lessons", lessonRoutes)
 router.use("/issue-reports", issueReportRoutes)
+router.use("/debug", debugRoutes)
 
 export default router
