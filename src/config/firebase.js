@@ -1,4 +1,5 @@
-import admin from "firebase-admin"
+import { cert, getApps, initializeApp } from "firebase-admin/app"
+import { getMessaging as getFcmMessaging } from "firebase-admin/messaging"
 import { env } from "./env.js"
 
 let initialized = false
@@ -30,7 +31,7 @@ export function isFirebaseEnabled() {
 export function initializeFirebase() {
   if (initialized) {
     console.log("[firebase] already initialized, reusing messaging client")
-    return admin.messaging()
+    return getFcmMessaging()
   }
 
   let serviceAccount
@@ -60,24 +61,24 @@ export function initializeFirebase() {
   )
 
   try {
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert({
           projectId: serviceAccount.project_id,
           clientEmail: serviceAccount.client_email,
           privateKey: serviceAccount.private_key,
         }),
       })
-      console.log("[firebase] admin.initializeApp succeeded")
+      console.log("[firebase] initializeApp succeeded")
     }
   } catch (err) {
-    console.error("[firebase] admin.initializeApp failed:", err.message)
+    console.error("[firebase] initializeApp failed:", err.message)
     if (err.stack) console.error(err.stack)
     return null
   }
 
   initialized = true
-  return admin.messaging()
+  return getFcmMessaging()
 }
 
 export function getMessaging() {

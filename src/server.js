@@ -29,11 +29,8 @@ function start() {
 
   connectDB()
     .then(async () => {
-      console.log("firebase enabled", env.firebase.enabled)
       if (env.firebase.enabled) {
         const messaging = initializeFirebase()
-        console.log("messaging", messaging)
-
         if (messaging) {
           console.log("[firebase] FCM enabled")
         } else {
