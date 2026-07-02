@@ -28,21 +28,52 @@ export function isFirebaseEnabled() {
 }
 
 export function initializeFirebase() {
-  if (initialized) return admin.messaging()
+  if (initialized) {
+    console.log("[firebase] already initialized, reusing messaging client")
+    return admin.messaging()
+  }
 
-  const serviceAccount = parseServiceAccount()
-  if (!serviceAccount?.project_id || !serviceAccount?.client_email || !serviceAccount?.private_key) {
+  let serviceAccount
+  try {
+    serviceAccount = parseServiceAccount()
+  } catch (err) {
+    console.error("[firebase] failed to parse service account:", err.message)
     return null
   }
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: serviceAccount.project_id,
-        clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key,
-      }),
-    })
+  if (!serviceAccount) {
+    console.warn("[firebase] no service account — env fields incomplete after parse")
+    return null
+  }
+
+  const missing = []
+  if (!serviceAccount.project_id) missing.push("project_id")
+  if (!serviceAccount.client_email) missing.push("client_email")
+  if (!serviceAccount.private_key) missing.push("private_key")
+  if (missing.length) {
+    console.warn(`[firebase] service account missing fields: ${missing.join(", ")}`)
+    return null
+  }
+
+  console.log(
+    `[firebase] parsed credentials — project_id=${serviceAccount.project_id}, client_email=${serviceAccount.client_email}`,
+  )
+
+  try {
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: serviceAccount.project_id,
+          clientEmail: serviceAccount.client_email,
+          privateKey: serviceAccount.private_key,
+        }),
+      })
+      console.log("[firebase] admin.initializeApp succeeded")
+    }
+  } catch (err) {
+    console.error("[firebase] admin.initializeApp failed:", err.message)
+    if (err.stack) console.error(err.stack)
+    return null
   }
 
   initialized = true
