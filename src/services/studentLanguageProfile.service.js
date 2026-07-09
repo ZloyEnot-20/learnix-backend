@@ -15,6 +15,7 @@ import {
   MEASURED_SKILLS,
   GRAMMAR_TOPIC_COUNT,
   GRAMMAR_TOPIC_LEVELS,
+  buildLevelCatalogue,
   MASTERY_ACCURACY,
   MASTERY_CONFIDENCE,
   MASTERY_MIN_QUESTIONS,
@@ -120,10 +121,34 @@ function computeTopicStats(acc, now = new Date()) {
   }
 }
 
-function computeSkillScore(topicStats) {
-  const eligible = topicStats.filter(
-    (t) => t.attemptedQuestions >= MIN_QUESTIONS_FOR_TOPIC,
-  )
+/** Penalize inflated scores from narrow topic breadth (few decks practiced well). */
+function applyBreadthPenalty(score, eligibleCount, masteredCount) {
+  const breadthFactor = Math.min(1, Math.sqrt(eligibleCount / 8))
+  const masteryFactor = Math.min(1, 0.55 + 0.45 * Math.min(1, masteredCount / 8))
+  return Math.round(score * breadthFactor * masteryFactor)
+}
+
+/** Reduce score when catalogue / level coverage is still shallow. */
+function adjustScoreForCoverage(score, levelCoverage, attemptedTopics, totalTopics) {
+  if (score <= 0) return 0
+  const catalogueBreadth = totalTopics > 0 ? attemptedTopics / totalTopics : 0
+  const breadthPenalty = Math.min(1, Math.sqrt(Math.max(0, catalogueBreadth) * 6))
+
+  let levelProgress = 0
+  for (let l = 1; l <= 9; l++) {
+    levelProgress += (levelCoverage[String(l)] ?? 0) / 100
+  }
+  const levelPenalty = Math.min(1, 0.35 + 0.65 * (levelProgress / 9))
+
+  return Math.round(score * breadthPenalty * levelPenalty)
+}
+
+function countEligibleTopics(topicStats) {
+  return topicStats.filter((t) => t.attemptedQuestions >= MIN_QUESTIONS_FOR_TOPIC)
+}
+
+function computeSkillScore(topicStats, levelCoverage = {}) {
+  const eligible = countEligibleTopics(topicStats)
   if (!eligible.length) {
     return { score: 0, confidence: 0, level: 1, hasData: false }
   }
@@ -145,25 +170,41 @@ function computeSkillScore(topicStats) {
   const rawRatio = maxSum > 0 ? weightedSum / maxSum : 0
   const avgConfidence = confSum / eligible.length
   const masteryBonus = 0.7 + 0.3 * (masteredCount / Math.max(1, eligible.length))
-  const score = Math.round(
-    Math.min(1000, rawRatio * 1000 * masteryBonus * avgConfidence),
-  )
+  const rawScore = Math.min(1000, rawRatio * 1000 * masteryBonus * avgConfidence)
+  const score = applyBreadthPenalty(Math.round(rawScore), eligible.length, masteredCount)
   const confidence = Math.min(1, avgConfidence)
-  const level = scoreToLearnixLevel(score, eligible.length, masteredCount)
+  const level = deriveLearnixLevel(score, eligible.length, masteredCount, levelCoverage)
 
   return { score, confidence, level, hasData: true }
 }
 
-function scoreToLearnixLevel(score, topicsAttempted, masteredCount) {
-  const base = Math.max(1, Math.min(9, Math.round((score / 1000) * 9)))
-  if (topicsAttempted < 3) return Math.min(base, 2)
-  if (topicsAttempted < 6) return Math.min(base, 4)
-  if (masteredCount < 2) return Math.min(base, 5)
-  if (masteredCount < 5) return Math.min(base, 7)
-  return base
+/** Highest level with at least minPct catalogue mastery (sequential — no skipping). */
+function maxLevelFromCoverage(levelCoverage, minPct = 25) {
+  let maxLevel = 1
+  for (let l = 1; l <= 9; l++) {
+    const pct = levelCoverage[String(l)] ?? 0
+    if (pct >= minPct) maxLevel = l
+    else break
+  }
+  return maxLevel
 }
 
-function computeOverallSkillScores(skillProfiles) {
+function deriveLearnixLevel(score, topicsAttempted, masteredCount, levelCoverage = {}) {
+  const base = Math.max(1, Math.min(9, Math.round((score / 1000) * 9)))
+  let level = base
+  if (topicsAttempted < 3) level = Math.min(level, 2)
+  if (topicsAttempted < 6) level = Math.min(level, 4)
+  if (masteredCount < 2) level = Math.min(level, 5)
+  if (masteredCount < 5) level = Math.min(level, 7)
+  level = Math.min(level, maxLevelFromCoverage(levelCoverage, 25))
+  return level
+}
+
+function scoreToLearnixLevel(score, topicsAttempted, masteredCount, levelCoverage = {}) {
+  return deriveLearnixLevel(score, topicsAttempted, masteredCount, levelCoverage)
+}
+
+function computeOverallSkillScores(skillProfiles, levelCoverage = {}, coverage = {}) {
   const active = MEASURED_SKILLS.filter(
     (s) => skillProfiles[s]?.hasData && (skillProfiles[s].confidence ?? 0) > 0,
   )
@@ -179,16 +220,28 @@ function computeOverallSkillScores(skillProfiles) {
     confSum += p.confidence
   }
 
-  const score = confSum > 0 ? Math.round(scoreSum / confSum) : 0
+  const rawScore = confSum > 0 ? Math.round(scoreSum / confSum) : 0
   const confidence = Math.min(1, confSum / active.length)
-  const level = scoreToLearnixLevel(
-    score,
-    active.reduce((a, s) => a + (skillProfiles[s].topics?.length ?? 0), 0),
-    active.reduce(
-      (a, s) => a + (skillProfiles[s].topics?.filter((t) => t.mastered).length ?? 0),
-      0,
-    ),
+  const eligibleTopics = active.reduce(
+    (a, s) => a + countEligibleTopics(skillProfiles[s].topics ?? []).length,
+    0,
   )
+  const masteredTopics = active.reduce(
+    (a, s) => a + (skillProfiles[s].topics?.filter((t) => t.mastered).length ?? 0),
+    0,
+  )
+
+  const hasCoverageMeta =
+    typeof coverage.attemptedTopics === "number" && typeof coverage.totalTopics === "number"
+  const score = hasCoverageMeta
+    ? adjustScoreForCoverage(
+        rawScore,
+        levelCoverage,
+        coverage.attemptedTopics,
+        coverage.totalTopics,
+      )
+    : rawScore
+  const level = deriveLearnixLevel(score, eligibleTopics, masteredTopics, levelCoverage)
 
   return { score, level, confidence }
 }
@@ -507,13 +560,13 @@ async function collectTopicData(studentId) {
   }
 }
 
-function buildSkillProfile(topicMap, speakingDimensions = null) {
+function buildSkillProfile(topicMap, levelCoverage = {}, speakingDimensions = null) {
   const topicStats = [...topicMap.values()]
     .map((acc) => computeTopicStats(acc))
     .filter(Boolean)
     .sort((a, b) => b.weightedAccuracy - a.weightedAccuracy)
 
-  const { score, confidence, level, hasData } = computeSkillScore(topicStats)
+  const { score, confidence, level, hasData } = computeSkillScore(topicStats, levelCoverage)
   const profile = {
     score,
     confidence,
@@ -554,13 +607,17 @@ export async function recomputeStudentLanguageProfile(studentId) {
   const approvedSpeakingCount = countApprovedSpeakingAssessments(speakingSubmissions)
   const speakingConf = speakingConfidenceFromAssessments(approvedSpeakingCount)
 
-  const grammar = buildSkillProfile(grammarTopics)
-  const vocabulary = buildSkillProfile(vocabTopics)
+  const grammarDraft = buildSkillProfile(grammarTopics)
+  const vocabularyDraft = buildSkillProfile(vocabTopics)
+  const levelCoverage = computeLevelCoverage(grammarDraft.topics, vocabularyDraft.topics)
+
+  const grammar = buildSkillProfile(grammarTopics, levelCoverage)
+  const vocabulary = buildSkillProfile(vocabTopics, levelCoverage)
   const speakingTopicsStats = [...speakingTopics.values()]
     .map((acc) => computeTopicStats(acc))
     .filter(Boolean)
 
-  const speakingBase = buildSkillProfile(speakingTopics)
+  const speakingBase = buildSkillProfile(speakingTopics, levelCoverage)
   const speaking = {
     ...speakingBase,
     score: speakingScoreFromDimensions(speakingDimensions, speakingTopicsStats, speakingSubmissions),
@@ -573,17 +630,16 @@ export async function recomputeStudentLanguageProfile(studentId) {
 
   if (speaking.hasData) {
     if (speaking.score > 0) {
-      speaking.level = scoreToLearnixLevel(
+      const eligibleSpeaking = countEligibleTopics(speaking.topics)
+      speaking.level = deriveLearnixLevel(
         speaking.score,
-        speaking.topics.length,
-        speaking.topics.filter((t) => t.mastered).length,
+        eligibleSpeaking.length,
+        eligibleSpeaking.filter((t) => t.mastered).length,
+        levelCoverage,
       )
     }
     speaking.confidence = speakingConf
   }
-
-  const skillProfiles = { grammar, vocabulary, speaking }
-  const overall = computeOverallSkillScores(skillProfiles)
 
   const allTopics = [
     ...grammar.topics,
@@ -592,7 +648,17 @@ export async function recomputeStudentLanguageProfile(studentId) {
   ]
   const masteredTopics = allTopics.filter((t) => t.mastered).map((t) => t.slug)
   const needsReviewTopics = allTopics.filter((t) => t.needsReview).map((t) => t.slug)
-  const levelCoverage = computeLevelCoverage(grammar.topics, vocabulary.topics)
+
+  const vocabCatalogueCount = await VocabDeck.countDocuments()
+  const coverageMeta = {
+    attemptedTopics: allTopics.length,
+    masteredTopics: masteredTopics.length,
+    totalTopics: GRAMMAR_TOPIC_COUNT + vocabCatalogueCount,
+    needsReviewTopics: needsReviewTopics.length,
+  }
+
+  const skillProfiles = { grammar, vocabulary, speaking }
+  const overall = computeOverallSkillScores(skillProfiles, levelCoverage, coverageMeta)
 
   const doc = {
     _id: studentId,
@@ -605,12 +671,7 @@ export async function recomputeStudentLanguageProfile(studentId) {
     listening: { hasData: false, score: 0, confidence: 0, level: 1, topics: [] },
     writing: { hasData: false, score: 0, confidence: 0, level: 1, topics: [] },
     overall,
-    coverage: {
-      attemptedTopics: allTopics.length,
-      masteredTopics: masteredTopics.length,
-      totalTopics: GRAMMAR_TOPIC_COUNT + vocabTopics.size,
-      needsReviewTopics: needsReviewTopics.length,
-    },
+    coverage: coverageMeta,
     masteredTopics,
     needsReviewTopics,
     levelCoverage,
@@ -681,4 +742,9 @@ export const _internal = {
   speakingConfidenceFromAssessments,
   recencyWeight,
   scoreToLearnixLevel,
+  deriveLearnixLevel,
+  applyBreadthPenalty,
+  adjustScoreForCoverage,
+  maxLevelFromCoverage,
+  buildLevelCatalogue,
 }

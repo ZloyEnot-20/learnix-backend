@@ -149,4 +149,37 @@ describe("language-profile learnix level gates", () => {
     assert.ok(scoreToLearnixLevel(900, 2, 1) <= 2)
     assert.ok(scoreToLearnixLevel(900, 5, 1) <= 4)
   })
+
+  it("caps level when level coverage is shallow", () => {
+    const shallowCoverage = {
+      "1": 80,
+      "2": 10,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+    }
+    const level = scoreToLearnixLevel(900, 20, 15, shallowCoverage)
+    assert.ok(level <= 2)
+  })
+})
+
+describe("language-profile coverage penalties", () => {
+  const { adjustScoreForCoverage, applyBreadthPenalty } = _internal
+
+  it("reduces inflated score when catalogue coverage is low", () => {
+    const levelCoverage = Object.fromEntries(
+      Array.from({ length: 9 }, (_, i) => [String(i + 1), i < 2 ? 60 : 0]),
+    )
+    const adjusted = adjustScoreForCoverage(924, levelCoverage, 15, 200)
+    assert.ok(adjusted < 600)
+  })
+
+  it("penalizes narrow topic breadth", () => {
+    const penalized = applyBreadthPenalty(900, 3, 1)
+    assert.ok(penalized < 500)
+  })
 })

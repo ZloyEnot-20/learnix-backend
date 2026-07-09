@@ -114,6 +114,104 @@ export const GRAMMAR_TOPIC_LEVELS = {
 /** Total grammar topics in catalogue (for coverage). */
 export const GRAMMAR_TOPIC_COUNT = 52
 
+/** Learnix level (1–9) → CEFR band shown in admin and student UI. */
+export const LEARNIX_TO_CEFR = ["", "A1", "A2", "A2", "B1", "B1", "B2", "B2", "C1", "C2"]
+
+/** Human-readable level metadata for admin level scale. */
+export const LEARNIX_LEVEL_META = [
+  {
+    level: 1,
+    cefr: "A1",
+    title: "Starter",
+    description: "Basic sentences, verb to be, there is/are, simple vocabulary.",
+  },
+  {
+    level: 2,
+    cefr: "A2",
+    title: "Elementary",
+    description: "Present simple, articles, pronouns, everyday topics and routines.",
+  },
+  {
+    level: 3,
+    cefr: "A2",
+    title: "Pre-Intermediate",
+    description: "Present continuous, past simple, comparatives, common time expressions.",
+  },
+  {
+    level: 4,
+    cefr: "B1",
+    title: "Intermediate",
+    description: "Question forms, agreement, containers, adverbs, intermediate vocabulary.",
+  },
+  {
+    level: 5,
+    cefr: "B1",
+    title: "Upper-Intermediate",
+    description: "Modals, present perfect, prepositions, past continuous, phrasal basics.",
+  },
+  {
+    level: 6,
+    cefr: "B2",
+    title: "B2 Core",
+    description: "Relative clauses, gerunds/infinitives, business English, compound words.",
+  },
+  {
+    level: 7,
+    cefr: "B2",
+    title: "B2 Advanced",
+    description: "Passive voice, conditionals, reported speech, phrasal verbs, causative.",
+  },
+  {
+    level: 8,
+    cefr: "C1",
+    title: "C1",
+    description: "Wish/if only, linking words, participle clauses, advanced word formation.",
+  },
+  {
+    level: 9,
+    cefr: "C2",
+    title: "C2",
+    description: "Inversion, advanced structures, near-native grammar control.",
+  },
+]
+
+function formatTopicTitle(slug) {
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+}
+
+/** Grammar topics grouped by Learnix level for admin level scale. */
+export function buildGrammarLevelCatalogue() {
+  const byLevel = Object.fromEntries(
+    Array.from({ length: 9 }, (_, i) => [
+      String(i + 1),
+      { grammarTopics: [] },
+    ]),
+  )
+  for (const [slug, level] of Object.entries(GRAMMAR_TOPIC_LEVELS)) {
+    byLevel[String(level)].grammarTopics.push({
+      slug,
+      title: formatTopicTitle(slug),
+    })
+  }
+  for (const level of Object.values(byLevel)) {
+    level.grammarTopics.sort((a, b) => a.title.localeCompare(b.title))
+  }
+  return byLevel
+}
+
+/** Full level catalogue payload for API. */
+export function buildLevelCatalogue() {
+  const grammarByLevel = buildGrammarLevelCatalogue()
+  return LEARNIX_LEVEL_META.map((meta) => ({
+    ...meta,
+    grammarTopics: grammarByLevel[String(meta.level)].grammarTopics,
+    vocabularyCefr: meta.cefr,
+  }))
+}
+
 /** CEFR deck level → Learnix topic level for vocabulary. */
 export const CEFR_TO_TOPIC_LEVEL = {
   A1: 1,

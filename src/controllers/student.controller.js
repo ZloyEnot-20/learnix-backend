@@ -21,6 +21,7 @@ import {
   getStudentLanguageProfile,
   buildLanguageProfileSummaries,
 } from "../services/studentLanguageProfile.service.js"
+import { buildLevelCatalogue } from "../config/language-profile.js"
 import { recomputeStudentLanguageProfileNow } from "../services/languageProfileQueue.js"
 import { getProfileScoreHistory } from "../services/languageProfileSnapshot.service.js"
 import {
@@ -519,6 +520,11 @@ export const getLanguageProfileSummaries = asyncHandler(async (req, res) => {
   const users = await User.find(await studentListFilter(req)).lean()
   const summaries = await buildLanguageProfileSummaries(users)
   res.json(summaries)
+})
+
+/** Learnix level scale with grammar topics per level (admin roadmap). */
+export const getLanguageProfileLevelCatalogue = asyncHandler(async (req, res) => {
+  res.json(buildLevelCatalogue())
 })
 
 /** Staff: force immediate profile recompute. */

@@ -20,6 +20,7 @@ router.use(...protect)
 router.get("/login-suggestions", isStaff, validate(loginSuggestionsSchema), ctrl.loginSuggestions)
 router.get("/ielts-summaries", isStaff, ctrl.getIeltsSummaries)
 router.get("/language-profile-summaries", isStaff, ctrl.getLanguageProfileSummaries)
+router.get("/language-profile/level-catalogue", isStaff, ctrl.getLanguageProfileLevelCatalogue)
 router.get("/", isStaff, ctrl.listStudents)
 router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 
