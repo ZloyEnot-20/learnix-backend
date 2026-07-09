@@ -644,6 +644,42 @@ export const importVocabSchema = {
   }),
 }
 
+const manageVocabWordInput = z.object({
+  id: z.string().max(120).optional(),
+  term: z.string().min(1).max(200),
+  partOfSpeech: z.string().max(40).optional().default("noun"),
+  definition: z.string().max(2000).optional().default(""),
+  example: z.string().max(2000).optional().default(""),
+  translation: z.string().max(2000).optional().default(""),
+  translationUz: z.string().max(2000).optional().default(""),
+})
+
+export const manageOrgVocabSchema = {
+  body: z
+    .object({
+      mode: z.enum(["create", "append"]),
+      deckSlug: z.string().max(200).optional(),
+      title: z.string().max(200).optional(),
+      topic: z.string().max(200).optional(),
+      level: z.literal("A1").optional().default("A1"),
+      difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+      words: z.array(manageVocabWordInput).min(1).max(200),
+    })
+    .superRefine((data, ctx) => {
+      if (data.mode === "create") {
+        if (!data.title?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "title is required", path: ["title"] })
+        }
+        if (!data.topic?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "topic is required", path: ["topic"] })
+        }
+      }
+      if (data.mode === "append" && !data.deckSlug?.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "deckSlug is required", path: ["deckSlug"] })
+      }
+    }),
+}
+
 const podcastWordInput = z.object({
   word: z.string().min(1).max(200).optional(),
   term: z.string().min(1).max(200).optional(),

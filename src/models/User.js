@@ -73,6 +73,9 @@ const userSchema = new mongoose.Schema(
     /** Set when the student deletes their account from the mobile app. */
     deletedAt: { type: Date },
 
+    /** Updated on each successful password login (web or mobile). */
+    lastLoginAt: { type: Date },
+
     /** Gamification — stored on student users, updated incrementally or via recompute. */
     totalPoints: { type: Number, default: 0, min: 0 },
     level: { type: Number, default: 1, min: 1, max: 30 },
@@ -174,6 +177,8 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
 
     deletedAt: this.deletedAt ?? null,
 
+    lastLoginAt: this.lastLoginAt ?? null,
+
   }
 
 }
@@ -213,6 +218,8 @@ userSchema.methods.toStudentJSON = function toStudentJSON() {
     isActive: !this.deletedAt,
 
     deletedAt: this.deletedAt ?? null,
+
+    lastLoginAt: this.lastLoginAt ?? null,
 
   }
 

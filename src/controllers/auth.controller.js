@@ -67,6 +67,9 @@ export const login = asyncHandler(async (req, res) => {
 
   if (!user.login && user.email) await ensureLoginField(user)
 
+  user.lastLoginAt = new Date()
+  await user.save()
+
   await recordAudit({
     req,
     actor: { id: user._id, name: user.name, type: user.type },

@@ -9,6 +9,7 @@ import { validate } from "../middleware/validate.js"
 import {
   importCatalogSchema,
   importVocabSchema,
+  manageOrgVocabSchema,
   importPodcastSchema,
   importReadingSchema,
   slugParamSchema,
@@ -30,6 +31,7 @@ router.get("/", ctrl.listExercises)
 router.get("/topics", ctrl.listTopics)
 router.get("/levels", ctrl.listLevels)
 router.get("/vocab/summary", ctrl.listVocabDeckSummaries)
+router.get("/vocab/org", isAdmin, ctrl.listOrgVocabDecks)
 router.get("/vocab", ctrl.listVocabDecks)
 router.get("/vocab/:slug", validate(slugParamSchema), ctrl.getVocabDeck)
 router.get("/podcasts/summary", podcastCtrl.listPodcastSummaries)
@@ -43,6 +45,7 @@ router.post("/meta", validate(exerciseMetaBatchSchema), ctrl.getExerciseMetaBatc
 // Org admin + super admin bulk import into the shared catalogue.
 router.post("/import", isAdmin, validate(importCatalogSchema), ctrl.importCatalog)
 router.post("/vocab/import", isAdmin, validate(importVocabSchema), ctrl.importVocabDecks)
+router.post("/vocab/manage", isAdmin, validate(manageOrgVocabSchema), ctrl.manageOrgVocab)
 router.post(
   "/podcasts/upload",
   isAdmin,

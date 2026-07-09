@@ -5,6 +5,50 @@ import { VocabDeck } from "../models/VocabDeck.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { recordAudit } from "../services/audit.service.js"
+import { canCrossTenant, resolveOrgId } from "../services/tenantScope.service.js"
+import { uid } from "../utils/ids.js"
+
+function slugify(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+/** Global platform decks (orgId absent) plus decks owned by the caller's org. */
+function vocabVisibilityFilter(req) {
+  const orgId = resolveOrgId(req)
+  if (!orgId) {
+    if (canCrossTenant(req)) return {}
+    return { $or: [{ orgId: null }, { orgId: { $exists: false } }] }
+  }
+  return { $or: [{ orgId: null }, { orgId: { $exists: false } }, { orgId }] }
+}
+
+function assertVocabDeckAccess(doc, req) {
+  if (!doc?.orgId) return
+  const orgId = resolveOrgId(req)
+  if (canCrossTenant(req) && !orgId) return
+  if (doc.orgId !== orgId) throw ApiError.notFound("Deck not found")
+}
+
+function buildOrgDeckSlug(orgId, topic, title) {
+  const base = slugify(`${topic}-${title}`) || "deck"
+  return `${orgId}--${base}`.slice(0, 200)
+}
+
+function normalizeVocabWords(words = []) {
+  return words.map((w, idx) => ({
+    id: w.id?.trim() || `w-${uid("vw").slice(-8)}-${idx}`,
+    term: w.term.trim(),
+    partOfSpeech: w.partOfSpeech?.trim() || "noun",
+    definition: w.definition?.trim() ?? "",
+    example: w.example?.trim() ?? "",
+    translation: w.translation?.trim() ?? "",
+    translationUz: w.translationUz?.trim() ?? "",
+  }))
+}
 
 /** Reconstruct the client `GrammarExercise` shape from a stored doc. */
 function serializeExercise(doc) {
@@ -114,6 +158,9 @@ function serializeVocabDeck(doc) {
     title: doc.title,
     description: doc.description ?? "",
     level: doc.level ?? "A1",
+    topic: doc.topic ?? "",
+    difficulty: doc.difficulty ?? "medium",
+    orgId: doc.orgId ?? null,
     words: (doc.words ?? []).map((w) => ({
       id: w.id,
       term: w.term,
@@ -132,19 +179,27 @@ function serializeVocabDeckSummary(doc) {
     title: doc.title,
     description: doc.description ?? "",
     level: doc.level ?? "A1",
+    topic: doc.topic ?? "",
+    difficulty: doc.difficulty ?? "medium",
+    orgId: doc.orgId ?? null,
     wordCount: doc.wordCount ?? (doc.words ?? []).length,
   }
 }
 
 /** List vocabulary deck metadata without embedded words. */
-export const listVocabDeckSummaries = asyncHandler(async (_req, res) => {
+export const listVocabDeckSummaries = asyncHandler(async (req, res) => {
+  const filter = vocabVisibilityFilter(req)
   const docs = await VocabDeck.aggregate([
+    { $match: filter },
     {
       $project: {
         slug: 1,
         title: 1,
         description: 1,
         level: 1,
+        topic: 1,
+        difficulty: 1,
+        orgId: 1,
         order: 1,
         wordCount: { $size: { $ifNull: ["$words", []] } },
       },
@@ -154,21 +209,32 @@ export const listVocabDeckSummaries = asyncHandler(async (_req, res) => {
   res.json(docs.map(serializeVocabDeckSummary))
 })
 
-/** List all vocabulary decks — available to any authenticated user. */
-export const listVocabDecks = asyncHandler(async (_req, res) => {
-  const docs = await VocabDeck.find().sort({ order: 1, title: 1 })
+/** List vocabulary decks visible to the caller (global + own org). */
+export const listVocabDecks = asyncHandler(async (req, res) => {
+  const filter = vocabVisibilityFilter(req)
+  const docs = await VocabDeck.find(filter).sort({ order: 1, title: 1 })
   res.json(docs.map(serializeVocabDeck))
+})
+
+/** Org-owned decks only — for the admin "add to existing deck" picker. */
+export const listOrgVocabDecks = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+  const docs = await VocabDeck.find({ orgId }).sort({ updatedAt: -1, title: 1 })
+  res.json(docs.map(serializeVocabDeckSummary))
 })
 
 export const getVocabDeck = asyncHandler(async (req, res) => {
   const doc = await VocabDeck.findById(req.params.slug)
   if (!doc) throw ApiError.notFound("Deck not found")
+  assertVocabDeckAccess(doc, req)
   res.json(serializeVocabDeck(doc))
 })
 
 /** Staff-only upsert of vocabulary decks by slug (idempotent). */
 export const importVocabDecks = asyncHandler(async (req, res) => {
   const { decks = [] } = req.body
+  const orgId = resolveOrgId(req)
   let written = 0
   if (decks.length > 0) {
     const ops = decks.map((d, idx) => ({
@@ -180,6 +246,9 @@ export const importVocabDecks = asyncHandler(async (req, res) => {
             title: d.title,
             description: d.description ?? "",
             level: d.level ?? "A1",
+            topic: d.topic ?? "",
+            difficulty: d.difficulty ?? "medium",
+            orgId: orgId ?? d.orgId ?? null,
             words: d.words ?? [],
             order: d.order ?? idx,
           },
@@ -201,6 +270,88 @@ export const importVocabDecks = asyncHandler(async (req, res) => {
   })
 
   res.json({ ok: true, decksWritten: written })
+})
+
+/** Org admin UI: create a deck or append words to an existing org deck. */
+export const manageOrgVocab = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+
+  const {
+    mode,
+    deckSlug,
+    title,
+    topic,
+    level = "A1",
+    difficulty = "medium",
+    words = [],
+  } = req.body
+
+  if (level !== "A1") {
+    throw ApiError.badRequest("Only Stage 1 (A1) vocabulary is supported for now")
+  }
+
+  const normalizedWords = normalizeVocabWords(words)
+  if (normalizedWords.length === 0) {
+    throw ApiError.badRequest("Add at least one word")
+  }
+
+  let deck
+  let wordsAdded = normalizedWords.length
+
+  if (mode === "append") {
+    if (!deckSlug) throw ApiError.badRequest("Select a deck to add words to")
+    deck = await VocabDeck.findOne({ _id: deckSlug, orgId })
+    if (!deck) throw ApiError.notFound("Deck not found in your organization")
+
+    const existingTerms = new Set((deck.words ?? []).map((w) => w.term.toLowerCase()))
+    const toAdd = normalizedWords.filter((w) => !existingTerms.has(w.term.toLowerCase()))
+    wordsAdded = toAdd.length
+    deck.words = [...(deck.words ?? []), ...toAdd]
+    if (topic?.trim()) deck.topic = topic.trim()
+    if (difficulty) deck.difficulty = difficulty
+    await deck.save()
+  } else if (mode === "create") {
+    const deckTitle = title?.trim()
+    const deckTopic = topic?.trim()
+    if (!deckTitle) throw ApiError.badRequest("Deck title is required")
+    if (!deckTopic) throw ApiError.badRequest("Topic is required")
+
+    const slug = buildOrgDeckSlug(orgId, deckTopic, deckTitle)
+    const existing = await VocabDeck.findById(slug)
+    if (existing) throw ApiError.conflict("A deck with this name already exists. Choose another title or add to the existing deck.")
+
+    deck = await VocabDeck.create({
+      _id: slug,
+      slug,
+      title: deckTitle,
+      description: `Stage 1 vocabulary — ${deckTopic}`,
+      level: "A1",
+      topic: deckTopic,
+      difficulty,
+      orgId,
+      words: normalizedWords,
+      order: Date.now(),
+    })
+  } else {
+    throw ApiError.badRequest("Invalid mode")
+  }
+
+  await recordAudit({
+    req,
+    action: mode === "append" ? "append_vocab" : "create_vocab",
+    category: "exercises",
+    targetType: "vocab",
+    targetId: deck.slug,
+    targetLabel: deck.title,
+    details: { wordsAdded, topic: deck.topic, difficulty: deck.difficulty },
+  })
+
+  res.json({
+    ok: true,
+    deck: serializeVocabDeck(deck),
+    wordsAdded,
+  })
 })
 
 export const getExercise = asyncHandler(async (req, res) => {
