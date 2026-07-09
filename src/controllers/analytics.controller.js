@@ -20,6 +20,7 @@ import { applyStudentPointsDelta, recomputeLearnGamification } from "../services
 import { POINTS } from "../config/level-thresholds.js"
 import { assertStudentInOrg, tenantFilter } from "../services/tenantScope.service.js"
 import { isStaffType } from "../constants/userTypes.js"
+import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : 0
@@ -68,6 +69,8 @@ export const recordEvent = asyncHandler(async (req, res) => {
     })
   }
 
+  scheduleRecomputeStudentLanguageProfile(studentId)
+
   res.status(201).json({ id: event._id })
 })
 
@@ -97,6 +100,8 @@ export const recordVocab = asyncHandler(async (req, res) => {
     wordAnswers: wordAnswers ?? [],
   })
 
+  scheduleRecomputeStudentLanguageProfile(studentId)
+
   res.status(201).json({ ok: true })
 })
 
@@ -115,6 +120,8 @@ export const recordVocabWord = asyncHandler(async (req, res) => {
     interactionType: interactionType ?? "multiple_choice",
   })
 
+  scheduleRecomputeStudentLanguageProfile(studentId)
+
   res.status(201).json(result)
 })
 
@@ -131,6 +138,8 @@ export const syncLearn = asyncHandler(async (req, res) => {
   await recomputeLearnGamification(studentId).catch((err) => {
     console.error("[gamification] learn recompute after sync failed", err)
   })
+
+  scheduleRecomputeStudentLanguageProfile(studentId)
 
   res.json(result)
 })

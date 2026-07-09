@@ -23,6 +23,7 @@ import { findStudentIdsInGroup, assertSelectableGroup, resourceGroupIds } from "
 import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import { transcribeControlWorkStep } from "../services/speaking-transcription.service.js"
 import { env } from "../config/env.js"
+import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
 
 const PAUSE_MAX_SECONDS = 30 * 60
 
@@ -530,6 +531,8 @@ export const completeControlWorkStep = asyncHandler(async (req, res) => {
       source: "control_work",
     })
   }
+
+  scheduleRecomputeStudentLanguageProfile(studentId)
 
   if (step?.subject === "speaking" && env.whisper.enabled) {
     void transcribeControlWorkStep(sub._id, idx).catch((err) =>

@@ -8,8 +8,13 @@ const mistakeSchema = new mongoose.Schema(
     userAnswer: String,
     correctAnswer: String,
     explanation: String,
-    /** Teacher IELTS band for a speaking recording (0–9). */
+    /** Teacher overall score for a speaking recording (0–9 legacy scale). */
     score: Number,
+    /** Teacher rubric scores (0–10 each). */
+    grammarScore: Number,
+    vocabularyScore: Number,
+    fluencyScore: Number,
+    pronunciationScore: Number,
     /** Teacher feedback for a single speaking recording. */
     feedback: String,
     /** Auto-generated speech-to-text (Whisper) — may be inaccurate. */
@@ -114,8 +119,16 @@ const submissionSchema = new mongoose.Schema(
     orgId: { type: String, required: true, index: true },
     homeworkId: { type: String, ref: "Homework", required: true, index: true },
     studentId: { type: String, ref: "User", required: true, index: true },
-    /** Denormalized from Homework for reports (topic slug or subject). */
+    /** Denormalized from Homework for reports (exercise slug or subject). */
     topic: { type: String, index: true },
+    /** Grammar topic slug (e.g. present-simple) — denormalized from Exercise. */
+    grammarTopic: { type: String, index: true },
+    /** Vocabulary deck slug — denormalized from VocabDeck. */
+    vocabularyTopic: { type: String, index: true },
+    /** Learnix topic level 1–9 for grammar content. */
+    grammarLevel: { type: Number, min: 1, max: 9 },
+    /** Learnix topic level 1–9 for vocabulary deck. */
+    vocabularyLevel: { type: Number, min: 1, max: 9 },
     /** Denormalized homework subject for Homework check / analytics without joins. */
     subject: {
       type: String,

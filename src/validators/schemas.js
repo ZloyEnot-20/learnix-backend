@@ -183,6 +183,10 @@ export const createHomeworkSchema = {
 const speakingRecordingGradeSchema = z.object({
   questionId: z.number(),
   score: z.number().min(0).max(9).optional(),
+  grammarScore: z.number().min(0).max(10).optional(),
+  vocabularyScore: z.number().min(0).max(10).optional(),
+  fluencyScore: z.number().min(0).max(10).optional(),
+  pronunciationScore: z.number().min(0).max(10).optional(),
   feedback: z.string().max(2000).optional(),
 })
 

@@ -25,6 +25,11 @@ import { findStudentIdsInGroup, serializeGroupDoc, assertSelectableGroup, resour
 import { STAFF_PERMISSIONS } from "../constants/staffPermissions.js"
 import { transcribeHomeworkSubmission } from "../services/speaking-transcription.service.js"
 import { env } from "../config/env.js"
+import {
+  resolveSubmissionTopicFields,
+  applySubmissionTopicFields,
+} from "../services/submissionTopic.service.js"
+import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -96,6 +101,16 @@ function leanHomeworkDoc(hw) {
 
 function homeworkTopic(hw) {
   return hw?.exerciseSlug ?? hw?.subject ?? "unknown"
+}
+
+async function submissionTopicDefaults(hw) {
+  const fields = await resolveSubmissionTopicFields(hw)
+  return {
+    topic: homeworkTopic(hw),
+    subject: hw?.subject,
+    homeworkTitle: hw?.title,
+    ...fields,
+  }
 }
 
 function shouldCountHomeworkEntry(sub, now) {
@@ -236,15 +251,14 @@ export const createHomework = asyncHandler(async (req, res) => {
   // Create a pending submission for every student in the target group.
   const studentIds = await findStudentIdsInGroup(group._id, group.orgId)
   const topic = homeworkTopic(hw)
+  const topicDefaults = await submissionTopicDefaults(hw)
   if (studentIds.length) {
     const assignedAt = new Date()
     const docs = studentIds.map((studentId) => ({
       orgId: group.orgId,
       homeworkId: hw._id,
       studentId,
-      topic,
-      subject: hw.subject,
-      homeworkTitle: hw.title,
+      ...topicDefaults,
       assignedAt,
       entryCount: 0,
       status: "pending",
@@ -336,6 +350,10 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
       const mistake = sub.attempt.mistakes.find((m) => m.questionId === grade.questionId)
       if (!mistake) continue
       if (grade.score != null) mistake.score = grade.score
+      if (grade.grammarScore != null) mistake.grammarScore = grade.grammarScore
+      if (grade.vocabularyScore != null) mistake.vocabularyScore = grade.vocabularyScore
+      if (grade.fluencyScore != null) mistake.fluencyScore = grade.fluencyScore
+      if (grade.pronunciationScore != null) mistake.pronunciationScore = grade.pronunciationScore
       if (grade.feedback !== undefined) {
         mistake.feedback = grade.feedback.trim() || undefined
       }
@@ -359,6 +377,8 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
     })
   }
   await sub.save()
+
+  scheduleRecomputeStudentLanguageProfile(sub.studentId)
 
   // Notify the student when their work gets a grade or feedback.
   if (patch.score != null || patch.feedback || hasRecordingGrades) {
@@ -608,13 +628,12 @@ export const recordHomeworkEntry = asyncHandler(async (req, res) => {
   if (!sub) {
     const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
+    const defaults = await submissionTopicDefaults(hw)
     sub = await Submission.create({
       orgId,
       homeworkId,
       studentId,
-      topic: homeworkTopic(hw),
-      subject: hw?.subject,
-      homeworkTitle: hw.title,
+      ...defaults,
       assignedAt: now,
       lastEntryAt: now,
       entryCount: 1,
@@ -658,13 +677,12 @@ export const startHomework = asyncHandler(async (req, res) => {
   if (!sub) {
     const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
+    const defaults = await submissionTopicDefaults(hw)
     sub = await Submission.create({
       orgId,
       homeworkId,
       studentId,
-      topic: homeworkTopic(hw),
-      subject: hw?.subject,
-      homeworkTitle: hw?.title,
+      ...defaults,
       assignedAt: now,
       entryCount: skipEntryCount ? 0 : 1,
       status: "in_progress",
@@ -759,6 +777,7 @@ export const reportViolation = asyncHandler(async (req, res) => {
     const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
     const hw = await Homework.findById(homeworkId)
+    const defaults = await submissionTopicDefaults(hw)
     return res.json({
       action: "warn",
       pauseUsed: false,
@@ -766,9 +785,7 @@ export const reportViolation = asyncHandler(async (req, res) => {
         orgId,
         homeworkId,
         studentId,
-        topic: homeworkTopic(hw),
-        subject: hw?.subject,
-        homeworkTitle: hw?.title,
+        ...defaults,
         assignedAt: now,
         entryCount: 1,
         status: "in_progress",
@@ -834,6 +851,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   const hw = await Homework.findById(homeworkId)
   const isSpeaking = hw?.subject === "speaking"
   const isListening = hw?.subject === "listening"
+  const topicDefaults = await submissionTopicDefaults(hw)
   const score =
     isSpeaking || isListening
       ? undefined
@@ -846,9 +864,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       orgId,
       homeworkId,
       studentId,
-      topic: homeworkTopic(hw),
-      subject: hw?.subject,
-      homeworkTitle: hw?.title,
+      ...topicDefaults,
       assignedAt: now,
       entryCount: 1,
       status: "submitted",
@@ -879,6 +895,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
       durationSeconds: attempt.durationSeconds ?? existing.elapsedSeconds ?? 0,
     }
     if (!existing.subject && hw) existing.subject = hw.subject
+    applySubmissionTopicFields(existing, topicDefaults)
     appendSubmissionEvent(existing, {
       type: "submit",
       metadata: {
@@ -895,6 +912,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
     await recomputeHomeworkGamification(studentId).catch((err) => {
       console.error("[gamification] homework recompute failed", err)
     })
+    scheduleRecomputeStudentLanguageProfile(studentId)
   }
 
   if (alreadyDone) return res.json(result)

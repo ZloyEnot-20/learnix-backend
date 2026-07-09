@@ -19,6 +19,7 @@ router.use(...protect)
 // Listing/creating students is staff-only.
 router.get("/login-suggestions", isStaff, validate(loginSuggestionsSchema), ctrl.loginSuggestions)
 router.get("/ielts-summaries", isStaff, ctrl.getIeltsSummaries)
+router.get("/language-profile-summaries", isStaff, ctrl.getLanguageProfileSummaries)
 router.get("/", isStaff, ctrl.listStudents)
 router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 
@@ -26,6 +27,10 @@ router.post("/", isStaff, validate(createStudentSchema), ctrl.createStudent)
 router.get("/:id", validate(idParamSchema), ctrl.getStudent)
 router.get("/:id/progress", validate(idParamSchema), ctrl.getStudentProgress)
 router.get("/:id/ielts-profile", validate(idParamSchema), ctrl.getIeltsProfile)
+router.get("/:id/language-profile/history", validate(idParamSchema), ctrl.getLanguageProfileHistory)
+router.get("/:id/recommended-homework", validate(idParamSchema), ctrl.getRecommendedHomework)
+router.get("/:id/language-profile", validate(idParamSchema), ctrl.getLanguageProfile)
+router.post("/:id/language-profile/recompute", isStaff, validate(idParamSchema), ctrl.recomputeLanguageProfile)
 router.get("/:id/level", validate(idParamSchema), ctrl.getStudentLevel)
 router.get("/:id/context", validate(idParamSchema), ctrl.getStudentContext)
 

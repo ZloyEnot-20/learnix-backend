@@ -17,6 +17,16 @@ import {
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
 import { computeStudentLevel } from "../services/gamification.service.js"
 import { buildIeltsProfile, buildIeltsSummaries } from "../services/ieltsProfile.service.js"
+import {
+  getStudentLanguageProfile,
+  buildLanguageProfileSummaries,
+} from "../services/studentLanguageProfile.service.js"
+import { recomputeStudentLanguageProfileNow } from "../services/languageProfileQueue.js"
+import { getProfileScoreHistory } from "../services/languageProfileSnapshot.service.js"
+import {
+  buildRecommendations,
+  buildHomeworkCandidates,
+} from "../services/studentRecommendations.service.js"
 import { recordAudit } from "../services/audit.service.js"
 import {
   assertOrgGroup,
@@ -490,4 +500,63 @@ export const getIeltsSummaries = asyncHandler(async (req, res) => {
   const users = await User.find(await studentListFilter(req)).lean()
   const summaries = await buildIeltsSummaries(users)
   res.json(summaries)
+})
+
+/** Full Learnix language profile (grammar, vocabulary, speaking). */
+export const getLanguageProfile = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const force = req.query.force === "true" || req.query.force === "1"
+  const profile = await getStudentLanguageProfile(student._id, { force })
+  res.json(profile)
+})
+
+/** Staff: compact language profile summaries for student list. */
+export const getLanguageProfileSummaries = asyncHandler(async (req, res) => {
+  const users = await User.find(await studentListFilter(req)).lean()
+  const summaries = await buildLanguageProfileSummaries(users)
+  res.json(summaries)
+})
+
+/** Staff: force immediate profile recompute. */
+export const recomputeLanguageProfile = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  const profile = await recomputeStudentLanguageProfileNow(student._id)
+  res.json(profile)
+})
+
+/** Score history for progress charts. */
+export const getLanguageProfileHistory = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const history = await getProfileScoreHistory(student._id)
+  res.json(history)
+})
+
+/** Recommended topics + homework candidates (no auto-assign). */
+export const getRecommendedHomework = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+
+  const profile = await getStudentLanguageProfile(student._id)
+  if (!profile) {
+    return res.json({ recommendations: [], homeworkCandidates: [] })
+  }
+
+  const recommendations = profile.recommendations?.length
+    ? profile.recommendations
+    : buildRecommendations(profile)
+  const homeworkCandidates = await buildHomeworkCandidates(profile, recommendations)
+
+  res.json({ recommendations, homeworkCandidates })
 })
