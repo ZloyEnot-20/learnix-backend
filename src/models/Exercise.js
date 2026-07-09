@@ -33,8 +33,12 @@ const exerciseSchema = new mongoose.Schema(
     totalQuestions: { type: Number, default: 0, min: 0 },
     /** Full `GrammarExercise` payload returned verbatim to the client. */
     data: { type: mongoose.Schema.Types.Mixed, required: true },
+    /** null = global platform exercise; set when created by an organization. */
+    orgId: { type: String, index: true, default: null },
   },
   { _id: false, timestamps: true },
 )
+
+exerciseSchema.index({ orgId: 1, slug: 1 })
 
 export const Exercise = mongoose.model("Exercise", exerciseSchema)

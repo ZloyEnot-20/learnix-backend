@@ -26,6 +26,16 @@ function vocabVisibilityFilter(req) {
   return { $or: [{ orgId: null }, { orgId: { $exists: false } }, { orgId }] }
 }
 
+/** Global platform exercises plus exercises owned by the caller's org. */
+function exerciseVisibilityFilter(req) {
+  const orgId = resolveOrgId(req)
+  if (!orgId) {
+    if (canCrossTenant(req)) return {}
+    return { $or: [{ orgId: null }, { orgId: { $exists: false } }] }
+  }
+  return { $or: [{ orgId: null }, { orgId: { $exists: false } }, { orgId }] }
+}
+
 function assertVocabDeckAccess(doc, req) {
   if (!doc?.orgId) return
   const orgId = resolveOrgId(req)
@@ -33,9 +43,34 @@ function assertVocabDeckAccess(doc, req) {
   if (doc.orgId !== orgId) throw ApiError.notFound("Deck not found")
 }
 
+function assertExerciseAccess(doc, req) {
+  if (!doc?.orgId) return
+  const orgId = resolveOrgId(req)
+  if (canCrossTenant(req) && !orgId) return
+  if (doc.orgId !== orgId) throw ApiError.notFound("Exercise not found")
+}
+
 function buildOrgDeckSlug(orgId, topic, title) {
   const base = slugify(`${topic}-${title}`) || "deck"
   return `${orgId}--${base}`.slice(0, 200)
+}
+
+function buildOrgSpeakingTopicSlug(orgId, level) {
+  return `${orgId}--speaking-${level.toLowerCase()}`.slice(0, 200)
+}
+
+function buildOrgSpeakingExerciseSlug(orgId, title) {
+  const base = slugify(title) || "speaking-set"
+  return `${orgId}--speaking-${base}`.slice(0, 200)
+}
+
+const SPEAKING_LEVEL_META = {
+  A1: { difficulty: "easy", estimatedTime: 15, prepTime: 15, speakTime: 30 },
+  A2: { difficulty: "easy", estimatedTime: 18, prepTime: 20, speakTime: 45 },
+  B1: { difficulty: "medium", estimatedTime: 20, prepTime: 30, speakTime: 60 },
+  B2: { difficulty: "medium", estimatedTime: 25, prepTime: 45, speakTime: 90 },
+  C1: { difficulty: "hard", estimatedTime: 30, prepTime: 60, speakTime: 120 },
+  C2: { difficulty: "hard", estimatedTime: 35, prepTime: 60, speakTime: 150 },
 }
 
 function normalizeVocabWords(words = []) {
@@ -72,7 +107,7 @@ function serializeTopic(doc) {
 
 /** List the full exercise catalogue (optionally filtered by topic). */
 export const listExercises = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...exerciseVisibilityFilter(req) }
   if (req.query.topic) filter.topic = req.query.topic
   if (req.query.category) filter.category = req.query.category
   const docs = await Exercise.find(filter).sort({ topic: 1, slug: 1 })
@@ -81,7 +116,7 @@ export const listExercises = asyncHandler(async (req, res) => {
 
 /** Lightweight catalogue rows for list/browse screens (no question payloads). */
 export const listExerciseSummaries = asyncHandler(async (req, res) => {
-  const filter = {}
+  const filter = { ...exerciseVisibilityFilter(req) }
   if (req.query.topic) filter.topic = req.query.topic
   if (req.query.category) filter.category = req.query.category
   const docs = await Exercise.find(filter)
@@ -325,8 +360,8 @@ export const manageOrgVocab = asyncHandler(async (req, res) => {
       _id: slug,
       slug,
       title: deckTitle,
-      description: `Stage 1 vocabulary — ${deckTopic}`,
-      level: "A1",
+      description: `Vocabulary — ${deckTopic}`,
+      level: level ?? "A1",
       topic: deckTopic,
       difficulty,
       orgId,
@@ -354,9 +389,202 @@ export const manageOrgVocab = asyncHandler(async (req, res) => {
   })
 })
 
+function serializeSpeakingSetSummary(doc) {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    level: doc.level ?? "A1",
+    questionCount: doc.totalQuestions ?? doc.data?.content?.questions?.length ?? 0,
+  }
+}
+
+function normalizeSpeakingPrompts(prompts = [], level) {
+  const meta = SPEAKING_LEVEL_META[level] ?? SPEAKING_LEVEL_META.A1
+  return prompts.map((p, idx) => ({
+    id: idx + 1,
+    text: p.text.trim(),
+    hint: p.hint?.trim() ?? "",
+    explanation: p.explanation?.trim() ?? "",
+    prepTimeSeconds: meta.prepTime,
+    speakTimeSeconds: meta.speakTime,
+  }))
+}
+
+async function syncOrgSpeakingTopic(orgId, level) {
+  const topicSlug = buildOrgSpeakingTopicSlug(orgId, level)
+  const meta = SPEAKING_LEVEL_META[level] ?? SPEAKING_LEVEL_META.A1
+  const exercises = await Exercise.find({ orgId, category: "speaking", level })
+    .select("totalQuestions")
+    .lean()
+  const exerciseCount = exercises.length
+  const questionCount = exercises.reduce((sum, ex) => sum + (ex.totalQuestions ?? 0), 0)
+  if (exerciseCount === 0) return topicSlug
+
+  await Topic.findByIdAndUpdate(
+    topicSlug,
+    {
+      $set: {
+        slug: topicSlug,
+        title: `Speaking — ${level}`,
+        description: `Custom speaking prompts for ${level} learners in your organization.`,
+        levels: level,
+        exerciseCount,
+        questionCount,
+        totalMinutes: meta.estimatedTime * exerciseCount,
+        order: 200 + ["A1", "A2", "B1", "B2", "C1", "C2"].indexOf(level),
+      },
+    },
+    { upsert: true },
+  )
+  return topicSlug
+}
+
+function buildSpeakingExerciseData({ slug, title, level, topicSlug, questions }) {
+  const meta = SPEAKING_LEVEL_META[level] ?? SPEAKING_LEVEL_META.A1
+  return {
+    slug,
+    id: slug,
+    title,
+    description: `${questions.length} speaking prompt${questions.length === 1 ? "" : "s"} for ${level} learners.`,
+    category: "speaking",
+    topic: topicSlug,
+    subtopic: "practice",
+    difficulty: meta.difficulty,
+    level,
+    type: "speaking",
+    estimatedTime: meta.estimatedTime,
+    totalQuestions: questions.length,
+    passingScore: questions.length,
+    tags: ["speaking", level, "custom"],
+    instructions:
+      "Read each question, prepare your answer, then tap Record. You can pause, listen to your recording, and re-record before submitting.",
+    tips: [
+      "Speak clearly and at a natural pace.",
+      "Use the hint to guide what to describe.",
+      "Listen to your recording before submitting.",
+    ],
+    content: { questions },
+  }
+}
+
+/** Org-owned speaking sets for the admin picker. */
+export const listOrgSpeakingSets = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+  const docs = await Exercise.find({ orgId, category: "speaking" })
+    .select("slug title level totalQuestions data.content.questions")
+    .sort({ updatedAt: -1, title: 1 })
+    .lean()
+  res.json(docs.map(serializeSpeakingSetSummary))
+})
+
+/** Org staff UI: create a speaking set or append prompts to an existing one. */
+export const manageOrgSpeaking = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+
+  const {
+    mode,
+    exerciseSlug,
+    title,
+    level = "A1",
+    prompts = [],
+  } = req.body
+
+  const meta = SPEAKING_LEVEL_META[level] ?? SPEAKING_LEVEL_META.A1
+  const normalizedIncoming = normalizeSpeakingPrompts(prompts, level)
+  if (normalizedIncoming.length === 0) {
+    throw ApiError.badRequest("Add at least one prompt")
+  }
+
+  let exercise
+  let promptsAdded = normalizedIncoming.length
+
+  if (mode === "append") {
+    if (!exerciseSlug) throw ApiError.badRequest("Select a speaking set first")
+    exercise = await Exercise.findOne({ _id: exerciseSlug, orgId, category: "speaking" })
+    if (!exercise) throw ApiError.notFound("Speaking set not found in your organization")
+
+    const existingQuestions = exercise.data?.content?.questions ?? []
+    const startId = existingQuestions.length
+    const toAdd = normalizedIncoming.map((q, i) => ({ ...q, id: startId + i + 1 }))
+    const merged = [...existingQuestions, ...toAdd]
+    const data = buildSpeakingExerciseData({
+      slug: exercise.slug,
+      title: exercise.title,
+      level: exercise.level ?? level,
+      topicSlug: exercise.topic,
+      questions: merged,
+    })
+
+    exercise.data = data
+    exercise.totalQuestions = merged.length
+    exercise.estimatedTime = meta.estimatedTime
+    exercise.difficulty = meta.difficulty
+    await exercise.save()
+    await syncOrgSpeakingTopic(orgId, exercise.level ?? level)
+  } else if (mode === "create") {
+    const setTitle = title?.trim()
+    if (!setTitle) throw ApiError.badRequest("Set title is required")
+
+    const slug = buildOrgSpeakingExerciseSlug(orgId, setTitle)
+    const existing = await Exercise.findById(slug)
+    if (existing) {
+      throw ApiError.conflict(
+        "A speaking set with this name already exists. Choose another title or add to the existing set.",
+      )
+    }
+
+    const topicSlug = buildOrgSpeakingTopicSlug(orgId, level)
+    const data = buildSpeakingExerciseData({
+      slug,
+      title: setTitle,
+      level,
+      topicSlug,
+      questions: normalizedIncoming,
+    })
+
+    exercise = await Exercise.create({
+      _id: slug,
+      slug,
+      title: setTitle,
+      category: "speaking",
+      topic: topicSlug,
+      subtopic: "practice",
+      type: "speaking",
+      level,
+      difficulty: meta.difficulty,
+      estimatedTime: meta.estimatedTime,
+      totalQuestions: normalizedIncoming.length,
+      orgId,
+      data,
+    })
+    await syncOrgSpeakingTopic(orgId, level)
+  } else {
+    throw ApiError.badRequest("Invalid mode")
+  }
+
+  await recordAudit({
+    req,
+    action: mode === "append" ? "append_speaking" : "create_speaking",
+    category: "exercises",
+    targetType: "speaking",
+    targetId: exercise.slug,
+    targetLabel: exercise.title,
+    details: { promptsAdded, level: exercise.level },
+  })
+
+  res.json({
+    ok: true,
+    exercise: serializeExercise(exercise),
+    promptsAdded,
+  })
+})
+
 export const getExercise = asyncHandler(async (req, res) => {
   const doc = await Exercise.findById(req.params.slug)
   if (!doc) throw ApiError.notFound("Exercise not found")
+  assertExerciseAccess(doc, req)
   res.json(serializeExercise(doc))
 })
 

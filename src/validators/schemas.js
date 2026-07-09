@@ -661,7 +661,7 @@ export const manageOrgVocabSchema = {
       deckSlug: z.string().max(200).optional(),
       title: z.string().max(200).optional(),
       topic: z.string().max(200).optional(),
-      level: z.literal("A1").optional().default("A1"),
+      level: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional().default("A1"),
       difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
       words: z.array(manageVocabWordInput).min(1).max(200),
     })
@@ -704,6 +704,35 @@ const podcastInput = z.object({
   words: z.array(podcastWordInput).max(500).optional().default([]),
   order: z.number().int().optional(),
 })
+
+const manageSpeakingPromptInput = z.object({
+  text: z.string().min(1).max(2000),
+  hint: z.string().max(2000).optional().default(""),
+  explanation: z.string().max(2000).optional().default(""),
+})
+
+export const manageOrgSpeakingSchema = {
+  body: z
+    .object({
+      mode: z.enum(["create", "append"]),
+      exerciseSlug: z.string().max(200).optional(),
+      title: z.string().max(200).optional(),
+      level: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional().default("A1"),
+      prompts: z.array(manageSpeakingPromptInput).min(1).max(100),
+    })
+    .superRefine((data, ctx) => {
+      if (data.mode === "create" && !data.title?.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "title is required", path: ["title"] })
+      }
+      if (data.mode === "append" && !data.exerciseSlug?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "exerciseSlug is required",
+          path: ["exerciseSlug"],
+        })
+      }
+    }),
+}
 
 export const importPodcastSchema = {
   body: z.object({
