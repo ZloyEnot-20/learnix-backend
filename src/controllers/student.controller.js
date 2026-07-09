@@ -2,6 +2,7 @@ import { User } from "../models/User.js"
 import { Group } from "../models/Group.js"
 import { Submission } from "../models/Submission.js"
 import { Payment } from "../models/Payment.js"
+import { StudentLanguageProfile } from "../models/StudentLanguageProfile.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { hashPassword } from "../utils/password.js"
@@ -20,6 +21,7 @@ import { buildIeltsProfile, buildIeltsSummaries } from "../services/ieltsProfile
 import {
   getStudentLanguageProfile,
   buildLanguageProfileSummaries,
+  getStudentLanguageProfileDebug,
 } from "../services/studentLanguageProfile.service.js"
 import { buildLevelCatalogue } from "../config/language-profile.js"
 import { recomputeStudentLanguageProfileNow } from "../services/languageProfileQueue.js"
@@ -515,11 +517,72 @@ export const getLanguageProfile = asyncHandler(async (req, res) => {
   res.json(profile)
 })
 
+/** Diagnostic breakdown of score computation. */
+export const getLanguageProfileDebug = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const debug = await getStudentLanguageProfileDebug(student._id)
+  res.json(debug)
+})
+
 /** Staff: compact language profile summaries for student list. */
 export const getLanguageProfileSummaries = asyncHandler(async (req, res) => {
   const users = await User.find(await studentListFilter(req)).lean()
   const summaries = await buildLanguageProfileSummaries(users)
   res.json(summaries)
+})
+
+function percentile(sorted, p) {
+  if (!sorted.length) return 0
+  const idx = (sorted.length - 1) * p
+  const lo = Math.floor(idx)
+  const hi = Math.ceil(idx)
+  if (lo === hi) return sorted[lo]
+  const w = idx - lo
+  return sorted[lo] * (1 - w) + sorted[hi] * w
+}
+
+function scoreStats(values) {
+  const nums = values.filter((v) => typeof v === "number" && !Number.isNaN(v))
+  if (!nums.length) {
+    return { count: 0, avg: 0, median: 0, p75: 0, p90: 0, p95: 0 }
+  }
+  nums.sort((a, b) => a - b)
+  const sum = nums.reduce((a, b) => a + b, 0)
+  return {
+    count: nums.length,
+    avg: Math.round((sum / nums.length) * 10) / 10,
+    median: Math.round(percentile(nums, 0.5) * 10) / 10,
+    p75: Math.round(percentile(nums, 0.75) * 10) / 10,
+    p90: Math.round(percentile(nums, 0.9) * 10) / 10,
+    p95: Math.round(percentile(nums, 0.95) * 10) / 10,
+  }
+}
+
+/** Staff: distribution analytics across language profile scores (internal). */
+export const getLanguageProfileScoreDistribution = asyncHandler(async (req, res) => {
+  const orgId = resolveOrgId(req)
+  // Only include profiles in current org scope.
+  const profiles = await StudentLanguageProfile.find(orgId ? { orgId } : {})
+    .select("grammar.score vocabulary.score speaking.score overall.score")
+    .lean()
+
+  const grammarScores = profiles.map((p) => p.grammar?.score ?? 0)
+  const vocabularyScores = profiles.map((p) => p.vocabulary?.score ?? 0)
+  const speakingScores = profiles.map((p) => p.speaking?.score ?? 0)
+  const overallScores = profiles.map((p) => p.overall?.score ?? 0)
+
+  res.json({
+    orgId: orgId ?? null,
+    totalProfiles: profiles.length,
+    grammar: scoreStats(grammarScores),
+    vocabulary: scoreStats(vocabularyScores),
+    speaking: scoreStats(speakingScores),
+    overall: scoreStats(overallScores),
+  })
 })
 
 /** Learnix level scale with grammar topics per level (admin roadmap). */

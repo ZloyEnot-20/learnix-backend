@@ -13,6 +13,8 @@ const studentWordProgressSchema = new mongoose.Schema(
     incorrectCount: { type: Number, default: 0 },
     totalAttempts: { type: Number, default: 0 },
     accuracy: { type: Number, default: null },
+    /** Consecutive correct answers (streak). Resets on incorrect. */
+    consecutiveCorrect: { type: Number, default: 0 },
     masteredAt: { type: Date, default: null },
     wantToLearn: { type: Boolean, default: false },
     lastReviewedAt: { type: Date, default: null },

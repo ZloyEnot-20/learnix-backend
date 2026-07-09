@@ -26,6 +26,15 @@ export const SPEAKING_EXERCISE_TYPES = new Set(["speaking"])
 /** Minimum questions before topic contributes to skill score. */
 export const MIN_QUESTIONS_FOR_TOPIC = 3
 
+/**
+ * Vocabulary WordAnswerEvent normalization.
+ * One "tap" is less reliable than a full quiz question, so we count it as a fraction.
+ */
+export const WORD_EVENT_QUESTION_WEIGHT = 0.25
+
+/** Vocabulary deck mastery requires this % of words mastered (by streak). */
+export const VOCAB_DECK_MASTERY_PCT = 80
+
 /** Mastery thresholds (spec §8–9). */
 export const MASTERY_ACCURACY = 75
 export const MASTERY_CONFIDENCE = 0.7

@@ -23,7 +23,7 @@ export function shouldSaveSnapshot(previousSnapshot, newProfile) {
     Math.abs((newProfile.overall?.score ?? 0) - (previousSnapshot.overallScore ?? 0)),
   ]
 
-  return diffs.some((d) => d > SNAPSHOT_SCORE_THRESHOLD)
+  return diffs.some((d) => d >= SNAPSHOT_SCORE_THRESHOLD)
 }
 
 /**
@@ -44,6 +44,7 @@ export async function maybeSaveProfileSnapshot(studentId, orgId, profile) {
     vocabularyScore: profile.vocabulary?.score ?? 0,
     speakingScore: profile.speaking?.score ?? 0,
     overallScore: profile.overall?.score ?? 0,
+    learnixLevel: profile.overall?.level ?? 1,
     grammarLevel: profile.grammar?.level ?? 1,
     vocabularyLevel: profile.vocabulary?.level ?? 1,
     speakingLevel: profile.speaking?.level ?? 1,
@@ -68,7 +69,7 @@ export async function getProfileScoreHistory(studentId, limit = 52) {
     grammar.push({ ...point, score: s.grammarScore, level: s.grammarLevel })
     vocabulary.push({ ...point, score: s.vocabularyScore, level: s.vocabularyLevel })
     speaking.push({ ...point, score: s.speakingScore, level: s.speakingLevel })
-    overall.push({ ...point, score: s.overallScore, level: 0 })
+    overall.push({ ...point, score: s.overallScore, level: s.learnixLevel ?? 1 })
   }
 
   return { grammar, vocabulary, speaking, overall }

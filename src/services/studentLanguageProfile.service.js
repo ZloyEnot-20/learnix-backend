@@ -6,6 +6,7 @@ import { ControlWorkSubmission } from "../models/ControlWorkSubmission.js"
 import { ControlWork } from "../models/ControlWork.js"
 import { Exercise } from "../models/Exercise.js"
 import { VocabDeck } from "../models/VocabDeck.js"
+import { StudentDeckProgress } from "../models/StudentDeckProgress.js"
 import { User } from "../models/User.js"
 import { StudentLanguageProfile } from "../models/StudentLanguageProfile.js"
 import { isCheatingSubmission } from "./submission.service.js"
@@ -22,6 +23,8 @@ import {
   NEEDS_REVIEW_ACCURACY,
   NEEDS_REVIEW_STALE_DAYS,
   MIN_QUESTIONS_FOR_TOPIC,
+  WORD_EVENT_QUESTION_WEIGHT,
+  VOCAB_DECK_MASTERY_PCT,
   confidenceFromQuestions,
   speakingConfidenceFromAssessments,
   recencyWeight,
@@ -36,7 +39,7 @@ function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 1000) / 10 : 0
 }
 
-/** @typedef {{ correct: number, total: number, at: Date, weight: number }} WeightedAttempt */
+/** @typedef {{ correct: number, total: number, at: Date, weight: number, source?: string }} WeightedAttempt */
 
 /**
  * @typedef {object} TopicAccumulator
@@ -50,14 +53,90 @@ function createTopicAccumulator(slug, title, learnixLevel) {
   return { slug, title: title ?? slug, learnixLevel, attempts: [] }
 }
 
-function addAttempt(acc, correct, total, at, difficultyWeight = 1) {
+function addAttempt(acc, correct, total, at, difficultyWeight = 1, source = undefined) {
   if (!total || total <= 0) return
   acc.attempts.push({
     correct: correct ?? 0,
     total,
     at: at ? new Date(at) : new Date(),
     weight: difficultyWeight,
+    ...(source ? { source } : {}),
   })
+}
+
+function computeSkillScoreDebug(topicStats, levelCoverage = {}) {
+  const eligible = countEligibleTopics(topicStats)
+  if (!eligible.length) {
+    return {
+      profile: { score: 0, confidence: 0, level: 1, hasData: false },
+      debug: {
+        rawScore: 0,
+        avgConfidence: 0,
+        breadthFactor: 0,
+        masteryFactor: 0,
+        masteryBonus: 0,
+        eligibleTopics: 0,
+        masteredTopics: 0,
+        finalScore: 0,
+        level: 1,
+      },
+    }
+  }
+
+  let weightedSum = 0
+  let maxSum = 0
+  let confSum = 0
+  let masteredCount = 0
+
+  for (const t of eligible) {
+    const w = topicLevelWeight(t.learnixLevel)
+    const c = t.confidence
+    weightedSum += (t.weightedAccuracy / 100) * w * c
+    maxSum += w * c
+    confSum += c
+    if (t.mastered) masteredCount += 1
+  }
+
+  const rawRatio = maxSum > 0 ? weightedSum / maxSum : 0
+  const avgConfidence = confSum / eligible.length
+  const masteryBonus = 0.7 + 0.3 * (masteredCount / Math.max(1, eligible.length))
+  const rawScore = Math.min(1000, rawRatio * 1000 * masteryBonus * avgConfidence)
+  const breadthFactor = Math.min(1, Math.sqrt(eligible.length / 8))
+  const masteryFactor = Math.min(1, 0.55 + 0.45 * Math.min(1, masteredCount / 8))
+  const finalScore = applyBreadthPenalty(Math.round(rawScore), eligible.length, masteredCount)
+  const confidence = Math.min(1, avgConfidence)
+  const level = deriveLearnixLevel(finalScore, eligible.length, masteredCount, levelCoverage)
+
+  return {
+    profile: { score: finalScore, confidence, level, hasData: true },
+    debug: {
+      rawScore: Math.round(rawScore),
+      avgConfidence,
+      breadthFactor,
+      masteryFactor,
+      masteryBonus,
+      eligibleTopics: eligible.length,
+      masteredTopics: masteredCount,
+      finalScore,
+      level,
+    },
+  }
+}
+
+function coveragePenaltyDebug(score, levelCoverage, attemptedTopics, totalTopics) {
+  if (score <= 0) {
+    return { finalScore: 0, breadthPenalty: 0, levelPenalty: 0 }
+  }
+  const catalogueBreadth = totalTopics > 0 ? attemptedTopics / totalTopics : 0
+  const breadthPenalty = Math.min(1, Math.sqrt(Math.max(0, catalogueBreadth) * 6))
+
+  let levelProgress = 0
+  for (let l = 1; l <= 9; l++) {
+    levelProgress += (levelCoverage[String(l)] ?? 0) / 100
+  }
+  const levelPenalty = Math.min(1, 0.35 + 0.65 * (levelProgress / 9))
+  const finalScore = Math.round(score * breadthPenalty * levelPenalty)
+  return { finalScore, breadthPenalty, levelPenalty }
 }
 
 function computeTopicStats(acc, now = new Date()) {
@@ -119,6 +198,24 @@ function computeTopicStats(acc, now = new Date()) {
     mastered,
     needsReview,
   }
+}
+
+function applyVocabDeckMastery(topicStats, deckProgressBySlug) {
+  if (!deckProgressBySlug) return topicStats
+  const pctReq = VOCAB_DECK_MASTERY_PCT ?? 80
+  return topicStats.map((t) => {
+    const dp = deckProgressBySlug.get(t.slug)
+    if (!dp) return t
+    const totalWords = dp.totalWords ?? 0
+    const wordsMastered = dp.wordsMastered ?? 0
+    if (!totalWords || totalWords <= 0) {
+      // Without deck size, never auto-mark as mastered from quizzes.
+      return { ...t, mastered: false }
+    }
+    const pct = (wordsMastered / totalWords) * 100
+    const mastered = pct >= pctReq
+    return { ...t, mastered }
+  })
 }
 
 /** Penalize inflated scores from narrow topic breadth (few decks practiced well). */
@@ -415,6 +512,15 @@ async function collectTopicData(studentId) {
     : []
   const cwById = new Map(controlWorks.map((c) => [c._id, c]))
 
+  const vocabularyAudit = {
+    sources: {
+      wordAnswerEvents: { events: 0, questions: 0 },
+      studentActivity: { events: 0, questions: 0 },
+      submissions: { events: 0, questions: 0 },
+      controlWork: { events: 0, questions: 0 },
+    },
+  }
+
   function ensureGrammar(slug, title) {
     if (!grammarTopics.has(slug)) {
       grammarTopics.set(
@@ -471,7 +577,9 @@ async function collectTopicData(studentId) {
         sub.vocabularyLevel ?? (deck ? vocabDeckLevel(deck.level, deck.difficulty) : 3),
       )
       const lw = topicLevelWeight(acc.learnixLevel)
-      addAttempt(acc, correct, total, at, lw)
+      addAttempt(acc, correct, total, at, lw, "submission")
+      vocabularyAudit.sources.submissions.events += 1
+      vocabularyAudit.sources.submissions.questions += total ?? 0
     }
 
     if (sub.subject === "speaking") {
@@ -505,7 +613,16 @@ async function collectTopicData(studentId) {
         a.materialTitle ?? deck?.title ?? slug,
         deck ? vocabDeckLevel(deck.level, deck.difficulty) : 3,
       )
-      addAttempt(acc, a.correctCount, a.totalQuestions, at, topicLevelWeight(acc.learnixLevel))
+      addAttempt(
+        acc,
+        a.correctCount,
+        a.totalQuestions,
+        at,
+        topicLevelWeight(acc.learnixLevel),
+        "studentActivity",
+      )
+      vocabularyAudit.sources.studentActivity.events += 1
+      vocabularyAudit.sources.studentActivity.questions += a.totalQuestions ?? 0
     }
   }
 
@@ -516,7 +633,17 @@ async function collectTopicData(studentId) {
       deck?.title ?? w.deckSlug,
       deck ? vocabDeckLevel(deck.level, deck.difficulty) : 3,
     )
-    addAttempt(acc, w.correct ? 1 : 0, 1, w.at, topicLevelWeight(acc.learnixLevel))
+    const qWeight = WORD_EVENT_QUESTION_WEIGHT ?? 0.25
+    addAttempt(
+      acc,
+      w.correct ? qWeight : 0,
+      qWeight,
+      w.at,
+      topicLevelWeight(acc.learnixLevel),
+      "wordAnswerEvent",
+    )
+    vocabularyAudit.sources.wordAnswerEvents.events += 1
+    vocabularyAudit.sources.wordAnswerEvents.questions += qWeight
   }
 
   for (const cws of cwSubs) {
@@ -543,7 +670,16 @@ async function collectTopicData(studentId) {
           deck?.title ?? deckSlug,
           deck ? vocabDeckLevel(deck.level, deck.difficulty) : 3,
         )
-        addAttempt(acc, correctCount, totalQuestions, at, topicLevelWeight(acc.learnixLevel))
+        addAttempt(
+          acc,
+          correctCount,
+          totalQuestions,
+          at,
+          topicLevelWeight(acc.learnixLevel),
+          "controlWork",
+        )
+        vocabularyAudit.sources.controlWork.events += 1
+        vocabularyAudit.sources.controlWork.questions += totalQuestions ?? 0
       }
       if (step.subject === "speaking") {
         const acc = ensureSpeaking(step.exerciseSlug ?? "speaking", step.title)
@@ -557,6 +693,7 @@ async function collectTopicData(studentId) {
     vocabTopics,
     speakingTopics,
     speakingSubmissions: subs.filter((s) => s.subject === "speaking"),
+    vocabularyAudit,
   }
 }
 
@@ -579,6 +716,27 @@ function buildSkillProfile(topicMap, levelCoverage = {}, speakingDimensions = nu
     profile.dimensions = speakingDimensions
   }
   return profile
+}
+
+function buildFilteredTopicMap(topicMap, allowedSources) {
+  if (!allowedSources || !allowedSources.size) return topicMap
+  const filtered = new Map()
+  for (const [slug, acc] of topicMap.entries()) {
+    const attempts = (acc.attempts ?? []).filter((a) => {
+      if (!a.source) return false
+      return allowedSources.has(a.source)
+    })
+    if (!attempts.length) continue
+    filtered.set(slug, { ...acc, attempts })
+  }
+  return filtered
+}
+
+function buildSkillDebug(topicMap, levelCoverage = {}, allowedSources = null) {
+  const filtered = allowedSources ? buildFilteredTopicMap(topicMap, allowedSources) : topicMap
+  const topicStats = [...filtered.values()].map((acc) => computeTopicStats(acc)).filter(Boolean)
+  const { profile, debug } = computeSkillScoreDebug(topicStats, levelCoverage)
+  return { profile: { ...profile, topics: topicStats }, debug }
 }
 
 /**
@@ -613,6 +771,12 @@ export async function recomputeStudentLanguageProfile(studentId) {
 
   const grammar = buildSkillProfile(grammarTopics, levelCoverage)
   const vocabulary = buildSkillProfile(vocabTopics, levelCoverage)
+  // Override vocabulary "mastered" to depend on word streak mastery (not quiz completion).
+  const deckProgress = await StudentDeckProgress.find({ studentId })
+    .select("deckSlug wordsMastered totalWords")
+    .lean()
+  const deckProgressBySlug = new Map(deckProgress.map((d) => [d.deckSlug, d]))
+  vocabulary.topics = applyVocabDeckMastery(vocabulary.topics ?? [], deckProgressBySlug)
   const speakingTopicsStats = [...speakingTopics.values()]
     .map((acc) => computeTopicStats(acc))
     .filter(Boolean)
@@ -647,11 +811,12 @@ export async function recomputeStudentLanguageProfile(studentId) {
     ...speaking.topics,
   ]
   const masteredTopics = allTopics.filter((t) => t.mastered).map((t) => t.slug)
-  const needsReviewTopics = allTopics.filter((t) => t.needsReview).map((t) => t.slug)
+  const eligibleAllTopics = countEligibleTopics(allTopics)
+  const needsReviewTopics = eligibleAllTopics.filter((t) => t.needsReview).map((t) => t.slug)
 
   const vocabCatalogueCount = await VocabDeck.countDocuments()
   const coverageMeta = {
-    attemptedTopics: allTopics.length,
+    attemptedTopics: eligibleAllTopics.length,
     masteredTopics: masteredTopics.length,
     totalTopics: GRAMMAR_TOPIC_COUNT + vocabCatalogueCount,
     needsReviewTopics: needsReviewTopics.length,
@@ -711,6 +876,175 @@ export async function getStudentLanguageProfile(studentId, opts = {}) {
   }
 }
 
+/**
+ * Diagnostic endpoint payload — explains how every score was computed.
+ * Does not persist changes.
+ */
+export async function getStudentLanguageProfileDebug(studentId) {
+  const now = new Date()
+  const { grammarTopics, vocabTopics, speakingTopics, speakingSubmissions, vocabularyAudit } =
+    await collectTopicData(studentId)
+
+  const deckProgress = await StudentDeckProgress.find({ studentId })
+    .select("deckSlug wordsMastered totalWords")
+    .lean()
+  const deckProgressBySlug = new Map(deckProgress.map((d) => [d.deckSlug, d]))
+
+  const speakingDimensions = computeSpeakingDimensions(speakingSubmissions, now)
+  const approvedSpeakingCount = countApprovedSpeakingAssessments(speakingSubmissions)
+  const speakingConf = speakingConfidenceFromAssessments(approvedSpeakingCount)
+
+  const grammarDraft = buildSkillProfile(grammarTopics)
+  const vocabularyDraft = buildSkillProfile(vocabTopics)
+  const levelCoverage = computeLevelCoverage(grammarDraft.topics, vocabularyDraft.topics)
+
+  const { debug: grammarDebug, profile: grammarProfile } = buildSkillDebug(grammarTopics, levelCoverage)
+  const { debug: vocabularyDebug, profile: vocabularyProfile } = buildSkillDebug(vocabTopics, levelCoverage)
+  vocabularyProfile.topics = applyVocabDeckMastery(vocabularyProfile.topics ?? [], deckProgressBySlug)
+
+  const speakingTopicsStats = [...speakingTopics.values()].map((acc) => computeTopicStats(acc)).filter(Boolean)
+  const { profile: speakingBaseProfile, debug: speakingBaseDebug } = buildSkillDebug(
+    speakingTopics,
+    levelCoverage,
+  )
+  const speakingScore = speakingScoreFromDimensions(
+    speakingDimensions,
+    speakingTopicsStats,
+    speakingSubmissions,
+  )
+  const eligibleSpeaking = countEligibleTopics(speakingTopicsStats)
+  const speakingMastered = eligibleSpeaking.filter((t) => t.mastered).length
+  const speakingLevel = speakingScore > 0
+    ? deriveLearnixLevel(
+        speakingScore,
+        eligibleSpeaking.length,
+        speakingMastered,
+        levelCoverage,
+      )
+    : 1
+
+  const speakingProfile = {
+    ...speakingBaseProfile,
+    score: speakingScore,
+    confidence: speakingConf,
+    level: speakingLevel,
+    hasData:
+      speakingBaseProfile.hasData ||
+      approvedSpeakingCount > 0 ||
+      Object.values(speakingDimensions).some((v) => v > 0),
+    dimensions: speakingDimensions,
+    topics: speakingTopicsStats,
+  }
+
+  const skillProfiles = {
+    grammar: { ...grammarProfile, topics: grammarProfile.topics ?? [] },
+    vocabulary: { ...vocabularyProfile, topics: vocabularyProfile.topics ?? [] },
+    speaking: speakingProfile,
+  }
+
+  // Overall raw score (confidence-weighted average of skill scores).
+  const active = MEASURED_SKILLS.filter(
+    (s) => skillProfiles[s]?.hasData && (skillProfiles[s].confidence ?? 0) > 0,
+  )
+  let rawOverallScore = 0
+  let rawOverallConfidence = 0
+  if (active.length) {
+    let scoreSum = 0
+    let confSum = 0
+    for (const skill of active) {
+      const p = skillProfiles[skill]
+      scoreSum += (p.score ?? 0) * (p.confidence ?? 0)
+      confSum += p.confidence ?? 0
+    }
+    rawOverallScore = confSum > 0 ? Math.round(scoreSum / confSum) : 0
+    rawOverallConfidence = Math.min(1, confSum / active.length)
+  }
+
+  const allTopics = [
+    ...(skillProfiles.grammar.topics ?? []),
+    ...(skillProfiles.vocabulary.topics ?? []),
+    ...(skillProfiles.speaking.topics ?? []),
+  ]
+  const eligibleAllTopics = countEligibleTopics(allTopics)
+  const vocabCatalogueCount = await VocabDeck.countDocuments()
+  const attemptedTopics = eligibleAllTopics.length
+  const totalTopics = GRAMMAR_TOPIC_COUNT + vocabCatalogueCount
+
+  const { finalScore: overallFinalScore, breadthPenalty, levelPenalty } = coveragePenaltyDebug(
+    rawOverallScore,
+    levelCoverage,
+    attemptedTopics,
+    totalTopics,
+  )
+
+  const eligibleTopicsCount = active.reduce(
+    (a, s) => a + countEligibleTopics(skillProfiles[s].topics ?? []).length,
+    0,
+  )
+  const masteredTopicsCount = active.reduce(
+    (a, s) => a + (countEligibleTopics(skillProfiles[s].topics ?? []).filter((t) => t.mastered).length ?? 0),
+    0,
+  )
+  const overallLevel = deriveLearnixLevel(
+    overallFinalScore,
+    eligibleTopicsCount,
+    masteredTopicsCount,
+    levelCoverage,
+  )
+
+  const sourceSets = {
+    submissions: new Set(["submission"]),
+    studentActivity: new Set(["studentActivity"]),
+    wordAnswerEvents: new Set(["wordAnswerEvent"]),
+    controlWork: new Set(["controlWork"]),
+  }
+  const vocabularySources = Object.entries(sourceSets).map(([key, set]) => {
+    const { debug: d } = buildSkillDebug(vocabTopics, levelCoverage, set)
+    const src = vocabularyAudit.sources[key] ?? { events: 0, questions: 0 }
+    return {
+      source: key,
+      events: src.events,
+      questions: src.questions,
+      scoreIfOnlySource: d.finalScore,
+      rawScoreIfOnlySource: d.rawScore,
+      eligibleTopics: d.eligibleTopics,
+    }
+  })
+
+  return {
+    grammar: {
+      ...grammarDebug,
+      finalScore: grammarProfile.score,
+    },
+    vocabulary: {
+      ...vocabularyDebug,
+      finalScore: vocabularyProfile.score,
+      sources: vocabularySources,
+    },
+    speaking: {
+      rawScore: speakingBaseDebug.rawScore,
+      confidence: speakingConf,
+      finalScore: speakingScore,
+      level: speakingLevel,
+      approvedAssessments: approvedSpeakingCount,
+    },
+    overall: {
+      rawScore: rawOverallScore,
+      breadthPenalty,
+      levelPenalty,
+      finalScore: overallFinalScore,
+      level: overallLevel,
+      confidence: rawOverallConfidence,
+      attemptedTopics,
+      totalTopics,
+    },
+    meta: {
+      computedAt: now,
+      levelCoverage,
+    },
+  }
+}
+
 /** Batch summaries for staff list (compact). */
 export async function buildLanguageProfileSummaries(students) {
   return Promise.all(
@@ -747,4 +1081,6 @@ export const _internal = {
   adjustScoreForCoverage,
   maxLevelFromCoverage,
   buildLevelCatalogue,
+  computeSkillScoreDebug,
+  coveragePenaltyDebug,
 }

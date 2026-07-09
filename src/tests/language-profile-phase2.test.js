@@ -6,6 +6,7 @@ import {
   SNAPSHOT_SCORE_THRESHOLD,
   SNAPSHOT_MIN_DAYS,
 } from "../services/languageProfileSnapshot.service.js"
+import { getProfileScoreHistory } from "../services/languageProfileSnapshot.service.js"
 import { buildRecommendations } from "../services/studentRecommendations.service.js"
 import { _internal } from "../services/studentLanguageProfile.service.js"
 
@@ -14,6 +15,7 @@ const {
   computeLevelCoverage,
   countApprovedSpeakingAssessments,
   speakingConfidenceFromAssessments: speakingConf,
+  adjustScoreForCoverage,
 } = _internal
 
 describe("language-profile snapshots", () => {
@@ -43,6 +45,21 @@ describe("language-profile snapshots", () => {
     assert.equal(shouldSaveSnapshot(prev, changed), true)
   })
 
+  it("saves when any score changes by exactly threshold", () => {
+    const prev = {
+      createdAt: new Date(),
+      grammarScore: 620,
+      vocabularyScore: 580,
+      speakingScore: 650,
+      overallScore: 610,
+    }
+    const changed = {
+      ...baseProfile,
+      vocabulary: { score: 580 + SNAPSHOT_SCORE_THRESHOLD, level: 4 },
+    }
+    assert.equal(shouldSaveSnapshot(prev, changed), true)
+  })
+
   it("does not save when scores stable within threshold", () => {
     const prev = {
       createdAt: new Date(),
@@ -67,6 +84,39 @@ describe("language-profile snapshots", () => {
       overallScore: 610,
     }
     assert.equal(shouldSaveSnapshot(prev, baseProfile), true)
+  })
+})
+
+describe("language-profile history", () => {
+  it("returns overall level from learnixLevel when present", async () => {
+    // Stub DB via in-memory override: we only test mapping logic by monkeypatching model find.
+    const { StudentLanguageProfileSnapshot } = await import("../models/StudentLanguageProfileSnapshot.js")
+    const original = StudentLanguageProfileSnapshot.find
+    StudentLanguageProfileSnapshot.find = () => ({
+      sort: () => ({
+        limit: () => ({
+          lean: async () => ([
+            {
+              createdAt: new Date("2026-01-01T00:00:00Z"),
+              grammarScore: 100,
+              vocabularyScore: 200,
+              speakingScore: 300,
+              overallScore: 400,
+              grammarLevel: 2,
+              vocabularyLevel: 3,
+              speakingLevel: 4,
+              learnixLevel: 5,
+            },
+          ]),
+        }),
+      }),
+    })
+    try {
+      const history = await getProfileScoreHistory("student-1", 10)
+      assert.equal(history.overall[0].level, 5)
+    } finally {
+      StudentLanguageProfileSnapshot.find = original
+    }
   })
 })
 
@@ -135,6 +185,15 @@ describe("confidence-weighted overall score", () => {
       speaking: { score: 650, confidence: 0, hasData: false, topics: [] },
     })
     assert.ok(overall.score > 580 && overall.score < 620)
+  })
+})
+
+describe("coverage meta should use eligible topics", () => {
+  it("penalizes shallow catalogue attempts (attemptedTopics counts only eligible)", () => {
+    const levelCoverage = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [String(i + 1), 0]))
+    // Raw score is high, but only 2/200 topics are "eligible" attempts => should be heavily penalized.
+    const adjusted = adjustScoreForCoverage(953, levelCoverage, 2, 200)
+    assert.ok(adjusted < 400)
   })
 })
 

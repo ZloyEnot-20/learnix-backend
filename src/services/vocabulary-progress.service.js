@@ -62,13 +62,15 @@ export async function recordWordAnswer({
     const correctCount = existing.correctCount + (correct ? 1 : 0)
     const incorrectCount = existing.incorrectCount + (correct ? 0 : 1)
     const totalAttempts = existing.totalAttempts + 1
+    const consecutiveCorrect = correct ? (existing.consecutiveCorrect ?? 0) + 1 : 0
     const wasMastered = existing.masteredAt != null
-    const newlyMastered = !wasMastered && correctCount >= MASTERY_CORRECT_THRESHOLD
+    const newlyMastered = !wasMastered && consecutiveCorrect >= MASTERY_CORRECT_THRESHOLD
 
     existing.correctCount = correctCount
     existing.incorrectCount = incorrectCount
     existing.totalAttempts = totalAttempts
     existing.accuracy = pct(correctCount, totalAttempts)
+    existing.consecutiveCorrect = consecutiveCorrect
     existing.lastReviewedAt = now
     if (newlyMastered) existing.masteredAt = now
     await existing.save()
@@ -90,7 +92,8 @@ export async function recordWordAnswer({
 
   const correctCount = correct ? 1 : 0
   const incorrectCount = correct ? 0 : 1
-  const newlyMastered = correctCount >= MASTERY_CORRECT_THRESHOLD
+  const consecutiveCorrect = correct ? 1 : 0
+  const newlyMastered = consecutiveCorrect >= MASTERY_CORRECT_THRESHOLD
 
   const word = await StudentWordProgress.create({
     studentId,
@@ -101,6 +104,7 @@ export async function recordWordAnswer({
     incorrectCount,
     totalAttempts: 1,
     accuracy: pct(correctCount, 1),
+    consecutiveCorrect,
     masteredAt: newlyMastered ? now : null,
     lastReviewedAt: now,
   })

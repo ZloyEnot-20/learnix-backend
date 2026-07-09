@@ -6,6 +6,7 @@ import {
   MASTERY_ACCURACY,
   MASTERY_CONFIDENCE,
   MASTERY_MIN_QUESTIONS,
+  WORD_EVENT_QUESTION_WEIGHT,
 } from "../config/language-profile.js"
 import { _internal } from "../services/studentLanguageProfile.service.js"
 
@@ -30,6 +31,15 @@ describe("language-profile confidence", () => {
   it("caps at 1 for 30+ questions", () => {
     assert.equal(confidenceFromQuestions(30), 1)
     assert.equal(confidenceFromQuestions(100), 1)
+  })
+})
+
+describe("vocabulary word event normalization", () => {
+  it("treats 4 word events as ~1 question of confidence", () => {
+    // With WORD_EVENT_QUESTION_WEIGHT=0.25, 4 events => totalQuestions ~1.
+    assert.equal(WORD_EVENT_QUESTION_WEIGHT, 0.25)
+    const c = confidenceFromQuestions(4 * WORD_EVENT_QUESTION_WEIGHT)
+    assert.ok(Math.abs(c - 0.182) < 0.02)
   })
 })
 

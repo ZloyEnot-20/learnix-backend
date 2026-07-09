@@ -11,6 +11,8 @@ const snapshotSchema = new mongoose.Schema(
     vocabularyScore: { type: Number, default: 0 },
     speakingScore: { type: Number, default: 0 },
     overallScore: { type: Number, default: 0 },
+    /** Learnix overall level (1–9). */
+    learnixLevel: { type: Number, min: 1, max: 9, default: 1 },
     grammarLevel: { type: Number, min: 1, max: 9 },
     vocabularyLevel: { type: Number, min: 1, max: 9 },
     speakingLevel: { type: Number, min: 1, max: 9 },
