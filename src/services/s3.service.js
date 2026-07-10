@@ -135,6 +135,29 @@ async function uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl }) {
  * Upload a profile avatar (one object key per user).
  * @param {{ buffer: Buffer, mimeType: string, userId: string, publicBaseUrl?: string }} opts
  */
+/**
+ * Upload a full IELTS listening track with a stable object key per test slug.
+ * @param {{ buffer: Buffer, slug: string, publicBaseUrl?: string }} opts
+ */
+export async function uploadIeltsListeningAudio({ buffer, slug, publicBaseUrl }) {
+  const key = `ielts-listening/${slug}/full.mp3`
+  const mimeType = "audio/mpeg"
+
+  if (env.s3.enabled) {
+    try {
+      return await uploadImageToS3({ buffer, mimeType, key })
+    } catch (err) {
+      console.error("[s3] listening upload failed:", err?.message ?? err)
+      if (isProd) throw err
+      console.warn("[s3] falling back to local listening storage (development only)")
+    }
+  } else if (isProd) {
+    throw new Error("S3 storage is not configured")
+  }
+
+  return uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl })
+}
+
 export async function uploadAvatar({ buffer, mimeType, userId, publicBaseUrl }) {
   const ext = imageExtForMime(mimeType)
   const key = `avatars/${userId}.${ext}`

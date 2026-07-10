@@ -11,6 +11,7 @@
     "seed": "node src/seed/seed.js",
     "seed:speaking": "node src/seed/speaking-seed.js",
     "seed:reading": "node src/seed/ielts-reading-seed.js",
+    "seed:listening": "node src/seed/ielts-listening-seed.js",
     "push:reading": "node src/scripts/push-reading-import.mjs",
     "fix:reading": "node src/scripts/fix-and-reconvert-ielts-reading.mjs",
     "bot": "node src/bot/telegram-bot.js",

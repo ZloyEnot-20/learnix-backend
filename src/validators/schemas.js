@@ -781,6 +781,29 @@ export const importReadingSchema = {
   }),
 }
 
+const listeningInput = z.object({
+  slug: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(300).optional(),
+  subtitle: z.string().max(500).optional(),
+  book: z.number().int().positive().optional(),
+  test: z.number().int().positive().optional(),
+  totalTimeMinutes: z.number().int().positive().max(180).optional(),
+  questionCount: z.number().int().nonnegative().max(60).optional(),
+  fullAudioUrl: z.string().max(2000).optional(),
+  order: z.number().int().optional(),
+  data: z.record(z.unknown()).optional(),
+  parts: z.array(z.record(z.unknown())).min(1).max(10).optional(),
+  questionDetails: z.array(z.record(z.unknown())).optional(),
+}).refine((v) => v.data != null || v.parts != null, {
+  message: "data or parts is required",
+})
+
+export const importListeningSchema = {
+  body: z.object({
+    listenings: z.array(listeningInput).max(500).optional().default([]),
+  }),
+}
+
 export const slugParamSchema = {
   params: z.object({ slug: z.string().min(1).max(200) }),
 }

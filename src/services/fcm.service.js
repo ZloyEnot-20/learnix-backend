@@ -9,8 +9,22 @@ const INVALID_TOKEN_CODES = new Set([
   "messaging/invalid-registration-token",
 ])
 
-/** All notification types are delivered to the student mobile app. */
-const MOBILE_HIDDEN_NOTIFICATION_TYPES = new Set()
+/** Notification types that are stored in-app but must not trigger a device push. */
+const MOBILE_HIDDEN_NOTIFICATION_TYPES = new Set(["attendance"])
+
+function shouldDeliverMobilePush(note) {
+  if (!note?.type) return false
+  if (MOBILE_HIDDEN_NOTIFICATION_TYPES.has(note.type)) return false
+  // Self-submission (homework / progress test completed) — no push; grading still pushes.
+  if (
+    note.type === "result" &&
+    note.data?.status === "submitted" &&
+    note.data?.integrityStatus !== "cheating_detected"
+  ) {
+    return false
+  }
+  return true
+}
 
 function stringifyDataPayload(data) {
   const out = {}
@@ -113,7 +127,7 @@ export async function sendToStudent(studentId, { title, body, data = {} } = {}) 
  */
 export async function deliverPushNotification(note) {
   if (!note?.studentId) return
-  if (MOBILE_HIDDEN_NOTIFICATION_TYPES.has(note.type)) return
+  if (!shouldDeliverMobilePush(note)) return
   if (!getMessaging()) return
 
   const tokens = (await listPushTokensForStudent(note.studentId)).map((row) => row.token)

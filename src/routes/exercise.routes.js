@@ -3,6 +3,7 @@ import multer from "multer"
 import * as ctrl from "../controllers/exercise.controller.js"
 import * as podcastCtrl from "../controllers/podcast.controller.js"
 import * as readingCtrl from "../controllers/ieltsReading.controller.js"
+import * as listeningCtrl from "../controllers/ieltsListening.controller.js"
 import { protect } from "../middleware/protect.js"
 import { isAdmin, isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
@@ -13,6 +14,7 @@ import {
   manageOrgSpeakingSchema,
   importPodcastSchema,
   importReadingSchema,
+  importListeningSchema,
   slugParamSchema,
   exerciseMetaBatchSchema,
 } from "../validators/schemas.js"
@@ -42,6 +44,9 @@ router.get("/podcasts/:slug", validate(slugParamSchema), podcastCtrl.getPodcast)
 router.get("/reading/summary", readingCtrl.listReadingSummaries)
 router.get("/reading", readingCtrl.listReadings)
 router.get("/reading/:slug", validate(slugParamSchema), readingCtrl.getReading)
+router.get("/listening/summary", listeningCtrl.listListeningSummaries)
+router.get("/listening", listeningCtrl.listListenings)
+router.get("/listening/:slug", validate(slugParamSchema), listeningCtrl.getListening)
 router.post("/meta", validate(exerciseMetaBatchSchema), ctrl.getExerciseMetaBatch)
 
 // Org admin + super admin bulk import into the shared catalogue.
@@ -57,6 +62,12 @@ router.post(
 )
 router.post("/podcasts/import", isAdmin, validate(importPodcastSchema), podcastCtrl.importPodcasts)
 router.post("/reading/import", isAdmin, validate(importReadingSchema), readingCtrl.importReadings)
+router.post(
+  "/listening/import",
+  isAdmin,
+  validate(importListeningSchema),
+  listeningCtrl.importListenings,
+)
 
 router.get("/:slug", validate(slugParamSchema), ctrl.getExercise)
 
