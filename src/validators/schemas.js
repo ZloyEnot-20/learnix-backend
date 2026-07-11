@@ -929,10 +929,13 @@ export const updateOrgSettingsSchema = {
     .object({
       allowScreenshots: z.boolean().optional(),
       entryTestAutocomplete: z.boolean().optional(),
+      failHomeworkOnAppExit: z.boolean().optional(),
     })
     .refine(
       (data) =>
-        data.allowScreenshots !== undefined || data.entryTestAutocomplete !== undefined,
+        data.allowScreenshots !== undefined ||
+        data.entryTestAutocomplete !== undefined ||
+        data.failHomeworkOnAppExit !== undefined,
       { message: "At least one setting is required" },
     ),
 }

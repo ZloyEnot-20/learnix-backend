@@ -18,6 +18,8 @@ const organizationSchema = new Schema(
       allowScreenshots: { type: Boolean, default: false },
       /** When true, entry test UI shows demo autocomplete buttons for staff testing. */
       entryTestAutocomplete: { type: Boolean, default: false },
+      /** When true, repeated app exits fail the homework session (strict anti-cheat). */
+      failHomeworkOnAppExit: { type: Boolean, default: true },
     },
   },
   { timestamps: true, _id: false },

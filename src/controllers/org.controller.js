@@ -145,7 +145,7 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
   const orgId = resolveOrgId(req)
   if (!orgId) throw ApiError.forbidden("Organization context required")
 
-  const { allowScreenshots, entryTestAutocomplete } = req.body
+  const { allowScreenshots, entryTestAutocomplete, failHomeworkOnAppExit } = req.body
 
   await ensurePlatformDb()
   const Organization = getOrganizationModel()
@@ -165,6 +165,13 @@ export const updateOrgSettings = asyncHandler(async (req, res) => {
     details.entryTestAutocomplete = {
       from: previous.entryTestAutocomplete,
       to: entryTestAutocomplete,
+    }
+  }
+  if (failHomeworkOnAppExit !== undefined) {
+    $set["settings.failHomeworkOnAppExit"] = failHomeworkOnAppExit
+    details.failHomeworkOnAppExit = {
+      from: previous.failHomeworkOnAppExit,
+      to: failHomeworkOnAppExit,
     }
   }
 

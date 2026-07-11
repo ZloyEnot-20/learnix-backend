@@ -30,6 +30,7 @@ import {
   applySubmissionTopicFields,
 } from "../services/submissionTopic.service.js"
 import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
+import { getOrgSettings } from "../services/orgSettings.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -771,10 +772,12 @@ export const reportViolation = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { homeworkId, reason } = req.body
   const now = new Date()
+  const orgId = resolveOrgId(req)
+  const orgSettings = await getOrgSettings(orgId)
+  const strictExitPolicy = orgSettings.failHomeworkOnAppExit !== false
 
   const sub = await Submission.findOne({ homeworkId, studentId })
   if (!sub) {
-    const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
     const hw = await Homework.findById(homeworkId)
     const defaults = await submissionTopicDefaults(hw)
@@ -818,23 +821,31 @@ export const reportViolation = asyncHandler(async (req, res) => {
     })
   }
 
-  // First leave: warn only — the student keeps their pause until they choose it.
-  if (!sub.pauseUsed && sub.integrityStatus !== "cheating_suspicion") {
-    sub.violationCount = (sub.violationCount ?? 0) + 1
-    sub.integrityStatus = "cheating_suspicion"
-    appendSubmissionEvent(sub, {
-      type: "violation",
-      reason: reason ?? "unknown",
-      entryCount: sub.entryCount ?? 0,
-      metadata: { violationCount: sub.violationCount },
-    })
-    await sub.save()
+  sub.violationCount = (sub.violationCount ?? 0) + 1
+  sub.integrityStatus = "cheating_suspicion"
+  appendSubmissionEvent(sub, {
+    type: "violation",
+    reason: reason ?? "unknown",
+    entryCount: sub.entryCount ?? 0,
+    metadata: { violationCount: sub.violationCount },
+  })
+  await sub.save()
 
-    return res.json({ action: "warn", submission: sub, pauseUsed: false })
+  // Lenient mode: track exits for review but never auto-fail the homework.
+  if (!strictExitPolicy) {
+    return res.json({
+      action: "tracked",
+      submission: sub,
+      pauseUsed: sub.pauseUsed ?? false,
+      integrityStatus: "cheating_suspicion",
+      violationCount: sub.violationCount,
+    })
   }
 
-  sub.violationCount = (sub.violationCount ?? 0) + 1
-  await sub.save()
+  // First leave: warn only — the student keeps their pause until they choose it.
+  if (!sub.pauseUsed && sub.violationCount === 1) {
+    return res.json({ action: "warn", submission: sub, pauseUsed: false })
+  }
 
   return res.json(await failForCheating(sub, homeworkId, studentId, reason, now))
 })
