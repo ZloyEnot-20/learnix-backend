@@ -293,7 +293,7 @@ export const createIssueReportSchema = {
       stepIndex: z.number().int().min(0).optional(),
       exerciseSlug: z.string().min(1).max(200),
       exerciseTitle: z.string().min(1).max(300),
-      exerciseKind: z.enum(["grammar", "vocabulary", "podcast", "speaking"]),
+      exerciseKind: z.enum(["grammar", "vocabulary", "podcast", "speaking", "listening"]),
       questionIndex: z.number().int().min(0).optional(),
       questionId: z.number().int().min(0).optional(),
       questionPrompt: z.string().max(2000).optional(),
