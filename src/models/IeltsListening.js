@@ -14,6 +14,7 @@ const ieltsListeningSchema = new mongoose.Schema(
     test: { type: Number, min: 1 },
     totalTimeMinutes: { type: Number, default: 30, min: 0 },
     questionCount: { type: Number, default: 40, min: 0 },
+    questionTypes: { type: [String], default: [] },
     fullAudioUrl: { type: String, default: "" },
     /** Full `IeltsListeningTest` payload returned verbatim to the client. */
     data: { type: mongoose.Schema.Types.Mixed, required: true },

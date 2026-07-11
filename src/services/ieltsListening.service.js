@@ -17,12 +17,52 @@ export function countListeningQuestions(data) {
       }
     }
   }
-  return ids.size
+  return ids.size()
+}
+
+/** Catalogue filter keys derived from questions + contentBlocks. */
+export function collectListeningQuestionTypes(data) {
+  const types = new Set()
+  for (const part of data?.parts ?? []) {
+    for (const question of part.questions ?? []) {
+      const t = question?.type
+      if (t === "fill-in-blank") types.add("fill-in-blank")
+      else if (t === "multiple-choice") types.add("multiple-choice")
+      else if (t === "matching") types.add("matching")
+    }
+    for (const block of part.contentBlocks ?? []) {
+      switch (block?.type) {
+        case "table":
+          types.add("table-completion")
+          break
+        case "notes":
+          types.add("note-completion")
+          break
+        case "flow-chart":
+          types.add("flow-chart")
+          break
+        case "matching-grid":
+          types.add("map-labelling")
+          break
+        case "multi-select-group":
+          types.add("multiple-select")
+          break
+        case "multiple-choice":
+          types.add("multiple-choice")
+          break
+        default:
+          break
+      }
+    }
+  }
+  return [...types].sort()
 }
 
 export function serializeListeningSummary(doc) {
   const data = doc.data ?? {}
   const questionCount = doc.questionCount ?? countListeningQuestions(data)
+  const questionTypes =
+    doc.questionTypes?.length > 0 ? doc.questionTypes : collectListeningQuestionTypes(data)
   return {
     slug: doc.slug,
     title: doc.title,
@@ -31,6 +71,7 @@ export function serializeListeningSummary(doc) {
     test: doc.test,
     totalTimeMinutes: doc.totalTimeMinutes ?? data.totalTime ?? 30,
     questionCount,
+    questionTypes,
     order: doc.order ?? 0,
   }
 }
@@ -38,6 +79,8 @@ export function serializeListeningSummary(doc) {
 export function serializeListening(doc) {
   const data = doc.data ?? {}
   const fullAudioUrl = doc.fullAudioUrl || data.fullAudioUrl || ""
+  const questionTypes =
+    doc.questionTypes?.length > 0 ? doc.questionTypes : collectListeningQuestionTypes(data)
   return {
     slug: doc.slug,
     title: doc.title,
@@ -45,6 +88,7 @@ export function serializeListening(doc) {
     test: doc.test,
     totalTimeMinutes: doc.totalTimeMinutes ?? data.totalTime ?? 30,
     questionCount: doc.questionCount ?? countListeningQuestions(data),
+    questionTypes,
     fullAudioUrl,
     data: {
       testId: data.testId ?? doc.slug,
@@ -69,6 +113,8 @@ export function normalizeListeningInput(raw, idx = 0) {
     `listening-${idx}`
   const questionCount = raw.questionCount ?? countListeningQuestions(data)
   const fullAudioUrl = raw.fullAudioUrl || data.fullAudioUrl || ""
+  const questionTypes =
+    raw.questionTypes?.length > 0 ? raw.questionTypes : collectListeningQuestionTypes(data)
   return {
     slug,
     title: raw.title ?? data.title ?? slug,
@@ -77,6 +123,7 @@ export function normalizeListeningInput(raw, idx = 0) {
     test: raw.test ?? data.test,
     totalTimeMinutes: raw.totalTimeMinutes ?? data.totalTime ?? 30,
     questionCount,
+    questionTypes,
     fullAudioUrl,
     data: {
       ...data,

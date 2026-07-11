@@ -4,10 +4,10 @@
  */
 
 /** Skills currently measured by Learnix data. */
-export const MEASURED_SKILLS = ["grammar", "vocabulary", "speaking"]
+export const MEASURED_SKILLS = ["grammar", "vocabulary", "speaking", "reading", "listening"]
 
 /** Skills reserved for future implementation (no score computed). */
-export const FUTURE_SKILLS = ["reading", "listening", "writing"]
+export const FUTURE_SKILLS = ["writing"]
 
 /** Grammar exercise types (GrammarExerciseType). */
 export const GRAMMAR_EXERCISE_TYPES = new Set([

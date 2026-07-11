@@ -31,6 +31,7 @@ import {
 } from "../services/submissionTopic.service.js"
 import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
 import { getOrgSettings } from "../services/orgSettings.service.js"
+import { cambridgeBandFromAttempt } from "../config/ielts-band-tables.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -125,6 +126,21 @@ function shouldCountHomeworkEntry(sub, now) {
 function bandFromAttempt(total, correct) {
   if (!total || total <= 0) return undefined
   return Math.round((correct / total) * 9 * 2) / 2
+}
+
+/** Score for a homework attempt: Cambridge bands for IELTS L/R, linear otherwise. */
+function scoreFromHomeworkAttempt(hw, attempt) {
+  if (!hw || !attempt) return undefined
+  const subject = hw.subject
+  if (subject === "speaking") return undefined
+  if (subject === "listening" && parsePodcastHomeworkSlug(hw.exerciseSlug)) return undefined
+  if (subject === "listening") {
+    return cambridgeBandFromAttempt("listening", attempt.totalQuestions, attempt.correctCount)
+  }
+  if (subject === "reading") {
+    return cambridgeBandFromAttempt("reading", attempt.totalQuestions, attempt.correctCount)
+  }
+  return bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
 }
 
 /** Move the running segment into elapsedSeconds and clear sessionStartedAt. */
@@ -862,11 +878,9 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   const hw = await Homework.findById(homeworkId)
   const isSpeaking = hw?.subject === "speaking"
   const isListening = hw?.subject === "listening"
+  const isPodcastListening = isListening && !!parsePodcastHomeworkSlug(hw?.exerciseSlug)
   const topicDefaults = await submissionTopicDefaults(hw)
-  const score =
-    isSpeaking || isListening
-      ? undefined
-      : bandFromAttempt(attempt.totalQuestions, attempt.correctCount)
+  const score = scoreFromHomeworkAttempt(hw, attempt)
   let result
   if (!existing) {
     const orgId = resolveOrgId(req)
@@ -942,7 +956,7 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   // Notify (the student and, via the Telegram bot, their parents) that a task
   // was completed — this is one of the activities parents subscribe to.
   const listenStats = attempt.listeningStats
-  const listeningMessage = listenStats
+  const podcastMessage = listenStats
     ? `Podcast completed. Listened ${Math.round(listenStats.totalListenSeconds)}s` +
       (listenStats.seekCount > 0 ? `, ${listenStats.seekCount} seeks` : "") +
       (listenStats.wordsReviewed > 0 ? `, ${listenStats.wordsReviewed} words reviewed` : "") +
@@ -954,8 +968,8 @@ export const recordAttempt = asyncHandler(async (req, res) => {
     title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
     message: isSpeaking
       ? `Speaking homework submitted (${attempt.answeredCount ?? attempt.correctCount}/${attempt.totalQuestions} recordings). Awaiting teacher review.`
-      : isListening
-        ? listeningMessage
+      : isPodcastListening
+        ? podcastMessage
         : typeof score === "number"
           ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
           : "Homework submitted.",

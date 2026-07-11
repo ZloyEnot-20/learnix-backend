@@ -110,6 +110,7 @@ async function seedListenings({ skipAudio = false } = {}) {
           test: normalized.test,
           totalTimeMinutes: normalized.totalTimeMinutes,
           questionCount: normalized.questionCount,
+          questionTypes: normalized.questionTypes,
           fullAudioUrl: normalized.fullAudioUrl,
           data: normalized.data,
           order: normalized.order,

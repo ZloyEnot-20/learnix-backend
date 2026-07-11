@@ -9,6 +9,8 @@ import { VocabDeck } from "../models/VocabDeck.js"
 import { StudentDeckProgress } from "../models/StudentDeckProgress.js"
 import { User } from "../models/User.js"
 import { StudentLanguageProfile } from "../models/StudentLanguageProfile.js"
+import { TestResult } from "../models/TestResult.js"
+import { Homework } from "../models/Homework.js"
 import { isCheatingSubmission } from "./submission.service.js"
 import { maybeSaveProfileSnapshot } from "./languageProfileSnapshot.service.js"
 import { buildRecommendations } from "./studentRecommendations.service.js"
@@ -32,8 +34,14 @@ import {
   vocabDeckLevel,
   topicLevelWeight,
 } from "../config/language-profile.js"
+import {
+  cambridgeBandFromAttempt,
+  ieltsBandToLearnixScore,
+  ieltsSkillConfidenceFromAttempts,
+} from "../config/ielts-band-tables.js"
 
 const VOCAB_PREFIX = "vocab:"
+const PODCAST_SLUG_PREFIX = "podcast:"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 1000) / 10 : 0
@@ -465,6 +473,114 @@ function speakingScoreFromDimensions(dimensions, topicStats, submissions) {
   return skill.score
 }
 
+/**
+ * Collect IELTS reading/listening band observations from homework + mock tests.
+ * Podcast listening homework is excluded (no band score).
+ */
+async function collectIeltsSkillBands(studentId) {
+  const [subs, homeworkList, mocks] = await Promise.all([
+    Submission.find({ studentId, status: { $in: ["submitted", "graded"] } }).lean(),
+    Homework.find().select("_id subject exerciseSlug title").lean(),
+    TestResult.find({
+      studentId,
+      testType: { $in: ["reading", "listening"] },
+    }).lean(),
+  ])
+  const hwById = new Map(homeworkList.map((h) => [h._id, h]))
+  const reading = []
+  const listening = []
+
+  for (const sub of subs) {
+    if (isCheatingSubmission(sub)) continue
+    const hw = hwById.get(sub.homeworkId)
+    const subject = sub.subject ?? hw?.subject
+    const exerciseSlug = hw?.exerciseSlug ?? ""
+    if (subject === "listening" && exerciseSlug.startsWith(PODCAST_SLUG_PREFIX)) continue
+    if (subject !== "reading" && subject !== "listening") continue
+
+    let band = typeof sub.score === "number" ? sub.score : null
+    const attempt = sub.attempt
+    if (band == null && attempt?.totalQuestions > 0) {
+      band = cambridgeBandFromAttempt(subject, attempt.totalQuestions, attempt.correctCount)
+    }
+    if (band == null || Number.isNaN(band)) continue
+
+    const entry = {
+      band,
+      at: sub.submittedAt ?? sub.assignedAt ?? new Date(),
+      slug: `hw:${exerciseSlug || subject}`,
+      title: hw?.title ?? exerciseSlug ?? subject,
+      source: "homework",
+      correctCount: attempt?.correctCount,
+      totalQuestions: attempt?.totalQuestions,
+    }
+    if (subject === "reading") reading.push(entry)
+    else listening.push(entry)
+  }
+
+  for (const mock of mocks) {
+    if (typeof mock.bandScore !== "number") continue
+    const entry = {
+      band: mock.bandScore,
+      at: mock.date ?? new Date(),
+      slug: `mock:${mock._id}`,
+      title: `Mock ${mock.testType}`,
+      source: "mock_test",
+      correctCount: mock.totalCorrect,
+      totalQuestions: mock.totalQuestions,
+    }
+    if (mock.testType === "reading") reading.push(entry)
+    else if (mock.testType === "listening") listening.push(entry)
+  }
+
+  return { reading, listening }
+}
+
+/** Build a Learnix skill profile from IELTS band observations. */
+function buildIeltsSkillProfile(bandEntries, now = new Date()) {
+  if (!bandEntries.length) {
+    return { hasData: false, score: 0, confidence: 0, level: 1, topics: [] }
+  }
+
+  let scoreSum = 0
+  let wSum = 0
+  const topics = []
+
+  for (const entry of bandEntries) {
+    const learnix = ieltsBandToLearnixScore(entry.band)
+    const w = recencyWeight(entry.at, now)
+    scoreSum += learnix * w
+    wSum += w
+
+    const totalQ = entry.totalQuestions > 0 ? entry.totalQuestions : 40
+    const correctQ =
+      entry.correctCount != null ? entry.correctCount : Math.round((entry.band / 9) * totalQ)
+    const accuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 1000) / 10 : 0
+    const conf = confidenceFromQuestions(totalQ)
+
+    topics.push({
+      slug: entry.slug,
+      title: entry.title,
+      learnixLevel: Math.max(1, Math.min(9, Math.round((learnix / 1000) * 9))),
+      attemptedQuestions: totalQ,
+      correctAnswers: correctQ,
+      accuracy,
+      weightedAccuracy: Math.round((learnix / 1000) * 1000) / 10,
+      confidence: conf,
+      mastered: entry.band >= 7,
+      needsReview: entry.band < 5.5,
+      lastPracticedAt: entry.at,
+      source: entry.source,
+    })
+  }
+
+  const score = wSum > 0 ? Math.round(scoreSum / wSum) : 0
+  const confidence = ieltsSkillConfidenceFromAttempts(bandEntries.length)
+  const level = Math.max(1, Math.min(9, Math.round((score / 1000) * 9)))
+
+  return { hasData: true, score, confidence, level, topics }
+}
+
 async function loadGrammarTopicMaps() {
   const exercises = await Exercise.find({ category: "grammar" })
     .select("slug topic title level")
@@ -805,6 +921,10 @@ export async function recomputeStudentLanguageProfile(studentId) {
     speaking.confidence = speakingConf
   }
 
+  const ieltsBands = await collectIeltsSkillBands(studentId)
+  const reading = buildIeltsSkillProfile(ieltsBands.reading, now)
+  const listening = buildIeltsSkillProfile(ieltsBands.listening, now)
+
   const allTopics = [
     ...grammar.topics,
     ...vocabulary.topics,
@@ -822,7 +942,7 @@ export async function recomputeStudentLanguageProfile(studentId) {
     needsReviewTopics: needsReviewTopics.length,
   }
 
-  const skillProfiles = { grammar, vocabulary, speaking }
+  const skillProfiles = { grammar, vocabulary, speaking, reading, listening }
   const overall = computeOverallSkillScores(skillProfiles, levelCoverage, coverageMeta)
 
   const doc = {
@@ -832,8 +952,8 @@ export async function recomputeStudentLanguageProfile(studentId) {
     grammar,
     vocabulary,
     speaking,
-    reading: { hasData: false, score: 0, confidence: 0, level: 1, topics: [] },
-    listening: { hasData: false, score: 0, confidence: 0, level: 1, topics: [] },
+    reading,
+    listening,
     writing: { hasData: false, score: 0, confidence: 0, level: 1, topics: [] },
     overall,
     coverage: coverageMeta,
@@ -936,10 +1056,16 @@ export async function getStudentLanguageProfileDebug(studentId) {
     topics: speakingTopicsStats,
   }
 
+  const ieltsBands = await collectIeltsSkillBands(studentId)
+  const readingProfile = buildIeltsSkillProfile(ieltsBands.reading, now)
+  const listeningProfile = buildIeltsSkillProfile(ieltsBands.listening, now)
+
   const skillProfiles = {
     grammar: { ...grammarProfile, topics: grammarProfile.topics ?? [] },
     vocabulary: { ...vocabularyProfile, topics: vocabularyProfile.topics ?? [] },
     speaking: speakingProfile,
+    reading: readingProfile,
+    listening: listeningProfile,
   }
 
   // Overall raw score (confidence-weighted average of skill scores).
@@ -1028,6 +1154,20 @@ export async function getStudentLanguageProfileDebug(studentId) {
       level: speakingLevel,
       approvedAssessments: approvedSpeakingCount,
     },
+    reading: {
+      rawScore: readingProfile.score,
+      confidence: readingProfile.confidence,
+      finalScore: readingProfile.score,
+      level: readingProfile.level,
+      attempts: ieltsBands.reading.length,
+    },
+    listening: {
+      rawScore: listeningProfile.score,
+      confidence: listeningProfile.confidence,
+      finalScore: listeningProfile.score,
+      level: listeningProfile.level,
+      attempts: ieltsBands.listening.length,
+    },
     overall: {
       rawScore: rawOverallScore,
       breadthPenalty,
@@ -1059,7 +1199,15 @@ export async function buildLanguageProfileSummaries(students) {
         grammarScore: profile?.grammar?.score ?? null,
         vocabularyScore: profile?.vocabulary?.score ?? null,
         speakingScore: profile?.speaking?.score ?? null,
-        hasData: !!(profile?.grammar?.hasData || profile?.vocabulary?.hasData || profile?.speaking?.hasData),
+        readingScore: profile?.reading?.score ?? null,
+        listeningScore: profile?.listening?.score ?? null,
+        hasData: !!(
+          profile?.grammar?.hasData ||
+          profile?.vocabulary?.hasData ||
+          profile?.speaking?.hasData ||
+          profile?.reading?.hasData ||
+          profile?.listening?.hasData
+        ),
       }
     }),
   )
@@ -1083,4 +1231,6 @@ export const _internal = {
   buildLevelCatalogue,
   computeSkillScoreDebug,
   coveragePenaltyDebug,
+  buildIeltsSkillProfile,
+  ieltsBandToLearnixScore,
 }
