@@ -115,6 +115,18 @@ export const finishLiveLesson = asyncHandler(async (req, res) => {
   res.json(pushState(session))
 })
 
+export const assignUnit = asyncHandler(async (req, res) => {
+  await loadTeacherSession(req)
+  const session = await liveLessonService.assignUnit(req.params.id, req.body.unitNumber)
+  res.json(pushState(session))
+})
+
+export const completeUnit = asyncHandler(async (req, res) => {
+  await loadTeacherSession(req)
+  const session = await liveLessonService.completeUnit(req.params.id)
+  res.json(pushState(session))
+})
+
 export const selectExercise = asyncHandler(async (req, res) => {
   await loadTeacherSession(req)
   const { exerciseId, openForStudents } = req.body

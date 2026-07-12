@@ -30,6 +30,8 @@ const liveLessonSchema = new mongoose.Schema(
     code: { type: String, required: true, uppercase: true, unique: true, index: true },
     currentUnit: { type: Number, default: null },
     currentExercise: { type: String, default: null },
+    /** When true, teacher may assign a different unit. Cleared on assign. */
+    unitCompleted: { type: Boolean, default: false },
     lessonStatus: {
       type: String,
       enum: ["idle", "active", "paused", "finished"],

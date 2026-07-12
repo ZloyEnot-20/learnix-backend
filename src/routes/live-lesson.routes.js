@@ -4,6 +4,7 @@ import { protect } from "../middleware/protect.js"
 import { isStaff } from "../middleware/authorize.js"
 import { validate } from "../middleware/validate.js"
 import {
+  assignLiveLessonUnitSchema,
   createLiveLessonSchema,
   getLiveLessonBookSchema,
   getLiveLessonBookUnitSchema,
@@ -38,6 +39,8 @@ router.post("/:id/start", isStaff, validate(liveLessonIdSchema), ctrl.startLiveL
 router.post("/:id/pause", isStaff, validate(liveLessonIdSchema), ctrl.pauseLiveLesson)
 router.post("/:id/resume", isStaff, validate(liveLessonIdSchema), ctrl.resumeLiveLesson)
 router.post("/:id/finish", isStaff, validate(liveLessonIdSchema), ctrl.finishLiveLesson)
+router.post("/:id/assign-unit", isStaff, validate(assignLiveLessonUnitSchema), ctrl.assignUnit)
+router.post("/:id/complete-unit", isStaff, validate(liveLessonIdSchema), ctrl.completeUnit)
 router.post("/:id/exercise", isStaff, validate(selectLiveLessonExerciseSchema), ctrl.selectExercise)
 router.post("/:id/open", isStaff, validate(openLiveLessonSchema), ctrl.setOpenForStudents)
 

@@ -21,6 +21,14 @@ export const createLiveLessonSchema = {
   body: z.object({
     groupId: z.string().min(1),
     bookId: z.string().min(1).optional(),
+    /** Optional — prefer assign-unit after Start. */
+    unitNumber: z.coerce.number().int().positive().optional(),
+  }),
+}
+
+export const assignLiveLessonUnitSchema = {
+  params: idParam,
+  body: z.object({
     unitNumber: z.coerce.number().int().positive(),
   }),
 }

@@ -172,11 +172,80 @@ export async function createSession({ orgId, groupId, bookId, teacherId, unitNum
     code,
     currentUnit,
     currentExercise,
+    unitCompleted: false,
     lessonStatus: "idle",
     openForStudents: false,
     students,
   })
 
+  return session
+}
+
+function resetStudentProgress(session) {
+  for (const s of session.students ?? []) {
+    if (s.status === "done" || s.status === "working") {
+      s.status = s.status === "offline" ? "offline" : "online"
+    }
+    s.progress = 0
+    s.score = null
+    s.completedAt = null
+    s.answers = undefined
+  }
+  session.markModified("students")
+}
+
+/**
+ * Assign a unit to students. Blocked while another unit is active and not completed.
+ * Teacher may still preview other units in the admin UI without calling this.
+ */
+export async function assignUnit(sessionId, unitNumber) {
+  const session = await getById(sessionId)
+  if (session.lessonStatus === "finished") {
+    throw ApiError.badRequest("Lesson is already finished")
+  }
+  if (session.lessonStatus === "idle") {
+    throw ApiError.badRequest("Start the lesson before assigning a unit")
+  }
+
+  const nextUnit = Number(unitNumber)
+  if (!Number.isFinite(nextUnit) || nextUnit < 1) {
+    throw ApiError.badRequest("unitNumber is required")
+  }
+
+  const hasActiveUnit =
+    session.currentUnit != null && !session.unitCompleted
+  if (hasActiveUnit && Number(session.currentUnit) !== nextUnit) {
+    throw ApiError.badRequest("Complete the active unit before assigning another")
+  }
+
+  const { unit, exerciseIds } = await getUnit(session.bookId, nextUnit)
+  const switching = Number(session.currentUnit) !== Number(unit.unit_number)
+
+  session.currentUnit = Number(unit.unit_number)
+  session.currentExercise = exerciseIds[0] ?? null
+  session.unitCompleted = false
+  session.openForStudents = false
+
+  if (switching) {
+    resetStudentProgress(session)
+  }
+
+  await session.save()
+  return session
+}
+
+/** Mark the assigned unit complete so the teacher can assign the next one. */
+export async function completeUnit(sessionId) {
+  const session = await getById(sessionId)
+  if (session.lessonStatus === "finished") {
+    throw ApiError.badRequest("Lesson is already finished")
+  }
+  if (session.currentUnit == null) {
+    throw ApiError.badRequest("No unit is assigned")
+  }
+  session.unitCompleted = true
+  session.openForStudents = false
+  await session.save()
   return session
 }
 
@@ -234,29 +303,23 @@ export async function setCurrentExercise(sessionId, exerciseId, { openForStudent
   const id = String(exerciseId || "").trim()
   if (!id) throw ApiError.badRequest("exerciseId is required")
 
-  if (session.currentUnit != null) {
-    const { exerciseIds } = await getUnit(session.bookId, session.currentUnit)
-    if (!exerciseIds.includes(id)) {
-      throw ApiError.badRequest(`Exercise ${id} is not in unit ${session.currentUnit}`)
-    }
+  if (session.currentUnit == null || session.unitCompleted) {
+    throw ApiError.badRequest("Assign an active unit before opening an exercise")
   }
 
-  // Reset per-student progress when switching exercise
+  const { exerciseIds } = await getUnit(session.bookId, session.currentUnit)
+  if (!exerciseIds.includes(id)) {
+    throw ApiError.badRequest(`Exercise ${id} is not in unit ${session.currentUnit}`)
+  }
+
+  // Reset per-student progress only when the exercise pushed to students changes
   const switching = session.currentExercise !== id
   session.currentExercise = id
   if (typeof openForStudents === "boolean") {
     session.openForStudents = openForStudents
   }
   if (switching) {
-    for (const s of session.students ?? []) {
-      if (s.status === "done" || s.status === "working") {
-        s.status = s.status === "offline" ? "offline" : "online"
-      }
-      s.progress = 0
-      s.score = null
-      s.completedAt = null
-    }
-    session.markModified("students")
+    resetStudentProgress(session)
   }
   await session.save()
   return session
@@ -404,7 +467,15 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
       throw ApiError.badRequest("Invalid student status")
     }
     entry.status = status
-    if (status === "done") entry.completedAt = now
+    if (status === "done") {
+      entry.completedAt = now
+      // Ensure teacher panel always has a visible score when student finishes
+      if (entry.score == null && entry.progress != null) {
+        entry.score = Number(entry.progress)
+      }
+    } else if (status === "working") {
+      entry.completedAt = null
+    }
   } else if (entry.status === "offline" || entry.status === "online") {
     entry.status = "working"
   }
