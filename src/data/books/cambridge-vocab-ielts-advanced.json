@@ -1,0 +1,924 @@
+{
+  "book": {
+    "title": "Cambridge Vocabulary for IELTS Advanced",
+    "author": "Pauline Cullen",
+    "isbn": "978-0-521-17922-5",
+    "publisher": "Cambridge University Press",
+    "year": 2012
+  },
+  "units": [
+    {
+      "unit_number": 1,
+      "title": "Human nature",
+      "subtitle": "Character, psychology",
+      "sections": [
+        {
+          "section_type": "vocabulary",
+          "exercises": [
+            {
+              "exercise_id": "1.1",
+              "instruction": "Look at the following adjectives and decide if any of them apply to you.",
+              "items": [
+                "talkative",
+                "eccentric",
+                "cheerful",
+                "indecisive",
+                "clumsy"
+              ]
+            },
+            {
+              "exercise_id": "1.2",
+              "instruction": "Now listen to three people. Decide who they are talking about and choose the adjectives in 1.1 to describe that person. Then complete the sentences.",
+              "audio_track": "02",
+              "items": [
+                {
+                  "speaker": 1,
+                  "person": "neighbour",
+                  "adjectives": [
+                    "eccentric"
+                  ]
+                },
+                {
+                  "speaker": 2,
+                  "person": "friend",
+                  "adjectives": [
+                    "clumsy",
+                    "cheerful"
+                  ]
+                },
+                {
+                  "speaker": 3,
+                  "person": "colleague/team-mate/co-worker",
+                  "adjectives": [
+                    "indecisive"
+                  ]
+                }
+              ]
+            },
+            {
+              "exercise_id": "1.3",
+              "instruction": "Write the adjectives in the box in the correct part of the table.",
+              "items": [
+                "anxious",
+                "apprehensive",
+                "assertive",
+                "charming",
+                "cheerful",
+                "clumsy",
+                "egotistical",
+                "gullible",
+                "self-confident",
+                "self-conscious",
+                "sensible",
+                "tactful"
+              ],
+              "table": {
+                "Positive qualities": [
+                  "assertive",
+                  "charming",
+                  "cheerful",
+                  "self-confident",
+                  "sensible",
+                  "tactful"
+                ],
+                "Negative qualities": [
+                  "anxious",
+                  "apprehensive",
+                  "clumsy",
+                  "cynical",
+                  "egotistical",
+                  "gullible",
+                  "self-conscious"
+                ]
+              }
+            },
+            {
+              "exercise_id": "1.4",
+              "instruction": "Some adjectives which describe character use the prefixes self- and well-. Choose between self- and well- for each of the following adjectives and write the new adjectives below.",
+              "items": [
+                "absorbed",
+                "adjusted",
+                "assured",
+                "behaved",
+                "bred",
+                "brought-up",
+                "centred",
+                "confident",
+                "congratulatory",
+                "deprecating",
+                "dressed",
+                "educated",
+                "important",
+                "informed",
+                "mannered",
+                "reliant",
+                "rounded"
+              ],
+              "answers": {
+                "self-": [
+                  "absorbed",
+                  "assured",
+                  "centred",
+                  "confident",
+                  "congratulatory",
+                  "deprecating",
+                  "important",
+                  "reliant"
+                ],
+                "well-": [
+                  "adjusted",
+                  "behaved",
+                  "bred",
+                  "brought-up",
+                  "dressed",
+                  "educated",
+                  "informed",
+                  "mannered",
+                  "rounded"
+                ]
+              }
+            },
+            {
+              "exercise_id": "1.5",
+              "instruction": "The following adjectives describe positive qualities. Add prefixes to make them negative.",
+              "items": [
+                "considerate",
+                "sensitive",
+                "decisive",
+                "patient",
+                "reliable"
+              ],
+              "answers": [
+                "inconsiderate",
+                "insensitive",
+                "indecisive",
+                "impatient",
+                "unreliable"
+              ]
+            },
+            {
+              "exercise_id": "2.1",
+              "instruction": "A student has filled in this mind map. Make a mind map about yourself. Use it to practise talking about yourself for one to two minutes.",
+              "has_image": true,
+              "image_description": "mind map with categories like personality, hobbies, family, etc."
+            },
+            {
+              "exercise_id": "2.2",
+              "instruction": "Complete the sentences with the singular or plural form of personality, character or characteristic.",
+              "items": [
+                {
+                  "sentence": "She's always the life and soul of the party because she has such a bubbly _____.",
+                  "answer": "personality"
+                },
+                {
+                  "sentence": "Dedication, commitment and knowledge are all _____ of a good teacher.",
+                  "answer": "characteristics"
+                },
+                {
+                  "sentence": "I don't believe he said that; it would be really out of _____.",
+                  "answer": "character"
+                },
+                {
+                  "sentence": "I didn't get along with my business partner because our _____ clashed.",
+                  "answer": "personalities"
+                },
+                {
+                  "sentence": "Children may display _____ of either of their parents.",
+                  "answer": "characteristics"
+                }
+              ]
+            },
+            {
+              "exercise_id": "2.3",
+              "instruction": "In Part 2 of the IELTS Speaking test, you have to talk on a given topic for up to two minutes. Use the language and ideas in your mind map to answer these questions. Make a recording of yourself if possible.",
+              "topic": "Describe a friend you have known for a long time. You should talk about: how long you have known them, how you met them, their personality and character, what you have in common and say what you like doing together."
+            },
+            {
+              "exercise_id": "2.4",
+              "instruction": "Listen to your recording and check there is no hesitation in the middle of sentences and that your pronunciation is clear. Check the range of vocabulary in your answer and make sure there is not too much repetition."
+            }
+          ]
+        },
+        {
+          "section_type": "reading",
+          "exercises": [
+            {
+              "exercise_id": "3.1",
+              "instruction": "Read the passage below. Are the following statements True, False or Not given? Before you answer the questions, highlight or underline the part of the passage you think will give you your answer.",
+              "passage": "Would you prefer to be popular or well-liked? A new study from The Australian National University (ANU) has shown that for Canberra's young people, being well-liked is much more desirable than being popular, and being popular does not always mean you're well-liked. The study by Stephanie Hawke, a PhD candidate in clinical psychology at ANU, looked at nearly 200 Year 9 and Year 11 students from across Canberra. It found that adolescents saw being popular and being well-liked as two very different things, and that young people may not see popularity as a desirable trait. The research has been released as part of National Psychology Week. It is the first Australian study to address the issue of popularity and what it means to young people. Both boys and girls agreed that many popular teenagers are disliked by the year group as a whole, said Ms Hawke. This can be for several reasons such as bullying, having an attitude of superiority and disrupting the classroom. Those students who are described as being both popular and well-liked manage to balance their high social status with positive qualities such as being kind and friendly. The study also found that there was a complicated relationship between both individual and group popularity, and how these were perceived by students. One interesting finding is that popular students are likely to belong to popular groups. This was contrasted with well-liked students, who were much less likely to belong to groups of well-liked peers, said Ms Hawke. It seems that being popular is about the group that you fit into, whereas being well-liked is about the individual person's inherent characteristics. Almost all of the students interviewed said that they would prefer to be known as well-liked, as opposed to popular, because this is a reflection of who they are as a person. She added that the results indicate that popular students are not idealised in the way that popular culture sometimes portrays, and that once other students are aware that many popular students are not liked by others in the year group, it is possible that they will lose the power they are perceived to have.",
+              "questions": [
+                {
+                  "number": 1,
+                  "statement": "The ANU study found that young people in Canberra confuse being well-liked with being popular.",
+                  "answer": "False"
+                },
+                {
+                  "number": 2,
+                  "statement": "The ANU study showed that most young people in Canberra wish they were popular.",
+                  "answer": "False"
+                },
+                {
+                  "number": 3,
+                  "statement": "According to Ms Hawke, popular students may look down on other students.",
+                  "answer": "True"
+                },
+                {
+                  "number": 4,
+                  "statement": "According to Ms Hawke, popular students can prevent others from learning.",
+                  "answer": "True"
+                },
+                {
+                  "number": 5,
+                  "statement": "According to Ms Hawke, students who are well-liked tend to mix with others who are well-liked.",
+                  "answer": "False"
+                },
+                {
+                  "number": 6,
+                  "statement": "Being well-liked tells us more about someone's true character than being popular.",
+                  "answer": "True"
+                },
+                {
+                  "number": 7,
+                  "statement": "There is often one popular student in a year group who is thought to have more power than the others.",
+                  "answer": "Not given"
+                }
+              ]
+            },
+            {
+              "exercise_id": "3.2",
+              "instruction": "Paraphrase: Now find words or phrases in the passage with a similar meaning to the words in italics in 3.1.",
+              "items": [
+                {
+                  "original": "young people",
+                  "paraphrase": "adolescents/teenagers"
+                },
+                {
+                  "original": "wish they were popular",
+                  "paraphrase": "see popularity as a desirable trait"
+                },
+                {
+                  "original": "look down on",
+                  "paraphrase": "having an attitude of superiority"
+                },
+                {
+                  "original": "prevent others from learning",
+                  "paraphrase": "disrupting the classroom"
+                },
+                {
+                  "original": "tend to",
+                  "paraphrase": "(be) likely to"
+                },
+                {
+                  "original": "others",
+                  "paraphrase": "(their) peers"
+                },
+                {
+                  "original": "true character",
+                  "paraphrase": "inherent characteristics"
+                },
+                {
+                  "original": "thought to",
+                  "paraphrase": "perceived to"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "section_type": "test_practice",
+          "subtype": "Listening Section 4",
+          "audio_track": "03",
+          "instruction": "Questions 1-10. Complete the notes below. Write NO MORE THAN ONE WORD for each answer.",
+          "test_tip": "Remember that although the information on the question paper will paraphrase the information that you hear, it will be in the same order. Make sure you keep to the word limit you are given and be careful to check your spelling at the end. You can write your answers in capital letters or lower case.",
+          "notes": {
+            "title": "Past views of intelligence",
+            "body": [
+              "Thought to be only one type",
+              "Could be assessed through an IQ test",
+              "Current views",
+              "More than one type of intelligence - these can be seen in our 1",
+              "Howard Gardner - Frames of Mind (1983) identified seven types of intelligence:",
+              "i linguistic (i.e. words and language)",
+              "ii 2 (science and maths)",
+              "iii musical",
+              "iv kinaesthetic (i.e. the body and 3",
+              "v visual (relating to images)",
+              "vi interpersonal (conscious of the 4 of other people)",
+              "vii intrapersonal (relating to self-awareness)",
+              "Other intelligences have been suggested but are not generally included because they are too 5",
+              "Uses in education",
+              "Adapt activities to suit the type of student you are, e.g.",
+              "a kinaesthetic type learner will not learn well from a 6 - they would learn better from taking part in a 7",
+              "visual learners could create their own 8",
+              "Find out the type of learner you are by thinking about the way you prefer to do things, e.g. when teaching someone how to use a new piece of equipment",
+              "a visual learner would prefer to use a 9",
+              "a kinaesthetic learner would prefer to do a 10"
+            ]
+          },
+          "answers": [
+            "personality/personalities",
+            "logical",
+            "movement",
+            "feelings",
+            "complex",
+            "lecture",
+            "game",
+            "poster/s",
+            "diagram",
+            "demonstration"
+          ]
+        }
+      ]
+    },
+    {
+      "unit_number": 2,
+      "title": "Time for a change",
+      "subtitle": "Time, change",
+      "sections": [
+        {
+          "section_type": "vocabulary",
+          "exercises": [
+            {
+              "exercise_id": "1.1",
+              "instruction": "Answer these questions.",
+              "questions": [
+                "Has your attitude to your free time changed since you were a child? (In what way?)",
+                "What value is there in teaching history to children?",
+                "What is the best way to learn about history?",
+                "Do you think older people are more interested in the past than children are? (Why? / Why not?)",
+                "What influence do you think the past has over the present?"
+              ]
+            },
+            {
+              "exercise_id": "1.2",
+              "instruction": "Listen to two people answering the questions in 1.1. Which question are they answering?",
+              "audio_track": "04",
+              "speaker_1": "question 1",
+              "speaker_2": "question 4"
+            },
+            {
+              "exercise_id": "1.3",
+              "instruction": "Now listen again and note the expressions connected with time. You may need to listen several times and/or read recording script 04 at the back of the book.",
+              "speaker_1_expressions": [
+                "spare time",
+                "last an eternity",
+                "drags on (and on)",
+                "(went on for) ages",
+                "had so much time on my hands",
+                "in next to no time",
+                "time seems to speed up",
+                "it just goes so fast",
+                "there aren't enough hours in the day",
+                "pressed for time"
+              ],
+              "speaker_2_expressions": [
+                "the past is a/another country",
+                "for hours and hours at a time",
+                "time passes in the blink of an eye",
+                "make the most of every moment of it (time)",
+                "an instant (ago)",
+                "have the time of their life",
+                "brief",
+                "fleeting"
+              ]
+            }
+          ]
+        },
+        {
+          "exercise_id": "2.1",
+          "instruction": "Do the words in the box refer to the past or the present?",
+          "items": [
+            "retrospect",
+            "contemporary",
+            "bygone",
+            "immediate",
+            "preceding",
+            "current",
+            "topical",
+            "status quo"
+          ],
+          "answers": {
+            "past": [
+              "retrospect",
+              "bygone",
+              "preceding"
+            ],
+            "present": [
+              "contemporary",
+              "immediate",
+              "current",
+              "topical",
+              "status quo"
+            ]
+          }
+        },
+        {
+          "exercise_id": "2.2",
+          "instruction": "Complete the sentences with the words in the box in 2.1. Use a dictionary to help you and to check collocations with the words in bold. There may be more than one possible answer.",
+          "items": [
+            {
+              "sentence": "The exhibition contains faded photographs reminding us of a _____ era.",
+              "answer": "bygone"
+            },
+            {
+              "sentence": "He mixes _____ ideas with those of years gone by.",
+              "answer": "contemporary/current/topical"
+            },
+            {
+              "sentence": "There will always be people who resist change and want to maintain the _____.",
+              "answer": "status quo"
+            },
+            {
+              "sentence": "The _____ effect of the war was a breakdown in law and order on the streets.",
+              "answer": "immediate"
+            },
+            {
+              "sentence": "In _____ and with the benefit of hindsight, it is clear that this was a bad decision.",
+              "answer": "retrospect"
+            },
+            {
+              "sentence": "I prefer this newspaper because it covers the most _____ news stories.",
+              "answer": "current/topical"
+            },
+            {
+              "sentence": "On New Year's Day, people often stop and reflect on all that happened in the _____ year.",
+              "answer": "preceding"
+            },
+            {
+              "sentence": "In previous years, the library was always very busy, but our _____ students seem to prefer to study in the privacy of their own room.",
+              "answer": "current"
+            }
+          ]
+        },
+        {
+          "exercise_id": "3.1",
+          "instruction": "Listen to a talk about archaeology and complete the summary using NO MORE THAN TWO WORDS for each answer.",
+          "audio_track": "05",
+          "summary": "Years before the arrival of our ancestors, who were the 1 of colonial times, ancient societies lived in the lake area. In some places, archaeologists have discovered the remains of 2 hidden under many layers of earth. But digs in other areas have only produced charcoal deposits from 3 . Because of these finds, we can now protect the 4 e.g. they may be put on an official list of 5 It is very important that they are kept safe. They are at risk of disappearing altogether because of erosion and looters. The looters take things from the area because they hope to sell them as 6 . The researchers plan to totally 7 the area and take away any 8 they find to put them in a safe place. If people steal from these areas, we lose the possibility of understanding more about our cultural heritage.",
+          "answers": [
+            "pioneers",
+            "(ancient) villages",
+            "(ancient/prehistoric) fires",
+            "sites",
+            "historic places",
+            "antiques",
+            "excavate",
+            "artefacts"
+          ]
+        },
+        {
+          "exercise_id": "3.2",
+          "instruction": "Now listen again and note the words and phrases with a similar meaning to the words in italics in the summary.",
+          "paraphrases": [
+            {
+              "original": "times",
+              "paraphrase": "era"
+            },
+            {
+              "original": "societies",
+              "paraphrase": "civilisations"
+            },
+            {
+              "original": "lived",
+              "paraphrase": "dwelt"
+            },
+            {
+              "original": "remains",
+              "paraphrase": "remnants"
+            },
+            {
+              "original": "hidden under",
+              "paraphrase": "buried beneath"
+            },
+            {
+              "original": "produced",
+              "paraphrase": "yielded"
+            },
+            {
+              "original": "but",
+              "paraphrase": "however"
+            },
+            {
+              "original": "finds",
+              "paraphrase": "discoveries"
+            },
+            {
+              "original": "official list",
+              "paraphrase": "register"
+            },
+            {
+              "original": "very important",
+              "paraphrase": "vital"
+            },
+            {
+              "original": "kept safe",
+              "paraphrase": "conserve(d)"
+            },
+            {
+              "original": "totally",
+              "paraphrase": "fully"
+            },
+            {
+              "original": "find",
+              "paraphrase": "uncover"
+            }
+          ]
+        },
+        {
+          "exercise_id": "4.1",
+          "instruction": "The word change can collocate with all of the adjectives in the box. Do the adjectives mean large or small (change)?",
+          "items": [
+            "enormous",
+            "minute",
+            "total",
+            "dramatic",
+            "modest",
+            "complete",
+            "immense",
+            "gradual",
+            "profound",
+            "extraordinary",
+            "sweeping",
+            "minor",
+            "tremendous",
+            "infinitesimal",
+            "moderate",
+            "slight",
+            "drastic",
+            "major",
+            "huge"
+          ],
+          "answers": {
+            "large": [
+              "enormous",
+              "total",
+              "dramatic",
+              "complete",
+              "immense",
+              "profound",
+              "extraordinary",
+              "sweeping",
+              "tremendous",
+              "drastic",
+              "major",
+              "huge"
+            ],
+            "small": [
+              "minute",
+              "modest",
+              "gradual",
+              "minor",
+              "infinitesimal",
+              "moderate",
+              "slight"
+            ]
+          }
+        },
+        {
+          "exercise_id": "4.2",
+          "instruction": "The adjectives in the box can describe the nature or speed of change. Highlight or underline the synonyms of change in the sentences below. Then complete the sentences with adjectives from the box.",
+          "adjectives": [
+            "smooth",
+            "gradual",
+            "turbulent",
+            "abrupt",
+            "sudden",
+            "rapid",
+            "temporary"
+          ],
+          "sentences": [
+            {
+              "sentence": "Everyone was grateful that there had been a very _____ transition between governments.",
+              "answer": "smooth"
+            },
+            {
+              "sentence": "The stock market crash led to a very _____ reversal in fortunes for many people.",
+              "answer": "abrupt/sudden/rapid"
+            },
+            {
+              "sentence": "The government is hoping that this is only a _____ shift in public opinion.",
+              "answer": "temporary"
+            },
+            {
+              "sentence": "There was a _____ improvement in our sales figures from 1990 to 2010, and this helped bring about our transformation from a small local company to a global leader.",
+              "answer": "gradual"
+            },
+            {
+              "sentence": "This has been a _____ period involving a great deal of struggle and hardship. But it is a necessary part of our evolution.",
+              "answer": "turbulent"
+            },
+            {
+              "sentence": "We are slowly witnessing a _____ movement in favour of surveillance.",
+              "answer": "gradual"
+            }
+          ]
+        },
+        {
+          "exercise_id": "4.3",
+          "instruction": "Look at the graph and find the following: a gradual increase, a steady rise, a slight fall, a marked difference, a temporary levelling out, a very slight rise.",
+          "has_graph": true
+        },
+        {
+          "exercise_id": "4.4",
+          "instruction": "Write the verb + adverb form of the phrases in 4.3.",
+          "answers": [
+            "increase gradually",
+            "rise steadily",
+            "fall slightly",
+            "differ markedly / be markedly different",
+            "level out temporarily",
+            "rise very slightly"
+          ]
+        },
+        {
+          "exercise_id": "4.5",
+          "instruction": "Complete the description below with the words in the box.",
+          "words": [
+            "periodic",
+            "period",
+            "temporarily",
+            "remained",
+            "and",
+            "steady",
+            "steadily",
+            "by",
+            "from",
+            "trend"
+          ],
+          "text": "The graph shows changes in the price of fresh fruits and vegetables, sugar and sweets, and carbonated drinks over a thirty-year 1 in the US between 1979 2 2009. The graph also shows the general 3 in the consumer price index during this time. While the consumer price index showed a slow and 4 increase from 1979 to 2009, the same cannot be said for the price of carbonated, or soft, drinks. After rising briefly between 1979 and 1981, they 5 fairly constant until 1999, when the price did begin to increase slowly. In contrast, there was a marked difference in the price of fresh fruits and vegetables, which, despite fluctuations, rose 7 throughout this period. In fact, fresh food prices only levelled out 8 between 1990 and 1992 and again 9 2000 to 2001. However, 10 2008 the price had increased by more than 300%",
+          "answers": [
+            "period",
+            "and",
+            "trend",
+            "steady",
+            "remained",
+            "periodic",
+            "steadily",
+            "temporarily",
+            "from",
+            "by"
+          ]
+        },
+        {
+          "exercise_id": "4.6",
+          "instruction": "Answer the questions. Try to use some of the new language from this unit in your answers.",
+          "questions": [
+            "Has your city or town changed over the past 20 years? (If so, in what way?)",
+            "What changes do you think we will see in the next 20 years?",
+            "Do you think our lives are changing too quickly?",
+            "How difficult is it for older people to adapt to new changes?",
+            "What changes would you like to see in the future?",
+            "How different is life today compared to when your grandparents were young?"
+          ]
+        }
+      ]
+    },
+    {
+      "unit_number": 3,
+      "title": "No man is an island",
+      "subtitle": "Individuality, community",
+      "sections": []
+    }
+  ],
+  "answer_key": {
+    "unit_1": {
+      "1.2": "1 neighbour; eccentric; 2 friend; clumsy; cheerful; 3 colleague/team-mate/co-worker; indecisive",
+      "1.3": {
+        "Positive qualities": [
+          "assertive",
+          "charming",
+          "cheerful",
+          "self-confident",
+          "sensible",
+          "tactful"
+        ],
+        "Negative qualities": [
+          "anxious",
+          "apprehensive",
+          "clumsy",
+          "cynical",
+          "egotistical",
+          "gullible",
+          "self-conscious"
+        ]
+      },
+      "1.4": {
+        "self-": [
+          "absorbed",
+          "assured",
+          "centred",
+          "confident",
+          "congratulatory",
+          "deprecating",
+          "important",
+          "reliant"
+        ],
+        "well-": [
+          "adjusted",
+          "behaved",
+          "bred",
+          "brought-up",
+          "dressed",
+          "educated",
+          "informed",
+          "mannered",
+          "rounded"
+        ]
+      },
+      "1.5": [
+        "inconsiderate",
+        "insensitive",
+        "indecisive",
+        "impatient",
+        "unreliable"
+      ],
+      "2.2": [
+        "personality",
+        "characteristics",
+        "character",
+        "personalities",
+        "characteristics"
+      ],
+      "3.1": [
+        "False",
+        "False",
+        "True",
+        "True",
+        "False",
+        "True",
+        "Not given"
+      ],
+      "test_practice": [
+        "personality/personalities",
+        "logical",
+        "movement",
+        "feelings",
+        "complex",
+        "lecture",
+        "game",
+        "poster/s",
+        "diagram",
+        "demonstration"
+      ]
+    },
+    "unit_2": {
+      "1.2": {
+        "speaker_1": "question 1",
+        "speaker_2": "question 4"
+      },
+      "2.1": {
+        "past": [
+          "retrospect",
+          "bygone",
+          "preceding"
+        ],
+        "present": [
+          "contemporary",
+          "immediate",
+          "current",
+          "topical",
+          "status quo"
+        ]
+      },
+      "2.2": [
+        "bygone",
+        "contemporary/current/topical",
+        "status quo",
+        "immediate",
+        "retrospect",
+        "current/topical",
+        "preceding",
+        "current"
+      ],
+      "3.1": [
+        "pioneers",
+        "(ancient) villages",
+        "(ancient/prehistoric) fires",
+        "sites",
+        "historic places",
+        "antiques",
+        "excavate",
+        "artefacts"
+      ],
+      "4.1": {
+        "large": [
+          "enormous",
+          "total",
+          "dramatic",
+          "complete",
+          "immense",
+          "profound",
+          "extraordinary",
+          "sweeping",
+          "tremendous",
+          "drastic",
+          "major",
+          "huge"
+        ],
+        "small": [
+          "minute",
+          "modest",
+          "gradual",
+          "minor",
+          "infinitesimal",
+          "moderate",
+          "slight"
+        ]
+      },
+      "4.2": [
+        "smooth",
+        "abrupt/sudden/rapid",
+        "temporary",
+        "gradual",
+        "turbulent",
+        "gradual"
+      ],
+      "4.4": [
+        "increase gradually",
+        "rise steadily",
+        "fall slightly",
+        "differ markedly / be markedly different",
+        "level out temporarily",
+        "rise very slightly"
+      ],
+      "4.5": [
+        "period",
+        "and",
+        "trend",
+        "steady",
+        "remained",
+        "periodic",
+        "steadily",
+        "temporarily",
+        "from",
+        "by"
+      ]
+    },
+    "unit_3": {
+      "4": [
+        "decline",
+        "member",
+        "behaviour",
+        "interaction",
+        "Minority",
+        "pressure"
+      ],
+      "2.1": [
+        "C",
+        "F",
+        "D",
+        "B",
+        "A"
+      ],
+      "2.2": {
+        "tolerant attitude": "open-minded approach",
+        "harmful to society": "anti-social",
+        "approved of by society": "socially acceptable"
+      },
+      "2.3": [
+        "influential",
+        "segment",
+        "flaunt",
+        "skewed",
+        "suburban",
+        "status"
+      ],
+      "3.1": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8 X"
+      ],
+      "5.1": {
+        "censored": "/s/",
+        "censured": "/ʃ/",
+        "coarsen": "/s/",
+        "caution": "/ʃ/",
+        "censure": "/ʃ/",
+        "sensor": "/s/",
+        "partial": "/ʃ/",
+        "parcel": "/s/",
+        "seek": "/s/",
+        "chic": "/ʃ/",
+        "chauffeur": "/ʃ/",
+        "sofa": "/s/",
+        "furnish": "/ʃ/",
+        "furnace": "/s/",
+        "subtle": "/s/",
+        "shuttle": "/ʃ/",
+        "crust": "/s/",
+        "crushed": "/ʃ/",
+        "sealed": "/s/",
+        "shield": "/ʃ/",
+        "rust": "/s/",
+        "rushed": "/ʃ/",
+        "sip": "/s/",
+        "ship": "/ʃ/"
+      }
+    }
+  }
+}

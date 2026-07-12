@@ -1,3 +1,4 @@
+import http from "http"
 import { createApp } from "./app.js"
 import { connectDB, disconnectDB } from "./config/db.js"
 import { connectPlatformDB, disconnectPlatformDB } from "./config/platformDb.js"
@@ -9,15 +10,18 @@ import {
   registerTelegramWebhook,
 } from "./services/telegram-webhook.service.js"
 import { startReconcileTimer } from "./services/telegram.service.js"
+import { attachLiveLessonRealtime } from "./realtime/live-lesson.io.js"
 
 function start() {
   validateSecurityConfig()
   const app = createApp()
+  const server = http.createServer(app)
+  attachLiveLessonRealtime(server)
 
   // Start listening immediately so the process is reachable (and health checks
   // respond) even if MongoDB is temporarily unavailable. The DB connects in the
   // background; /api/health/ready reflects whether it's actually ready.
-  const server = app.listen(env.port, () => {
+  server.listen(env.port, () => {
     const prefix = env.apiPrefix || "(root)"
     console.log(`[server] API listening on http://localhost:${env.port}${env.apiPrefix || ""}`)
     console.log(`[server] health: http://localhost:${env.port}${env.apiPrefix}/health`)
