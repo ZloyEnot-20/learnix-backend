@@ -2,9 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { assertOrgGroup, assertTenantDoc, withOrgId } from "../services/tenantScope.service.js"
 import { assertSelectableGroup } from "../services/group.service.js"
+import { isStaffType } from "../constants/userTypes.js"
 import * as bookService from "../services/book.service.js"
 import * as liveLessonService from "../services/live-lesson.service.js"
-import { emitLessonState } from "../realtime/live-lesson.io.js"
+import { emitLessonPresence, emitLessonState } from "../realtime/live-lesson.io.js"
 import { LiveLesson } from "../models/LiveLesson.js"
 
 function pushState(session) {
@@ -19,6 +20,7 @@ async function loadTeacherSession(req) {
   return session
 }
 
+/** Platform books — available to every authenticated tenant user. */
 export const listBooks = asyncHandler(async (_req, res) => {
   const books = await bookService.listBooks()
   res.json(books)
@@ -26,6 +28,7 @@ export const listBooks = asyncHandler(async (_req, res) => {
 
 export const getBook = asyncHandler(async (req, res) => {
   const book = await bookService.loadBook(req.params.bookId)
+  const staff = isStaffType(req.user.type)
   res.json({
     bookId: book.bookId,
     book: book.book ?? null,
@@ -33,13 +36,19 @@ export const getBook = asyncHandler(async (req, res) => {
       unit_number: u.unit_number,
       title: u.title,
       subtitle: u.subtitle ?? null,
+      ready: Array.isArray(u.sections) && u.sections.length > 0,
       exerciseIds: bookService.flattenUnitExerciseIds(u),
     })),
+    // Full unit payloads are fetched per-unit; answer_key only for staff
+    ...(staff ? { answer_key: book.answer_key ?? {} } : {}),
   })
 })
 
 export const getBookUnit = asyncHandler(async (req, res) => {
-  const result = await bookService.getUnit(req.params.bookId, req.params.unitNumber)
+  const staff = isStaffType(req.user.type)
+  const result = await bookService.getUnit(req.params.bookId, req.params.unitNumber, {
+    includeAnswers: staff,
+  })
   res.json(result)
 })
 
@@ -129,10 +138,12 @@ export const studentProgress = asyncHandler(async (req, res) => {
   res.json(pushState(session))
 })
 
+/** Heartbeat returns a small presence patch — does not fan-out full lesson state via REST. */
 export const studentHeartbeat = asyncHandler(async (req, res) => {
   if (req.user.type !== "student") {
     throw ApiError.forbidden("Only students can send heartbeats")
   }
-  const session = await liveLessonService.studentHeartbeat(req.params.id, req.user.id)
-  res.json(pushState(session))
+  const patch = await liveLessonService.studentHeartbeat(req.params.id, req.user.id)
+  emitLessonPresence(patch.sessionId, patch)
+  res.json(patch)
 })

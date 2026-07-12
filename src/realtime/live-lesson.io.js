@@ -24,6 +24,11 @@ export function emitLessonState(sessionId, state) {
   io.to(roomForSession(sessionId)).emit("lesson:state", payload)
 }
 
+export function emitLessonPresence(sessionId, patch) {
+  if (!io || !patch) return
+  io.to(roomForSession(sessionId)).emit("lesson:presence", patch)
+}
+
 async function broadcastSession(session) {
   const state = liveLessonService.serialize(session)
   emitLessonState(session._id, state)
@@ -46,6 +51,13 @@ function requireStudent(socket) {
   }
 }
 
+async function assertStaffSessionAccess(socket, session) {
+  requireStaff(socket)
+  if (session.orgId && socket.user.orgId && session.orgId !== socket.user.orgId) {
+    throw new Error("Forbidden")
+  }
+}
+
 async function loadUserFromToken(token) {
   if (!token || typeof token !== "string") return null
   let payload
@@ -55,7 +67,7 @@ async function loadUserFromToken(token) {
     return null
   }
   if (!payload?.sub || payload.sub === "guest" || payload.type === "guest") return null
-  const user = await User.findById(payload.sub)
+  const user = await User.findById(payload.sub).select("_id type orgId name deletedAt")
   if (!user || user.deletedAt) return null
   return {
     id: user._id,
@@ -67,7 +79,7 @@ async function loadUserFromToken(token) {
 
 /**
  * Attach Socket.IO live-lesson realtime layer to an http.Server.
- * @param {import("http").Server} httpServer
+ * Does not alter Express routing — safe alongside existing REST API.
  */
 export function attachLiveLessonRealtime(httpServer) {
   const cors = resolveCorsOptions({
@@ -81,6 +93,10 @@ export function attachLiveLessonRealtime(httpServer) {
       credentials: cors.credentials !== false,
     },
     path: "/socket.io",
+    // Keep connection churn low
+    pingInterval: 25000,
+    pingTimeout: 20000,
+    maxHttpBufferSize: 1e5,
   })
 
   io.use(async (socket, next) => {
@@ -106,13 +122,10 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:subscribe", async (payload, ack) => {
       try {
-        requireStaff(socket)
         const sessionId = payload?.sessionId
         if (!sessionId) throw new Error("sessionId is required")
         const session = await liveLessonService.getById(sessionId)
-        if (session.orgId && socket.user.orgId && session.orgId !== socket.user.orgId) {
-          throw new Error("Forbidden")
-        }
+        await assertStaffSessionAccess(socket, session)
         await socket.join(roomForSession(session._id))
         const state = liveLessonService.serialize(session)
         socket.emit("lesson:state", state)
@@ -122,11 +135,15 @@ export function attachLiveLessonRealtime(httpServer) {
       }
     })
 
+    // Teacher control events — prefer REST from admin UI; socket kept for low-latency optional use.
+    // Always verify staff + org before mutating.
+
     socket.on("lesson:start", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.start(payload?.sessionId)
-        const state = await broadcastSession(session)
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.start(session._id)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -135,9 +152,10 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:pause", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.pause(payload?.sessionId)
-        const state = await broadcastSession(session)
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.pause(session._id)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -146,9 +164,10 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:resume", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.resume(payload?.sessionId)
-        const state = await broadcastSession(session)
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.resume(session._id)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -157,9 +176,10 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:finish", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.finish(payload?.sessionId)
-        const state = await broadcastSession(session)
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.finish(session._id)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -168,11 +188,12 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:select-exercise", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.setCurrentExercise(payload?.sessionId, payload?.exerciseId, {
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.setCurrentExercise(session._id, payload?.exerciseId, {
           openForStudents: payload?.openForStudents,
         })
-        const state = await broadcastSession(session)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -181,12 +202,13 @@ export function attachLiveLessonRealtime(httpServer) {
 
     socket.on("lesson:open-for-students", async (payload, ack) => {
       try {
-        requireStaff(socket)
-        const session = await liveLessonService.openForStudents(
-          payload?.sessionId,
+        const session = await liveLessonService.getById(payload?.sessionId)
+        await assertStaffSessionAccess(socket, session)
+        const next = await liveLessonService.openForStudents(
+          session._id,
           payload?.openForStudents ?? payload?.open,
         )
-        const state = await broadcastSession(session)
+        const state = await broadcastSession(next)
         if (typeof ack === "function") ack({ ok: true, state })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
@@ -206,13 +228,14 @@ export function attachLiveLessonRealtime(httpServer) {
       }
     })
 
+    // Heartbeat: cheap presence patch only — no full lesson:state fan-out.
     socket.on("lesson:heartbeat", async (payload, ack) => {
       try {
         requireStudent(socket)
-        const session = await liveLessonService.studentHeartbeat(payload?.sessionId, socket.user.id)
-        await socket.join(roomForSession(session._id))
-        const state = await broadcastSession(session)
-        if (typeof ack === "function") ack({ ok: true, state })
+        const patch = await liveLessonService.studentHeartbeat(payload?.sessionId, socket.user.id)
+        await socket.join(roomForSession(patch.sessionId))
+        emitLessonPresence(patch.sessionId, patch)
+        if (typeof ack === "function") ack({ ok: true, patch })
       } catch (err) {
         if (typeof ack === "function") ack({ ok: false, error: err.message })
       }

@@ -18,22 +18,21 @@ import {
 const router = Router()
 router.use(...protect)
 
-// ----- Teacher (staff) -----
-router.get("/books", isStaff, ctrl.listBooks)
-router.get("/books/:bookId", isStaff, validate(getLiveLessonBookSchema), ctrl.getBook)
+// Platform curriculum books — any authenticated user (all tenants)
+router.get("/books", ctrl.listBooks)
+router.get("/books/:bookId", validate(getLiveLessonBookSchema), ctrl.getBook)
 router.get(
   "/books/:bookId/units/:unitNumber",
-  isStaff,
   validate(getLiveLessonBookUnitSchema),
   ctrl.getBookUnit,
 )
 
+// Teacher session control
 router.post("/", isStaff, validate(createLiveLessonSchema), ctrl.createLiveLesson)
 
-// ----- Student -----
+// Student join by code
 router.get("/join/:code", validate(joinLiveLessonByCodeSchema), ctrl.joinByCode)
 
-// ----- Shared by id (staff mutations / student presence) -----
 router.get("/:id", isStaff, validate(liveLessonIdSchema), ctrl.getLiveLesson)
 router.post("/:id/start", isStaff, validate(liveLessonIdSchema), ctrl.startLiveLesson)
 router.post("/:id/pause", isStaff, validate(liveLessonIdSchema), ctrl.pauseLiveLesson)

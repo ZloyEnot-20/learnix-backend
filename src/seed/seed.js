@@ -17,6 +17,7 @@ import { User } from "../models/User.js"
 import { Level } from "../models/Level.js"
 import { VocabDeck } from "../models/VocabDeck.js"
 import { VOCAB_DECKS } from "../content/vocab-decks.js"
+import { seedCurriculumBooks } from "./curriculum-books-seed.js"
 
 async function seedSuperAdmin() {
   const email = env.seed.superAdminEmail
@@ -62,6 +63,7 @@ async function seed() {
   await seedSuperAdmin()
   await clearExtraLevels()
   await seedVocabDecks()
+  await seedCurriculumBooks()
 }
 
 seed()

@@ -8,6 +8,12 @@ import { flattenUnitExerciseIds, getUnit, loadBook } from "./book.service.js"
 const ACTIVE_STATUSES = ["idle", "active", "paused"]
 const STUDENT_STATUSES = new Set(["offline", "online", "working", "done"])
 
+/** Throttle DB flushes for heartbeats (ms). Presence stays fresh in memory via sockets. */
+const HEARTBEAT_DB_INTERVAL_MS = 60_000
+
+/** sessionId → Map(studentId → lastDbFlushAt) */
+const heartbeatFlushAt = new Map()
+
 function generateJoinCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
   const bytes = randomBytes(6)
@@ -34,7 +40,17 @@ function findStudentEntry(session, studentId) {
 
 export function serialize(session) {
   const json = typeof session.toJSON === "function" ? session.toJSON() : { ...session }
-  const students = json.students ?? []
+  const now = Date.now()
+  const students = (json.students ?? []).map((s) => {
+    const started = s.startedAt ? new Date(s.startedAt).getTime() : null
+    const ended = s.completedAt ? new Date(s.completedAt).getTime() : null
+    let elapsedSeconds = 0
+    if (started) {
+      elapsedSeconds = Math.max(0, Math.floor(((ended ?? now) - started) / 1000))
+    }
+    return { ...s, elapsedSeconds }
+  })
+  json.students = students
   json.onlineCount = students.filter((s) => s.status === "online" || s.status === "working").length
   json.workingCount = students.filter((s) => s.status === "working").length
   json.doneCount = students.filter((s) => s.status === "done").length
@@ -66,6 +82,25 @@ export async function getActiveForGroup(groupId) {
   }).sort({ createdAt: -1 })
 }
 
+/** Close leftover open sessions for the group so only one live room is active. */
+async function finishOpenSessionsForGroup(groupId, orgId) {
+  await LiveLesson.updateMany(
+    {
+      groupId: String(groupId),
+      orgId: String(orgId),
+      lessonStatus: { $in: ACTIVE_STATUSES },
+    },
+    {
+      $set: {
+        lessonStatus: "finished",
+        openForStudents: false,
+        finishedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  )
+}
+
 export async function createSession({ orgId, groupId, bookId, teacherId, unitNumber }) {
   if (!orgId) throw ApiError.forbidden("Organization context required")
   if (!groupId) throw ApiError.badRequest("groupId is required")
@@ -81,6 +116,8 @@ export async function createSession({ orgId, groupId, bookId, teacherId, unitNum
     currentUnit = Number(unit.unit_number)
     currentExercise = exerciseIds[0] ?? null
   }
+
+  await finishOpenSessionsForGroup(groupId, orgId)
 
   const studentIds = await findStudentIdsInGroup(groupId, orgId)
   const users = studentIds.length
@@ -158,6 +195,7 @@ export async function finish(sessionId) {
   session.finishedAt = new Date()
   session.openForStudents = false
   await session.save()
+  heartbeatFlushAt.delete(String(sessionId))
   return session
 }
 
@@ -177,9 +215,22 @@ export async function setCurrentExercise(sessionId, exerciseId, { openForStudent
     }
   }
 
+  // Reset per-student progress when switching exercise
+  const switching = session.currentExercise !== id
   session.currentExercise = id
   if (typeof openForStudents === "boolean") {
     session.openForStudents = openForStudents
+  }
+  if (switching) {
+    for (const s of session.students ?? []) {
+      if (s.status === "done" || s.status === "working") {
+        s.status = s.status === "offline" ? "offline" : "online"
+      }
+      s.progress = 0
+      s.score = null
+      s.completedAt = null
+    }
+    session.markModified("students")
   }
   await session.save()
   return session
@@ -217,10 +268,6 @@ export async function studentJoin(sessionIdOrCode, studentId) {
     throw ApiError.forbidden("You are not in this lesson group")
   }
 
-  if (!session.openForStudents && session.lessonStatus === "idle") {
-    // Allow join for presence, but teacher controls exercise access via openForStudents
-  }
-
   const now = new Date()
   entry.status = entry.status === "done" ? "done" : "online"
   entry.lastSeenAt = now
@@ -230,22 +277,68 @@ export async function studentJoin(sessionIdOrCode, studentId) {
   return session
 }
 
+/**
+ * Lightweight heartbeat: positional $set only, throttled to ≤1 write / 60s / student.
+ * Returns a small presence patch (not full session) so callers avoid broadcasting everything.
+ */
 export async function studentHeartbeat(sessionId, studentId) {
-  const session = await getById(sessionId)
-  const entry = findStudentEntry(session, studentId)
+  const sid = String(sessionId)
+  const uid = String(studentId)
+  const now = new Date()
+
+  const sessionMeta = await LiveLesson.findById(sid).select("lessonStatus students.studentId students.status")
+  if (!sessionMeta) throw ApiError.notFound("Live lesson not found")
+  if (sessionMeta.lessonStatus === "finished") {
+    throw ApiError.badRequest("Lesson is finished")
+  }
+  const entry = findStudentEntry(sessionMeta, uid)
   if (!entry) throw ApiError.forbidden("You are not in this lesson group")
 
-  entry.lastSeenAt = new Date()
-  if (entry.status === "offline") entry.status = "online"
-  session.markModified("students")
-  await session.save()
-  return session
+  const wasOffline = entry.status === "offline"
+  const nextStatus = entry.status === "done" || entry.status === "working" ? entry.status : "online"
+
+  let map = heartbeatFlushAt.get(sid)
+  if (!map) {
+    map = new Map()
+    heartbeatFlushAt.set(sid, map)
+  }
+  const last = map.get(uid) ?? 0
+  const due = wasOffline || Date.now() - last >= HEARTBEAT_DB_INTERVAL_MS
+
+  if (due) {
+    await LiveLesson.updateOne(
+      { _id: sid, "students.studentId": uid },
+      {
+        $set: {
+          "students.$.lastSeenAt": now,
+          ...(wasOffline || entry.status === "offline" ? { "students.$.status": nextStatus } : {}),
+          updatedAt: now,
+        },
+      },
+    )
+    map.set(uid, Date.now())
+  }
+
+  return {
+    sessionId: sid,
+    studentId: uid,
+    status: nextStatus,
+    lastSeenAt: now.toISOString(),
+    persisted: due,
+  }
 }
 
 export async function studentProgress(sessionId, studentId, payload = {}) {
   const session = await getById(sessionId)
   const entry = findStudentEntry(session, studentId)
   if (!entry) throw ApiError.forbidden("You are not in this lesson group")
+
+  if (!session.openForStudents) {
+    throw ApiError.badRequest("Exercise is not open for students yet")
+  }
+  if (session.lessonStatus !== "active") {
+    throw ApiError.badRequest("Lesson is not active")
+  }
 
   const now = new Date()
   entry.lastSeenAt = now
@@ -274,7 +367,12 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
     entry.status = "working"
   }
 
+  // Cap answers payload size to avoid huge documents
   if (payload.answers !== undefined) {
+    const raw = JSON.stringify(payload.answers)
+    if (raw.length > 20_000) {
+      throw ApiError.badRequest("answers payload too large")
+    }
     entry.answers = payload.answers
   }
 
@@ -283,7 +381,6 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
   return session
 }
 
-/** Resolve first exercise id for a unit (used by createSession / controllers). */
 export async function firstExerciseId(bookId, unitNumber) {
   const { exerciseIds } = await getUnit(bookId, unitNumber)
   return exerciseIds[0] ?? null

@@ -1,17 +1,30 @@
-import fs from "node:fs/promises"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { CurriculumBook } from "../models/CurriculumBook.js"
 import { ApiError } from "../utils/ApiError.js"
+import { seedCurriculumBooks, BOOK_ID as SEED_BOOK_ID } from "../seed/curriculum-books-seed.js"
 
-export const BOOK_ID = "cambridge-vocab-ielts-advanced"
+export const BOOK_ID = SEED_BOOK_ID
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const BOOKS_DIR = path.join(__dirname, "../data/books")
-
+/** In-memory cache — books are large and shared; avoid re-reading Mongo on every exercise select. */
 const bookCache = new Map()
+const CACHE_TTL_MS = 5 * 60 * 1000
 
-function bookFilePath(bookId) {
-  return path.join(BOOKS_DIR, `${bookId}.json`)
+function cacheGet(id) {
+  const hit = bookCache.get(id)
+  if (!hit) return null
+  if (Date.now() - hit.at > CACHE_TTL_MS) {
+    bookCache.delete(id)
+    return null
+  }
+  return hit.doc
+}
+
+function cacheSet(id, doc) {
+  bookCache.set(id, { at: Date.now(), doc })
+}
+
+export function invalidateBookCache(bookId) {
+  if (bookId) bookCache.delete(bookId)
+  else bookCache.clear()
 }
 
 /** Flatten unit exercises: nested → orphan → test_practice. */
@@ -31,7 +44,6 @@ export function flattenUnitExerciseIds(unit) {
       }
     }
 
-    // Orphan exercise sitting directly on the section
     if (section?.exercise_id) {
       ids.push(String(section.exercise_id))
     }
@@ -44,57 +56,161 @@ export function flattenUnitExerciseIds(unit) {
   return ids
 }
 
+/**
+ * Strip answer fields from exercise payloads for student-facing responses.
+ * Does not mutate the cached book document.
+ */
+export function stripAnswersFromUnit(unit) {
+  if (!unit) return unit
+  const clone = structuredClone(unit)
+
+  const scrubNode = (node) => {
+    if (!node || typeof node !== "object") return
+    delete node.answers
+    delete node.answer
+
+    if (Array.isArray(node.questions)) {
+      for (const q of node.questions) {
+        if (q && typeof q === "object" && !Array.isArray(q)) delete q.answer
+      }
+    }
+
+    if (Array.isArray(node.items)) {
+      for (const it of node.items) {
+        if (!it || typeof it !== "object" || Array.isArray(it)) continue
+        delete it.answer
+        // Speaker rows: person/adjectives are the key — hide for students
+        if ("speaker" in it) {
+          delete it.person
+          delete it.adjectives
+        }
+        // Paraphrase pairs: keep original only
+        if ("original" in it && "paraphrase" in it) {
+          delete it.paraphrase
+        }
+      }
+    }
+
+    if (Array.isArray(node.sentences)) {
+      for (const s of node.sentences) {
+        if (s && typeof s === "object") delete s.answer
+      }
+    }
+
+    if (Array.isArray(node.paraphrases)) {
+      node.paraphrases = node.paraphrases.map((p) =>
+        p && typeof p === "object" ? { original: p.original } : p,
+      )
+    }
+
+    // Classification / vocab table answer buckets → empty columns (labels kept)
+    if (node.table && typeof node.table === "object") {
+      node.table = Object.fromEntries(Object.keys(node.table).map((k) => [k, []]))
+    }
+
+    // Expression note-taking answers
+    if (node.speaker_1_expressions) node.speaker_1_expressions = []
+    if (node.speaker_2_expressions) node.speaker_2_expressions = []
+    if (node.speaker_1 && typeof node.speaker_1 === "string") node.speaker_1 = ""
+    if (node.speaker_2 && typeof node.speaker_2 === "string") node.speaker_2 = ""
+  }
+
+  for (const section of clone.sections ?? []) {
+    if (section.section_type === "test_practice") {
+      delete section.answers
+      scrubNode(section)
+      continue
+    }
+    if (Array.isArray(section.exercises)) {
+      for (const ex of section.exercises) scrubNode(ex)
+    }
+    if (section.exercise_id) scrubNode(section)
+  }
+
+  return clone
+}
+
+function toBookDoc(row) {
+  const data = row.data ?? {}
+  return {
+    bookId: row._id || row.slug,
+    book: data.book ?? {
+      title: row.title,
+      author: row.author,
+      isbn: row.isbn,
+      publisher: row.publisher,
+      year: row.year,
+    },
+    units: data.units ?? [],
+    answer_key: data.answer_key ?? {},
+    tests: data.tests,
+    unitCount: row.unitCount ?? (data.units?.length ?? 0),
+    readyUnitCount: row.readyUnitCount ?? 0,
+    orgId: row.orgId ?? null,
+  }
+}
+
+/**
+ * Load a published platform book (orgId null) or ensure seed once if DB empty.
+ */
 export async function loadBook(bookId) {
   const id = String(bookId || "").trim()
   if (!id) throw ApiError.badRequest("bookId is required")
 
-  if (bookCache.has(id)) return bookCache.get(id)
+  const cached = cacheGet(id)
+  if (cached) return cached
 
-  let raw
-  try {
-    raw = await fs.readFile(bookFilePath(id), "utf8")
-  } catch (err) {
-    if (err?.code === "ENOENT") throw ApiError.notFound(`Book not found: ${id}`)
-    throw err
+  let row = await CurriculumBook.findOne({
+    _id: id,
+    published: true,
+    $or: [{ orgId: null }, { orgId: { $exists: false } }],
+  })
+
+  if (!row && id === BOOK_ID) {
+    // First boot / empty DB — seed platform book once, then retry.
+    await seedCurriculumBooks()
+    row = await CurriculumBook.findOne({ _id: id, published: true })
   }
 
-  let data
-  try {
-    data = JSON.parse(raw)
-  } catch {
-    throw ApiError.badRequest(`Invalid book JSON: ${id}`)
-  }
+  if (!row) throw ApiError.notFound(`Book not found: ${id}`)
 
-  const book = { bookId: id, ...data }
-  bookCache.set(id, book)
-  return book
+  const doc = toBookDoc(row)
+  cacheSet(id, doc)
+  return doc
 }
 
 export async function listBooks() {
-  let entries
-  try {
-    entries = await fs.readdir(BOOKS_DIR)
-  } catch (err) {
-    if (err?.code === "ENOENT") return []
-    throw err
+  let rows = await CurriculumBook.find({
+    published: true,
+    $or: [{ orgId: null }, { orgId: { $exists: false } }],
+  })
+    .select("_id slug title author year unitCount readyUnitCount orgId")
+    .sort({ title: 1 })
+    .lean()
+
+  if (rows.length === 0) {
+    await seedCurriculumBooks()
+    rows = await CurriculumBook.find({
+      published: true,
+      $or: [{ orgId: null }, { orgId: { $exists: false } }],
+    })
+      .select("_id slug title author year unitCount readyUnitCount orgId")
+      .sort({ title: 1 })
+      .lean()
   }
 
-  const books = []
-  for (const name of entries) {
-    if (!name.endsWith(".json")) continue
-    const bookId = name.slice(0, -5)
-    const data = await loadBook(bookId)
-    books.push({
-      bookId,
-      title: data.book?.title ?? bookId,
-      author: data.book?.author ?? null,
-      unitCount: Array.isArray(data.units) ? data.units.length : 0,
-    })
-  }
-  return books
+  return rows.map((r) => ({
+    id: r._id || r.slug,
+    bookId: r._id || r.slug,
+    title: r.title,
+    author: r.author || null,
+    year: r.year ?? null,
+    unitCount: r.unitCount ?? 0,
+    readyUnitCount: r.readyUnitCount ?? 0,
+  }))
 }
 
-export async function getUnit(bookId, unitNumber) {
+export async function getUnit(bookId, unitNumber, { includeAnswers = true } = {}) {
   const book = await loadBook(bookId)
   const n = Number(unitNumber)
   if (!Number.isFinite(n)) throw ApiError.badRequest("unitNumber must be a number")
@@ -102,10 +218,15 @@ export async function getUnit(bookId, unitNumber) {
   const unit = (book.units ?? []).find((u) => Number(u.unit_number) === n)
   if (!unit) throw ApiError.notFound(`Unit ${n} not found in book ${bookId}`)
 
+  const keyName = `unit_${n}`
+  const answerKey = includeAnswers ? (book.answer_key?.[keyName] ?? null) : null
+  const safeUnit = includeAnswers ? unit : stripAnswersFromUnit(unit)
+
   return {
     bookId,
     book: book.book ?? null,
-    unit,
+    unit: safeUnit,
     exerciseIds: flattenUnitExerciseIds(unit),
+    answer_key: answerKey,
   }
 }
