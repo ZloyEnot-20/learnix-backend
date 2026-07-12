@@ -177,7 +177,19 @@ export const studentProgress = asyncHandler(async (req, res) => {
     throw ApiError.forbidden("Only students can update progress")
   }
   const session = await liveLessonService.studentProgress(req.params.id, req.user.id, req.body)
-  res.json(pushState(session))
+  const state = pushState(session)
+  const entry = (session.students ?? []).find((s) => String(s.studentId) === String(req.user.id))
+  if (entry) {
+    emitLessonPresence(session._id, {
+      sessionId: String(session._id),
+      studentId: String(req.user.id),
+      status: entry.status,
+      progress: entry.progress ?? 0,
+      score: entry.score ?? null,
+      lastSeenAt: entry.lastSeenAt ? new Date(entry.lastSeenAt).toISOString() : undefined,
+    })
+  }
+  res.json(state)
 })
 
 /** Heartbeat returns a small presence patch — does not fan-out full lesson state via REST. */
