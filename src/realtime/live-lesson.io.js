@@ -218,8 +218,13 @@ export function attachLiveLessonRealtime(httpServer) {
     socket.on("lesson:join", async (payload, ack) => {
       try {
         requireStudent(socket)
-        const key = payload?.sessionId || payload?.code
-        const session = await liveLessonService.studentJoin(key, socket.user.id)
+        // Prefer sessionId; fallback: join active lesson for student's group
+        let session
+        if (payload?.sessionId) {
+          session = await liveLessonService.studentJoin(payload.sessionId, socket.user.id)
+        } else {
+          session = await liveLessonService.studentJoinActive(socket.user.id)
+        }
         await socket.join(roomForSession(session._id))
         const state = await broadcastSession(session)
         if (typeof ack === "function") ack({ ok: true, state })

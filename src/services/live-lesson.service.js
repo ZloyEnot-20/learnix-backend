@@ -82,6 +82,32 @@ export async function getActiveForGroup(groupId) {
   }).sort({ createdAt: -1 })
 }
 
+/**
+ * Active live lesson for a student based on User.groupId (no join code).
+ */
+export async function getActiveForStudent(studentId) {
+  if (!studentId) throw ApiError.unauthorized()
+  const user = await User.findById(studentId).select("type groupId")
+  if (!user || user.type !== "student") {
+    throw ApiError.forbidden("Only students can open a live lesson")
+  }
+  if (!user.groupId) {
+    return null
+  }
+  return getActiveForGroup(user.groupId)
+}
+
+/**
+ * Join the active lesson for the student's group (membership via groupId).
+ */
+export async function studentJoinActive(studentId) {
+  const session = await getActiveForStudent(studentId)
+  if (!session) {
+    throw ApiError.notFound("No live lesson is running for your group")
+  }
+  return studentJoin(session._id, studentId)
+}
+
 /** Close leftover open sessions for the group so only one live room is active. */
 async function finishOpenSessionsForGroup(groupId, orgId) {
   await LiveLesson.updateMany(
@@ -249,10 +275,11 @@ export async function openForStudents(sessionId, open) {
 export async function studentJoin(sessionIdOrCode, studentId) {
   if (!studentId) throw ApiError.unauthorized()
 
-  let session
   const key = String(sessionIdOrCode || "").trim()
-  if (!key) throw ApiError.badRequest("session id or code is required")
+  if (!key) throw ApiError.badRequest("session id is required")
 
+  // Legacy: short codes still resolve, but clients should use session id / active join.
+  let session
   if (key.length === 6 && /^[A-Z0-9]+$/i.test(key)) {
     session = await getByCode(key)
   } else {
@@ -265,13 +292,28 @@ export async function studentJoin(sessionIdOrCode, studentId) {
 
   const entry = findStudentEntry(session, studentId)
   if (!entry) {
-    throw ApiError.forbidden("You are not in this lesson group")
+    // Allow join if student is currently in this group (roster may be stale)
+    const user = await User.findById(studentId).select("type groupId name")
+    if (!user || user.type !== "student" || String(user.groupId) !== String(session.groupId)) {
+      throw ApiError.forbidden("You are not in this lesson group")
+    }
+    session.students.push({
+      studentId: String(studentId),
+      name: user.name ?? "",
+      status: "online",
+      progress: 0,
+      score: null,
+      startedAt: new Date(),
+      completedAt: null,
+      lastSeenAt: new Date(),
+    })
+  } else {
+    const now = new Date()
+    entry.status = entry.status === "done" ? "done" : "online"
+    entry.lastSeenAt = now
+    if (!entry.startedAt) entry.startedAt = now
   }
 
-  const now = new Date()
-  entry.status = entry.status === "done" ? "done" : "online"
-  entry.lastSeenAt = now
-  if (!entry.startedAt) entry.startedAt = now
   session.markModified("students")
   await session.save()
   return session

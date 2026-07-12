@@ -112,14 +112,26 @@ export const setOpenForStudents = asyncHandler(async (req, res) => {
   res.json(pushState(session))
 })
 
-export const joinByCode = asyncHandler(async (req, res) => {
+/** Student: peek active lesson for their group (null if none). */
+export const getActiveForMe = asyncHandler(async (req, res) => {
   if (req.user.type !== "student") {
-    throw ApiError.forbidden("Only students can join by code")
+    throw ApiError.forbidden("Only students can view their live lesson")
   }
-  const session = await liveLessonService.getByCode(req.params.code)
-  const entry = (session.students ?? []).find((s) => String(s.studentId) === String(req.user.id))
-  if (!entry) throw ApiError.forbidden("You are not in this lesson group")
+  const session = await liveLessonService.getActiveForStudent(req.user.id)
+  if (!session) {
+    res.json(null)
+    return
+  }
   res.json(liveLessonService.serialize(session))
+})
+
+/** Student: join the active lesson for their group (no code). */
+export const joinActiveForMe = asyncHandler(async (req, res) => {
+  if (req.user.type !== "student") {
+    throw ApiError.forbidden("Only students can join a live lesson")
+  }
+  const session = await liveLessonService.studentJoinActive(req.user.id)
+  res.json(pushState(session))
 })
 
 export const joinLiveLesson = asyncHandler(async (req, res) => {

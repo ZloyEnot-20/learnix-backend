@@ -6,13 +6,6 @@ const bookUnitParams = z.object({
   bookId: z.string().min(1),
   unitNumber: z.coerce.number().int().positive(),
 })
-const codeParam = z.object({
-  code: z
-    .string()
-    .min(4)
-    .max(12)
-    .transform((v) => v.trim().toUpperCase()),
-})
 
 export const listLiveLessonBooksSchema = {}
 
@@ -49,10 +42,6 @@ export const openLiveLessonSchema = {
   body: z.object({
     openForStudents: z.boolean(),
   }),
-}
-
-export const joinLiveLessonByCodeSchema = {
-  params: codeParam,
 }
 
 export const studentLiveLessonProgressSchema = {

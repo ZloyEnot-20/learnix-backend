@@ -7,7 +7,6 @@ import {
   createLiveLessonSchema,
   getLiveLessonBookSchema,
   getLiveLessonBookUnitSchema,
-  joinLiveLessonByCodeSchema,
   liveLessonIdSchema,
   openLiveLessonSchema,
   selectLiveLessonExerciseSchema,
@@ -30,8 +29,9 @@ router.get(
 // Teacher session control
 router.post("/", isStaff, validate(createLiveLessonSchema), ctrl.createLiveLesson)
 
-// Student join by code
-router.get("/join/:code", validate(joinLiveLessonByCodeSchema), ctrl.joinByCode)
+// Student: active lesson for their group (must be before /:id)
+router.get("/active", ctrl.getActiveForMe)
+router.post("/active/join", ctrl.joinActiveForMe)
 
 router.get("/:id", isStaff, validate(liveLessonIdSchema), ctrl.getLiveLesson)
 router.post("/:id/start", isStaff, validate(liveLessonIdSchema), ctrl.startLiveLesson)
