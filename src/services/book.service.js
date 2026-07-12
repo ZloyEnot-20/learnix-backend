@@ -66,7 +66,13 @@ export function stripAnswersFromUnit(unit) {
 
   const scrubNode = (node) => {
     if (!node || typeof node !== "object") return
-    delete node.answers
+
+    // Keep classification / prefix bucket labels, clear contents
+    if (node.answers && typeof node.answers === "object" && !Array.isArray(node.answers)) {
+      node.answers = Object.fromEntries(Object.keys(node.answers).map((k) => [k, []]))
+    } else {
+      delete node.answers
+    }
     delete node.answer
 
     if (Array.isArray(node.questions)) {
@@ -79,12 +85,10 @@ export function stripAnswersFromUnit(unit) {
       for (const it of node.items) {
         if (!it || typeof it !== "object" || Array.isArray(it)) continue
         delete it.answer
-        // Speaker rows: person/adjectives are the key — hide for students
         if ("speaker" in it) {
           delete it.person
           delete it.adjectives
         }
-        // Paraphrase pairs: keep original only
         if ("original" in it && "paraphrase" in it) {
           delete it.paraphrase
         }
@@ -103,12 +107,10 @@ export function stripAnswersFromUnit(unit) {
       )
     }
 
-    // Classification / vocab table answer buckets → empty columns (labels kept)
     if (node.table && typeof node.table === "object") {
       node.table = Object.fromEntries(Object.keys(node.table).map((k) => [k, []]))
     }
 
-    // Expression note-taking answers
     if (node.speaker_1_expressions) node.speaker_1_expressions = []
     if (node.speaker_2_expressions) node.speaker_2_expressions = []
     if (node.speaker_1 && typeof node.speaker_1 === "string") node.speaker_1 = ""

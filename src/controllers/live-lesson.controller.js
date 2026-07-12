@@ -1,10 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { assertOrgGroup, assertTenantDoc, withOrgId } from "../services/tenantScope.service.js"
-import { assertSelectableGroup } from "../services/group.service.js"
+import { assertSelectableGroup, findStudentIdsInGroup } from "../services/group.service.js"
 import { isStaffType } from "../constants/userTypes.js"
 import * as bookService from "../services/book.service.js"
 import * as liveLessonService from "../services/live-lesson.service.js"
+import { notifyMany } from "../services/notification.service.js"
 import { emitLessonPresence, emitLessonState } from "../realtime/live-lesson.io.js"
 import { LiveLesson } from "../models/LiveLesson.js"
 
@@ -76,6 +77,23 @@ export const getLiveLesson = asyncHandler(async (req, res) => {
 export const startLiveLesson = asyncHandler(async (req, res) => {
   await loadTeacherSession(req)
   const session = await liveLessonService.start(req.params.id)
+
+  const studentIds = await findStudentIdsInGroup(session.groupId, session.orgId)
+  const unitLabel = session.currentUnit != null ? `Unit ${session.currentUnit}` : "class"
+  await notifyMany(studentIds, {
+    type: "system",
+    title: "Live lesson started",
+    message: `Your teacher started ${unitLabel}. Tap to join.`,
+    data: {
+      kind: "live_lesson",
+      path: "/live-lesson",
+      liveLessonId: String(session._id),
+      groupId: String(session.groupId),
+      bookId: session.bookId ? String(session.bookId) : undefined,
+      unitNumber: session.currentUnit ?? undefined,
+    },
+  }).catch(() => {})
+
   res.json(pushState(session))
 })
 
