@@ -4,6 +4,10 @@ import { User } from "../models/User.js"
 import { ApiError } from "../utils/ApiError.js"
 import { findStudentIdsInGroup } from "./group.service.js"
 import { flattenUnitExerciseIds, getUnit, loadBook } from "./book.service.js"
+import {
+  getUnitAnswerKey,
+  gradeLiveExerciseAnswers,
+} from "./book-exercise-grade.service.js"
 
 const ACTIVE_STATUSES = ["idle", "active", "paused"]
 const STUDENT_STATUSES = new Set(["offline", "online", "working", "done"])
@@ -188,6 +192,7 @@ function resetStudentProgress(session) {
     }
     s.progress = 0
     s.score = null
+    s.scoreDetail = undefined
     s.completedAt = null
     s.answers = undefined
   }
@@ -215,7 +220,10 @@ export async function assignUnit(sessionId, unitNumber) {
   const hasActiveUnit =
     session.currentUnit != null && !session.unitCompleted
   if (hasActiveUnit && Number(session.currentUnit) !== nextUnit) {
-    throw ApiError.badRequest("Complete the active unit before assigning another")
+    if (session.openForStudents) {
+      throw ApiError.badRequest("Finish the current exercise before assigning another unit")
+    }
+    // Exercise closed — allow switching units
   }
 
   const { unit, exerciseIds } = await getUnit(session.bookId, nextUnit)
@@ -469,12 +477,9 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
     entry.status = status
     if (status === "done") {
       entry.completedAt = now
-      // Ensure teacher panel always has a visible score when student finishes
-      if (entry.score == null && entry.progress != null) {
-        entry.score = Number(entry.progress)
-      }
     } else if (status === "working") {
       entry.completedAt = null
+      entry.scoreDetail = undefined
     }
   } else if (entry.status === "offline" || entry.status === "online") {
     entry.status = "working"
@@ -487,6 +492,31 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
       throw ApiError.badRequest("answers payload too large")
     }
     entry.answers = payload.answers
+  }
+
+  // Auto-grade against book answer_key (ignore client-reported score when we can grade)
+  if (entry.answers != null && session.currentUnit != null && session.currentExercise) {
+    try {
+      const book = await loadBook(session.bookId)
+      const answerKey = getUnitAnswerKey(book, session.currentUnit, session.currentExercise)
+      const graded = gradeLiveExerciseAnswers({
+        answerKey,
+        studentAnswers: entry.answers,
+      })
+      if (graded.graded) {
+        entry.score = graded.score
+        entry.scoreDetail = {
+          correct: graded.correct,
+          total: graded.total,
+          items: graded.items,
+        }
+      } else if (payload.status === "done" && payload.score === undefined) {
+        entry.score = null
+        entry.scoreDetail = undefined
+      }
+    } catch {
+      /* keep client score if grading fails */
+    }
   }
 
   session.markModified("students")

@@ -186,6 +186,7 @@ export const studentProgress = asyncHandler(async (req, res) => {
       status: entry.status,
       progress: entry.progress ?? 0,
       score: entry.score ?? null,
+      scoreDetail: entry.scoreDetail ?? null,
       lastSeenAt: entry.lastSeenAt ? new Date(entry.lastSeenAt).toISOString() : undefined,
     })
   }

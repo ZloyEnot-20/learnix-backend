@@ -12,6 +12,8 @@ const studentPresenceSchema = new mongoose.Schema(
     },
     progress: { type: Number, min: 0, max: 100, default: 0 },
     score: { type: Number, default: null },
+    /** { correct, total, items[] } when auto-graded */
+    scoreDetail: { type: mongoose.Schema.Types.Mixed, default: undefined },
     startedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     lastSeenAt: { type: Date, default: null },
