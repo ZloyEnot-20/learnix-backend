@@ -33,12 +33,14 @@ export const getBook = asyncHandler(async (req, res) => {
   res.json({
     bookId: book.bookId,
     book: book.book ?? null,
+    pages: book.pages ?? [],
     units: (book.units ?? []).map((u) => ({
       unit_number: u.unit_number,
       title: u.title,
       subtitle: u.subtitle ?? null,
       ready: Array.isArray(u.sections) && u.sections.length > 0,
       exerciseIds: bookService.flattenUnitExerciseIds(u),
+      pages: (book.pages ?? []).filter((p) => Number(p.unit) === Number(u.unit_number)),
     })),
     // Full unit payloads are fetched per-unit; answer_key only for staff
     ...(staff ? { answer_key: book.answer_key ?? {} } : {}),

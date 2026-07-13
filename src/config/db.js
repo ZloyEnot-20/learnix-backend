@@ -15,6 +15,11 @@ export async function connectDB() {
   // Works for both mongodb:// and mongodb+srv:// connection strings.
   // dbName ensures we use a named database even if the URI omits the path.
   try {
+    // Windows/local resolvers often refuse SRV; prefer public DNS for mongodb+srv.
+    if (String(env.mongoUri || "").startsWith("mongodb+srv")) {
+      const { setServers } = await import("node:dns")
+      setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"])
+    }
     logMongoConnectDebug("main", {
       mongoUri: env.mongoUri,
       dbName: env.dbName,

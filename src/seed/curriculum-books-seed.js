@@ -31,6 +31,7 @@ export async function seedCurriculumBooks() {
   const data = JSON.parse(raw)
   const units = Array.isArray(data.units) ? data.units : []
   const meta = data.book ?? {}
+  const readyUnitCount = countReadyUnits(units)
 
   await CurriculumBook.updateOne(
     { _id: BOOK_ID },
@@ -46,10 +47,11 @@ export async function seedCurriculumBooks() {
           book: meta,
           units,
           answer_key: data.answer_key ?? {},
+          ...(Array.isArray(data.pages) ? { pages: data.pages } : {}),
           ...(data.tests ? { tests: data.tests } : {}),
         },
         unitCount: units.length,
-        readyUnitCount: countReadyUnits(units),
+        readyUnitCount,
         orgId: null,
         published: true,
       },
@@ -57,6 +59,17 @@ export async function seedCurriculumBooks() {
     { upsert: true },
   )
 
-  console.log(`[seed:books] ensured platform book: ${BOOK_ID} (${units.length} units)`)
-  return { upserted: 1 }
+  console.log(
+    `[seed:books] ensured platform book: ${BOOK_ID} (${units.length} units, ${readyUnitCount} ready)`,
+  )
+
+  // Dynamic import avoids circular dependency with book.service ↔ seed.
+  try {
+    const { invalidateBookCache } = await import("../services/book.service.js")
+    invalidateBookCache(BOOK_ID)
+  } catch {
+    /* cache may not be loaded yet */
+  }
+
+  return { upserted: 1, unitCount: units.length, readyUnitCount }
 }

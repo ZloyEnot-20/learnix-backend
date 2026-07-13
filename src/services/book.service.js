@@ -144,6 +144,7 @@ function toBookDoc(row) {
       year: row.year,
     },
     units: data.units ?? [],
+    pages: Array.isArray(data.pages) ? data.pages : [],
     answer_key: data.answer_key ?? {},
     tests: data.tests,
     unitCount: row.unitCount ?? (data.units?.length ?? 0),
@@ -172,6 +173,18 @@ export async function loadBook(bookId) {
     // First boot / empty DB — seed platform book once, then retry.
     await seedCurriculumBooks()
     row = await CurriculumBook.findOne({ _id: id, published: true })
+  }
+
+  // Refresh seed when curriculum pages are missing or units are still empty stubs.
+  if (row && id === BOOK_ID) {
+    const pages = row.data?.pages
+    const ready = Number(row.readyUnitCount ?? 0)
+    const total = Number(row.unitCount ?? 0)
+    const needsRefresh = !Array.isArray(pages) || pages.length === 0 || ready < total
+    if (needsRefresh) {
+      await seedCurriculumBooks()
+      row = await CurriculumBook.findOne({ _id: id, published: true })
+    }
   }
 
   if (!row) throw ApiError.notFound(`Book not found: ${id}`)

@@ -9,6 +9,7 @@
     "dev": "pm2 start ecosystem.config.cjs --no-daemon --watch",
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
+    "seed:books": "node src/scripts/seed-books-only.mjs",
     "seed:speaking": "node src/seed/speaking-seed.js",
     "seed:reading": "node src/seed/ielts-reading-seed.js",
     "seed:listening": "node src/seed/ielts-listening-seed.js",
