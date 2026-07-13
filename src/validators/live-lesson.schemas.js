@@ -56,6 +56,7 @@ export const studentLiveLessonProgressSchema = {
   params: idParam,
   body: z.object({
     progress: z.coerce.number().min(0).max(100),
+    // Client score is ignored for grading; kept optional for backward compat
     score: z.coerce.number().nullable().optional(),
     status: z.enum(["offline", "online", "working", "done"]).optional(),
     answers: z.any().optional(),

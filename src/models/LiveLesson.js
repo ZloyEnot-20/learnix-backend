@@ -22,6 +22,21 @@ const studentPresenceSchema = new mongoose.Schema(
   { _id: false },
 )
 
+/** Durable per-exercise submissions (survives exercise switches / resets). */
+const exerciseResultSchema = new mongoose.Schema(
+  {
+    unitNumber: { type: Number, required: true },
+    exerciseId: { type: String, required: true },
+    studentId: { type: String, required: true },
+    name: { type: String, default: "" },
+    score: { type: Number, default: null },
+    scoreDetail: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    answers: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    completedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+)
+
 const liveLessonSchema = new mongoose.Schema(
   {
     _id: { type: String, default: () => uid("live") },
@@ -44,6 +59,7 @@ const liveLessonSchema = new mongoose.Schema(
     pausedAt: { type: Date, default: null },
     finishedAt: { type: Date, default: null },
     students: { type: [studentPresenceSchema], default: [] },
+    exerciseResults: { type: [exerciseResultSchema], default: [] },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

@@ -52,14 +52,61 @@ export function serialize(session) {
     if (started) {
       elapsedSeconds = Math.max(0, Math.floor(((ended ?? now) - started) / 1000))
     }
-    return { ...s, elapsedSeconds }
+    return {
+      ...s,
+      elapsedSeconds,
+      // Explicitly keep grading payload for teacher UI
+      answers: s.answers ?? null,
+      scoreDetail: s.scoreDetail ?? null,
+      score: s.score ?? null,
+    }
   })
   json.students = students
   json.onlineCount = students.filter((s) => s.status === "online" || s.status === "working").length
   json.workingCount = students.filter((s) => s.status === "working").length
   json.doneCount = students.filter((s) => s.status === "done").length
   json.studentCount = students.length
+  json.exerciseResults = Array.isArray(json.exerciseResults) ? json.exerciseResults : []
   return json
+}
+
+/** Upsert one student's result for the current exercise. */
+function upsertExerciseResult(session, entry) {
+  if (session.currentUnit == null || !session.currentExercise || !entry) return
+  if (!Array.isArray(session.exerciseResults)) session.exerciseResults = []
+
+  const unitNumber = Number(session.currentUnit)
+  const exerciseId = String(session.currentExercise)
+  const studentId = String(entry.studentId)
+  const idx = session.exerciseResults.findIndex(
+    (r) =>
+      Number(r.unitNumber) === unitNumber &&
+      String(r.exerciseId) === exerciseId &&
+      String(r.studentId) === studentId,
+  )
+  const row = {
+    unitNumber,
+    exerciseId,
+    studentId,
+    name: entry.name ?? "",
+    score: entry.score ?? null,
+    scoreDetail: entry.scoreDetail ?? undefined,
+    answers: entry.answers ?? undefined,
+    completedAt: entry.completedAt ?? new Date(),
+  }
+  if (idx >= 0) session.exerciseResults[idx] = row
+  else session.exerciseResults.push(row)
+  session.markModified("exerciseResults")
+}
+
+/** Snapshot every student who submitted / completed the open exercise. */
+function snapshotOpenExerciseResults(session) {
+  if (session.currentUnit == null || !session.currentExercise) return
+  for (const entry of session.students ?? []) {
+    if (entry.status === "done" || entry.answers != null || entry.scoreDetail != null) {
+      upsertExerciseResult(session, entry)
+    }
+  }
 }
 
 export async function getById(sessionId) {
@@ -294,6 +341,7 @@ export async function resume(sessionId) {
 export async function finish(sessionId) {
   const session = await getById(sessionId)
   if (session.lessonStatus === "finished") return session
+  snapshotOpenExerciseResults(session)
   session.lessonStatus = "finished"
   session.finishedAt = new Date()
   session.openForStudents = false
@@ -322,6 +370,9 @@ export async function setCurrentExercise(sessionId, exerciseId, { openForStudent
 
   // Reset per-student progress only when the exercise pushed to students changes
   const switching = session.currentExercise !== id
+  if (switching && session.openForStudents) {
+    snapshotOpenExerciseResults(session)
+  }
   session.currentExercise = id
   if (typeof openForStudents === "boolean") {
     session.openForStudents = openForStudents
@@ -338,7 +389,12 @@ export async function openForStudents(sessionId, open) {
   if (session.lessonStatus === "finished") {
     throw ApiError.badRequest("Lesson is already finished")
   }
-  session.openForStudents = Boolean(open)
+  const nextOpen = Boolean(open)
+  // Closing an exercise — persist submissions before clearing the live flag
+  if (session.openForStudents && !nextOpen) {
+    snapshotOpenExerciseResults(session)
+  }
+  session.openForStudents = nextOpen
   await session.save()
   return session
 }
@@ -465,26 +521,6 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
     entry.progress = p
   }
 
-  if (payload.score !== undefined) {
-    entry.score = payload.score == null ? null : Number(payload.score)
-  }
-
-  if (payload.status != null) {
-    const status = String(payload.status)
-    if (!STUDENT_STATUSES.has(status)) {
-      throw ApiError.badRequest("Invalid student status")
-    }
-    entry.status = status
-    if (status === "done") {
-      entry.completedAt = now
-    } else if (status === "working") {
-      entry.completedAt = null
-      entry.scoreDetail = undefined
-    }
-  } else if (entry.status === "offline" || entry.status === "online") {
-    entry.status = "working"
-  }
-
   // Cap answers payload size to avoid huge documents
   if (payload.answers !== undefined) {
     const raw = JSON.stringify(payload.answers)
@@ -494,7 +530,13 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
     entry.answers = payload.answers
   }
 
-  // Auto-grade against book answer_key (ignore client-reported score when we can grade)
+  const markingDone = payload.status === "done"
+  // Never trust client score on complete — always grade from answers when possible
+  if (!markingDone && payload.score !== undefined && payload.answers === undefined) {
+    entry.score = payload.score == null ? null : Number(payload.score)
+  }
+
+  let gradedOk = false
   if (entry.answers != null && session.currentUnit != null && session.currentExercise) {
     try {
       const book = await loadBook(session.bookId)
@@ -510,13 +552,38 @@ export async function studentProgress(sessionId, studentId, payload = {}) {
           total: graded.total,
           items: graded.items,
         }
-      } else if (payload.status === "done" && payload.score === undefined) {
-        entry.score = null
-        entry.scoreDetail = undefined
+        gradedOk = true
       }
-    } catch {
-      /* keep client score if grading fails */
+    } catch (err) {
+      console.error("[live-lesson] grade error:", err?.message ?? err)
     }
+  }
+
+  if (payload.status != null) {
+    const status = String(payload.status)
+    if (!STUDENT_STATUSES.has(status)) {
+      throw ApiError.badRequest("Invalid student status")
+    }
+    entry.status = status
+    if (status === "done") {
+      entry.completedAt = now
+      entry.progress = 100
+      if (!gradedOk) {
+        // Do not invent 100 — leave null unless already graded
+        if (payload.answers == null && entry.answers == null) {
+          entry.score = null
+          entry.scoreDetail = undefined
+        } else if (!gradedOk) {
+          entry.score = entry.scoreDetail ? entry.score : null
+          if (!entry.scoreDetail) entry.score = null
+        }
+      }
+      upsertExerciseResult(session, entry)
+    } else if (status === "working") {
+      entry.completedAt = null
+    }
+  } else if (entry.status === "offline" || entry.status === "online") {
+    entry.status = "working"
   }
 
   session.markModified("students")
