@@ -55,6 +55,8 @@ const liveLessonSchema = new mongoose.Schema(
       default: "idle",
     },
     openForStudents: { type: Boolean, default: false },
+    /** Answer key + meta shown to students after teacher finishes the exercise. */
+    lastExerciseReview: { type: mongoose.Schema.Types.Mixed, default: undefined },
     startedAt: { type: Date, default: null },
     pausedAt: { type: Date, default: null },
     finishedAt: { type: Date, default: null },

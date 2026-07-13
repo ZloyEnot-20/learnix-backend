@@ -109,6 +109,55 @@ function snapshotOpenExerciseResults(session) {
   }
 }
 
+/** Build public review payload (answer key) when an exercise is closed. */
+async function attachExerciseReview(session) {
+  if (session.currentUnit == null || !session.currentExercise) {
+    session.lastExerciseReview = undefined
+    return
+  }
+  try {
+    const book = await loadBook(session.bookId)
+    const answerKey = getUnitAnswerKey(book, session.currentUnit, session.currentExercise)
+    // Grade any student who answered but wasn't graded yet
+    for (const entry of session.students ?? []) {
+      if (entry.answers == null) continue
+      if (entry.scoreDetail?.total > 0) continue
+      try {
+        const graded = gradeLiveExerciseAnswers({
+          answerKey,
+          studentAnswers: entry.answers,
+        })
+        if (graded.graded) {
+          entry.score = graded.score
+          entry.scoreDetail = {
+            correct: graded.correct,
+            total: graded.total,
+            items: graded.items,
+          }
+        }
+      } catch {
+        /* ignore per-student grade errors */
+      }
+    }
+    session.markModified("students")
+    session.lastExerciseReview = {
+      unitNumber: Number(session.currentUnit),
+      exerciseId: String(session.currentExercise),
+      answerKey: answerKey ?? null,
+      closedAt: new Date().toISOString(),
+    }
+    session.markModified("lastExerciseReview")
+  } catch (err) {
+    console.error("[live-lesson] review attach error:", err?.message ?? err)
+    session.lastExerciseReview = {
+      unitNumber: Number(session.currentUnit),
+      exerciseId: String(session.currentExercise),
+      answerKey: null,
+      closedAt: new Date().toISOString(),
+    }
+  }
+}
+
 export async function getById(sessionId) {
   const session = await LiveLesson.findById(sessionId)
   if (!session) throw ApiError.notFound("Live lesson not found")
@@ -377,6 +426,9 @@ export async function setCurrentExercise(sessionId, exerciseId, { openForStudent
   if (typeof openForStudents === "boolean") {
     session.openForStudents = openForStudents
   }
+  if (openForStudents === true) {
+    session.lastExerciseReview = undefined
+  }
   if (switching) {
     resetStudentProgress(session)
   }
@@ -393,6 +445,10 @@ export async function openForStudents(sessionId, open) {
   // Closing an exercise — persist submissions before clearing the live flag
   if (session.openForStudents && !nextOpen) {
     snapshotOpenExerciseResults(session)
+    await attachExerciseReview(session)
+  }
+  if (nextOpen) {
+    session.lastExerciseReview = undefined
   }
   session.openForStudents = nextOpen
   await session.save()
