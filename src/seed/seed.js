@@ -17,6 +17,7 @@ import { User } from "../models/User.js"
 import { Level } from "../models/Level.js"
 import { VocabDeck } from "../models/VocabDeck.js"
 import { VOCAB_DECKS } from "../content/vocab-decks.js"
+import { CAMBRIDGE_UNIT_VOCAB_DECKS } from "../content/cambridge-unit-vocab-decks.js"
 import { seedCurriculumBooks } from "./curriculum-books-seed.js"
 
 async function seedSuperAdmin() {
@@ -45,16 +46,19 @@ async function clearExtraLevels() {
   if (deletedCount) console.log(`[seed] removed ${deletedCount} legacy extra level folder(s)`)
 }
 
-/** Upsert the starter vocabulary decks so the DB owns all deck data. */
+/** Upsert starter + Cambridge unit vocabulary decks so the DB owns all deck data. */
 async function seedVocabDecks() {
-  for (const deck of VOCAB_DECKS) {
+  const allDecks = [...VOCAB_DECKS, ...CAMBRIDGE_UNIT_VOCAB_DECKS]
+  for (const deck of allDecks) {
     await VocabDeck.updateOne(
       { _id: deck.slug },
-      { $set: { ...deck } },
+      { $set: { ...deck, orgId: null } },
       { upsert: true },
     )
   }
-  console.log(`[seed] ensured ${VOCAB_DECKS.length} vocabulary decks`)
+  console.log(
+    `[seed] ensured ${allDecks.length} vocabulary decks (${VOCAB_DECKS.length} starter + ${CAMBRIDGE_UNIT_VOCAB_DECKS.length} Cambridge units)`,
+  )
 }
 
 async function seed() {

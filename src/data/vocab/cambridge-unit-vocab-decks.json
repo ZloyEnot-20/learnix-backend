@@ -1,0 +1,5614 @@
+[
+  {
+    "slug": "cambridge-unit-1",
+    "title": "Unit 1: Human nature",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 1",
+    "level": "C1",
+    "topic": "Human nature",
+    "difficulty": "hard",
+    "order": 1,
+    "words": [
+      {
+        "id": "cambridge-unit-1-adolescent",
+        "term": "adolescent",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "подросток",
+        "translationUz": "o‘smir"
+      },
+      {
+        "id": "cambridge-unit-1-characteristic",
+        "term": "characteristic",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "характеристика, черта",
+        "translationUz": "xususiyat"
+      },
+      {
+        "id": "cambridge-unit-1-trait",
+        "term": "trait",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "черта характера",
+        "translationUz": "xislat"
+      },
+      {
+        "id": "cambridge-unit-1-apprehensive",
+        "term": "apprehensive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "тревожный, опасающийся",
+        "translationUz": "xavotirli"
+      },
+      {
+        "id": "cambridge-unit-1-assertive",
+        "term": "assertive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "уверенный, настойчивый",
+        "translationUz": "qatʼiy"
+      },
+      {
+        "id": "cambridge-unit-1-clumsy",
+        "term": "clumsy",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "неуклюжий",
+        "translationUz": "qo‘pol, noqulay"
+      },
+      {
+        "id": "cambridge-unit-1-cynical",
+        "term": "cynical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "циничный",
+        "translationUz": "sinik"
+      },
+      {
+        "id": "cambridge-unit-1-desirable",
+        "term": "desirable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "желательный, желанный",
+        "translationUz": "istaladigan"
+      },
+      {
+        "id": "cambridge-unit-1-eccentric",
+        "term": "eccentric",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "эксцентричный",
+        "translationUz": "g‘alatoy"
+      },
+      {
+        "id": "cambridge-unit-1-egotistical",
+        "term": "egotistical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "эгоистичный",
+        "translationUz": "egotsentrik"
+      },
+      {
+        "id": "cambridge-unit-1-gullible",
+        "term": "gullible",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "легковерный",
+        "translationUz": "ishonuvchan"
+      },
+      {
+        "id": "cambridge-unit-1-idealised",
+        "term": "idealised",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "идеализированный",
+        "translationUz": "ideallashtirilgan"
+      },
+      {
+        "id": "cambridge-unit-1-inconsiderate",
+        "term": "inconsiderate",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "бестактный, невнимательный к другим",
+        "translationUz": "eʼtiborsiz"
+      },
+      {
+        "id": "cambridge-unit-1-indecisive",
+        "term": "indecisive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "нерешительный",
+        "translationUz": "ikkilamchi"
+      },
+      {
+        "id": "cambridge-unit-1-self-assured",
+        "term": "self-assured",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "уверенный в себе",
+        "translationUz": "o‘ziga ishongan"
+      },
+      {
+        "id": "cambridge-unit-1-self-absorbed",
+        "term": "self-absorbed",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "поглощённый собой",
+        "translationUz": "o‘zini o‘ylagan"
+      },
+      {
+        "id": "cambridge-unit-1-self-centred",
+        "term": "self-centred",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "эгоцентричный",
+        "translationUz": "o‘zini o‘ylagan"
+      },
+      {
+        "id": "cambridge-unit-1-self-congratulatory",
+        "term": "self-congratulatory",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "самодовольный",
+        "translationUz": "o‘zini maqtaydigan"
+      },
+      {
+        "id": "cambridge-unit-1-self-deprecating",
+        "term": "self-deprecating",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "склонный к самоуничижению",
+        "translationUz": "o‘zini past ko‘radigan"
+      },
+      {
+        "id": "cambridge-unit-1-self-important",
+        "term": "self-important",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "важительный, зазнавшийся",
+        "translationUz": "o‘zini katta hisoblagan"
+      },
+      {
+        "id": "cambridge-unit-1-tactful",
+        "term": "tactful",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "тактичный",
+        "translationUz": "xushmuomala"
+      },
+      {
+        "id": "cambridge-unit-1-well-adjusted",
+        "term": "well-adjusted",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "хорошо адаптированный",
+        "translationUz": "moslashgan"
+      },
+      {
+        "id": "cambridge-unit-1-well-bred",
+        "term": "well-bred",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "хорошо воспитанный",
+        "translationUz": "tarbiyali"
+      },
+      {
+        "id": "cambridge-unit-1-well-brought-up",
+        "term": "well-brought-up",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "хорошо воспитанный",
+        "translationUz": "yaxshi tarbiyalangan"
+      },
+      {
+        "id": "cambridge-unit-1-well-dressed",
+        "term": "well-dressed",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "хорошо одетый",
+        "translationUz": "chiroyli kiyingan"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-2",
+    "title": "Unit 2: Time for a change",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 2",
+    "level": "C1",
+    "topic": "Time for a change",
+    "difficulty": "hard",
+    "order": 2,
+    "words": [
+      {
+        "id": "cambridge-unit-2-era",
+        "term": "era",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "эра, эпоха",
+        "translationUz": "davr"
+      },
+      {
+        "id": "cambridge-unit-2-evolution",
+        "term": "evolution",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "эволюция",
+        "translationUz": "evolyutsiya"
+      },
+      {
+        "id": "cambridge-unit-2-finds",
+        "term": "finds",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "находки",
+        "translationUz": "topilmalar"
+      },
+      {
+        "id": "cambridge-unit-2-pioneer",
+        "term": "pioneer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "первопроходец",
+        "translationUz": "kashshof"
+      },
+      {
+        "id": "cambridge-unit-2-remnants",
+        "term": "remnants",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "остатки, руины",
+        "translationUz": "qoldiqlar"
+      },
+      {
+        "id": "cambridge-unit-2-retrospect",
+        "term": "retrospect",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "ретроспектива",
+        "translationUz": "orqaga nazar"
+      },
+      {
+        "id": "cambridge-unit-2-status-quo",
+        "term": "status quo",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "существующее положение",
+        "translationUz": "mavjud holat"
+      },
+      {
+        "id": "cambridge-unit-2-transition",
+        "term": "transition",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "переход",
+        "translationUz": "o‘tish"
+      },
+      {
+        "id": "cambridge-unit-2-trend",
+        "term": "trend",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "тенденция",
+        "translationUz": "tendensiya"
+      },
+      {
+        "id": "cambridge-unit-2-abrupt",
+        "term": "abrupt",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "внезапный, резкий",
+        "translationUz": "to‘satdan"
+      },
+      {
+        "id": "cambridge-unit-2-bygone",
+        "term": "bygone",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "былой, прошлый",
+        "translationUz": "o‘tgan"
+      },
+      {
+        "id": "cambridge-unit-2-fleeting",
+        "term": "fleeting",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мимолетный",
+        "translationUz": "o‘kinchi"
+      },
+      {
+        "id": "cambridge-unit-2-immense",
+        "term": "immense",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "огромный",
+        "translationUz": "ulkan"
+      },
+      {
+        "id": "cambridge-unit-2-infinitesimal",
+        "term": "infinitesimal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ничтожно малый",
+        "translationUz": "juda kichik"
+      },
+      {
+        "id": "cambridge-unit-2-moderate",
+        "term": "moderate",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "умеренный",
+        "translationUz": "o‘rtacha"
+      },
+      {
+        "id": "cambridge-unit-2-periodic",
+        "term": "periodic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "периодический",
+        "translationUz": "davriy"
+      },
+      {
+        "id": "cambridge-unit-2-preceding",
+        "term": "preceding",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "предшествующий",
+        "translationUz": "oldingi"
+      },
+      {
+        "id": "cambridge-unit-2-prehistoric",
+        "term": "prehistoric",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "доисторический",
+        "translationUz": "tarixdan oldingi"
+      },
+      {
+        "id": "cambridge-unit-2-profound",
+        "term": "profound",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "глубокий",
+        "translationUz": "chuqur"
+      },
+      {
+        "id": "cambridge-unit-2-rapid",
+        "term": "rapid",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "быстрый",
+        "translationUz": "tez"
+      },
+      {
+        "id": "cambridge-unit-2-topical",
+        "term": "topical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "актуальный",
+        "translationUz": "dolzarb"
+      },
+      {
+        "id": "cambridge-unit-2-tremendous",
+        "term": "tremendous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "огромный, громадный",
+        "translationUz": "juda katta"
+      },
+      {
+        "id": "cambridge-unit-2-turbulent",
+        "term": "turbulent",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "бурный, неспокойный",
+        "translationUz": "notinch"
+      },
+      {
+        "id": "cambridge-unit-2-pressed-for-time",
+        "term": "pressed for time",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "ограничен во времени",
+        "translationUz": "vaqti oz"
+      },
+      {
+        "id": "cambridge-unit-2-have-the-time-of-your-life",
+        "term": "have the time of your life",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "отлично провести время",
+        "translationUz": "hayotining eng yaxshi vaqtini o‘tkazmoq"
+      },
+      {
+        "id": "cambridge-unit-2-have-time-on-your-hands",
+        "term": "have time on your hands",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "иметь свободное время",
+        "translationUz": "bo‘sh vaqti bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-2-in-next-to-no-time",
+        "term": "in next to no time",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "очень быстро, моментально",
+        "translationUz": "juda tez"
+      },
+      {
+        "id": "cambridge-unit-2-in-the-blink-of-an-eye",
+        "term": "in the blink of an eye",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "в мгновение ока",
+        "translationUz": "ko‘z ochib yumguncha"
+      },
+      {
+        "id": "cambridge-unit-2-there-aren-t-enough-hours-in-the-day",
+        "term": "there aren't enough hours in the day",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "не хватает времени в сутках",
+        "translationUz": "kunda soat yetmaydi"
+      },
+      {
+        "id": "cambridge-unit-2-time-goes-so-fast",
+        "term": "time goes so fast",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "время летит так быстро",
+        "translationUz": "vaqt juda tez o‘tadi"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-3",
+    "title": "Unit 3: No man is an island",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 3",
+    "level": "C1",
+    "topic": "No man is an island",
+    "difficulty": "hard",
+    "order": 3,
+    "words": [
+      {
+        "id": "cambridge-unit-3-behaviour",
+        "term": "behaviour",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "поведение",
+        "translationUz": "xulq-atvor"
+      },
+      {
+        "id": "cambridge-unit-3-demographics",
+        "term": "demographics",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "демография",
+        "translationUz": "demografiya"
+      },
+      {
+        "id": "cambridge-unit-3-heritage",
+        "term": "heritage",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "наследие",
+        "translationUz": "meros"
+      },
+      {
+        "id": "cambridge-unit-3-interaction",
+        "term": "interaction",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "взаимодействие",
+        "translationUz": "o‘zaro taʼsir"
+      },
+      {
+        "id": "cambridge-unit-3-minority",
+        "term": "minority",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "меньшинство",
+        "translationUz": "ozchilik"
+      },
+      {
+        "id": "cambridge-unit-3-norm",
+        "term": "norm",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "норма",
+        "translationUz": "meʼyor"
+      },
+      {
+        "id": "cambridge-unit-3-peer",
+        "term": "peer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "сверстник",
+        "translationUz": "tengdosh"
+      },
+      {
+        "id": "cambridge-unit-3-pressure",
+        "term": "pressure",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "давление",
+        "translationUz": "bosim"
+      },
+      {
+        "id": "cambridge-unit-3-segment",
+        "term": "segment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "сегмент, часть",
+        "translationUz": "bo‘lim"
+      },
+      {
+        "id": "cambridge-unit-3-standard",
+        "term": "standard",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "стандарт",
+        "translationUz": "standart"
+      },
+      {
+        "id": "cambridge-unit-3-status",
+        "term": "status",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "статус",
+        "translationUz": "maqom"
+      },
+      {
+        "id": "cambridge-unit-3-anti-social",
+        "term": "anti-social",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "антисоциальный",
+        "translationUz": "ijtimoiyga qarshi"
+      },
+      {
+        "id": "cambridge-unit-3-conservative",
+        "term": "conservative",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "консервативный",
+        "translationUz": "konservativ"
+      },
+      {
+        "id": "cambridge-unit-3-conventional",
+        "term": "conventional",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "традиционный, общепринятый",
+        "translationUz": "anʼanaviy"
+      },
+      {
+        "id": "cambridge-unit-3-harmonious",
+        "term": "harmonious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "гармоничный",
+        "translationUz": "totuv"
+      },
+      {
+        "id": "cambridge-unit-3-influential",
+        "term": "influential",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "влиятельный",
+        "translationUz": "nufuzli"
+      },
+      {
+        "id": "cambridge-unit-3-multicultural",
+        "term": "multicultural",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мультикультурный",
+        "translationUz": "ko‘p madaniyatli"
+      },
+      {
+        "id": "cambridge-unit-3-suburban",
+        "term": "suburban",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "пригородный",
+        "translationUz": "shahar atrofidagi"
+      },
+      {
+        "id": "cambridge-unit-3-unconventional",
+        "term": "unconventional",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "нетрадиционный",
+        "translationUz": "noodatiy"
+      },
+      {
+        "id": "cambridge-unit-3-follow-accepted-behaviour",
+        "term": "follow accepted behaviour",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "следовать принятому поведению",
+        "translationUz": "qabul qilingan xatti-harakatga rioya qilmoq"
+      },
+      {
+        "id": "cambridge-unit-3-shun-mainstream-values",
+        "term": "shun mainstream values",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "избегать ценностей большинства",
+        "translationUz": "asosiy qadriyatlardan qochmoq"
+      },
+      {
+        "id": "cambridge-unit-3-conform",
+        "term": "conform",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "соответствовать, подчиняться",
+        "translationUz": "moslashmoq"
+      },
+      {
+        "id": "cambridge-unit-3-exclude",
+        "term": "exclude",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "исключать",
+        "translationUz": "chiqarib tashlamoq"
+      },
+      {
+        "id": "cambridge-unit-3-flaunt",
+        "term": "flaunt",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "выставлять напоказ",
+        "translationUz": "ko‘z-ko‘z qilmoq"
+      },
+      {
+        "id": "cambridge-unit-3-obey",
+        "term": "obey",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "подчиняться",
+        "translationUz": "itoat qilmoq"
+      },
+      {
+        "id": "cambridge-unit-3-skew",
+        "term": "skew",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "искажать, смещать",
+        "translationUz": "burib ko‘rsatmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-4",
+    "title": "Unit 4: Scientific discovery",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 4",
+    "level": "C1",
+    "topic": "Scientific discovery",
+    "difficulty": "hard",
+    "order": 4,
+    "words": [
+      {
+        "id": "cambridge-unit-4-capsule",
+        "term": "capsule",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "капсула",
+        "translationUz": "kapsula"
+      },
+      {
+        "id": "cambridge-unit-4-carbon-dioxide",
+        "term": "carbon dioxide",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "углекислый газ",
+        "translationUz": "karbonat angidrid"
+      },
+      {
+        "id": "cambridge-unit-4-compound",
+        "term": "compound",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "соединение",
+        "translationUz": "birikma"
+      },
+      {
+        "id": "cambridge-unit-4-consequences",
+        "term": "consequences",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "последствия",
+        "translationUz": "oqibatlar"
+      },
+      {
+        "id": "cambridge-unit-4-dose",
+        "term": "dose",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "доза",
+        "translationUz": "doza"
+      },
+      {
+        "id": "cambridge-unit-4-emissions",
+        "term": "emissions",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "выбросы",
+        "translationUz": "chiqindilar"
+      },
+      {
+        "id": "cambridge-unit-4-exposure",
+        "term": "exposure",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "воздействие, подверженность",
+        "translationUz": "taʼsir"
+      },
+      {
+        "id": "cambridge-unit-4-food-chain",
+        "term": "food chain",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пищевая цепь",
+        "translationUz": "oziq zanjiri"
+      },
+      {
+        "id": "cambridge-unit-4-infection",
+        "term": "infection",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "инфекция",
+        "translationUz": "infeksiya"
+      },
+      {
+        "id": "cambridge-unit-4-interaction",
+        "term": "interaction",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "взаимодействие",
+        "translationUz": "o‘zaro taʼsir"
+      },
+      {
+        "id": "cambridge-unit-4-pesticide",
+        "term": "pesticide",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пестицид",
+        "translationUz": "pestisid"
+      },
+      {
+        "id": "cambridge-unit-4-protein",
+        "term": "protein",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "белок",
+        "translationUz": "oqsil"
+      },
+      {
+        "id": "cambridge-unit-4-reaction",
+        "term": "reaction",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "реакция",
+        "translationUz": "reaksiya"
+      },
+      {
+        "id": "cambridge-unit-4-side-effects",
+        "term": "side effects",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "побочные эффекты",
+        "translationUz": "yon taʼsirlar"
+      },
+      {
+        "id": "cambridge-unit-4-bacterial",
+        "term": "bacterial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "бактериальный",
+        "translationUz": "bakterial"
+      },
+      {
+        "id": "cambridge-unit-4-contagious",
+        "term": "contagious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "заразный",
+        "translationUz": "yuqumli"
+      },
+      {
+        "id": "cambridge-unit-4-contaminated",
+        "term": "contaminated",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "заражённый, загрязнённый",
+        "translationUz": "ifloslangan"
+      },
+      {
+        "id": "cambridge-unit-4-controversial",
+        "term": "controversial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "спорный",
+        "translationUz": "bahsli"
+      },
+      {
+        "id": "cambridge-unit-4-crucial",
+        "term": "crucial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "важнейший",
+        "translationUz": "muhim"
+      },
+      {
+        "id": "cambridge-unit-4-essential",
+        "term": "essential",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "существенный, необходимый",
+        "translationUz": "zarur"
+      },
+      {
+        "id": "cambridge-unit-4-natural",
+        "term": "natural",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "натуральный, естественный",
+        "translationUz": "tabiiy"
+      },
+      {
+        "id": "cambridge-unit-4-organic",
+        "term": "organic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "органический",
+        "translationUz": "organik"
+      },
+      {
+        "id": "cambridge-unit-4-petrochemicals",
+        "term": "petrochemicals",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "нефтехимия",
+        "translationUz": "neftkimyo mahsulotlari"
+      },
+      {
+        "id": "cambridge-unit-4-absorb",
+        "term": "absorb",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "поглощать",
+        "translationUz": "yutmoq"
+      },
+      {
+        "id": "cambridge-unit-4-contaminate",
+        "term": "contaminate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "загрязнять",
+        "translationUz": "ifloslantirmoq"
+      },
+      {
+        "id": "cambridge-unit-4-release",
+        "term": "release",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "высвобождать, выпускать",
+        "translationUz": "chiqarmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-5",
+    "title": "Unit 5: Striving to achieve",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 5",
+    "level": "C1",
+    "topic": "Striving to achieve",
+    "difficulty": "hard",
+    "order": 5,
+    "words": [
+      {
+        "id": "cambridge-unit-5-accounting",
+        "term": "accounting",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "бухгалтерия",
+        "translationUz": "buxgalteriya"
+      },
+      {
+        "id": "cambridge-unit-5-apprenticeship",
+        "term": "apprenticeship",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "ученичество",
+        "translationUz": "shogirdlik"
+      },
+      {
+        "id": "cambridge-unit-5-conceptualisation",
+        "term": "conceptualisation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "концептуализация",
+        "translationUz": "konseptualizatsiya"
+      },
+      {
+        "id": "cambridge-unit-5-consistency",
+        "term": "consistency",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "последовательность, согласованность",
+        "translationUz": "izchillik"
+      },
+      {
+        "id": "cambridge-unit-5-establishment",
+        "term": "establishment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "учреждение, создание",
+        "translationUz": "muassasa"
+      },
+      {
+        "id": "cambridge-unit-5-formulation",
+        "term": "formulation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "формулировка",
+        "translationUz": "shakllantirish"
+      },
+      {
+        "id": "cambridge-unit-5-hypothesis",
+        "term": "hypothesis",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "гипотеза",
+        "translationUz": "gipoteza"
+      },
+      {
+        "id": "cambridge-unit-5-inconsistency",
+        "term": "inconsistency",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "непоследовательность",
+        "translationUz": "nomuvofiqlik"
+      },
+      {
+        "id": "cambridge-unit-5-interpretation",
+        "term": "interpretation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "интерпретация",
+        "translationUz": "talqin"
+      },
+      {
+        "id": "cambridge-unit-5-technician",
+        "term": "technician",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "техник",
+        "translationUz": "texnik"
+      },
+      {
+        "id": "cambridge-unit-5-theorist",
+        "term": "theorist",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "теоретик",
+        "translationUz": "nazariyachi"
+      },
+      {
+        "id": "cambridge-unit-5-vocation",
+        "term": "vocation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "призвание, профессия",
+        "translationUz": "kasb"
+      },
+      {
+        "id": "cambridge-unit-5-analytical",
+        "term": "analytical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "аналитический",
+        "translationUz": "analitik"
+      },
+      {
+        "id": "cambridge-unit-5-blue-collar",
+        "term": "blue-collar",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "рабочий (физический труд)",
+        "translationUz": "ko‘k yoqali (ishchi)"
+      },
+      {
+        "id": "cambridge-unit-5-conceptual",
+        "term": "conceptual",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "концептуальный",
+        "translationUz": "konseptual"
+      },
+      {
+        "id": "cambridge-unit-5-hypothetical",
+        "term": "hypothetical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "гипотетический",
+        "translationUz": "gipotetik"
+      },
+      {
+        "id": "cambridge-unit-5-indicative",
+        "term": "indicative",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "указывающий, индикативный",
+        "translationUz": "ko‘rsatuvchi"
+      },
+      {
+        "id": "cambridge-unit-5-a-process-of-trial-and-error",
+        "term": "a process of trial and error",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "метод проб и ошибок",
+        "translationUz": "sinov va xato usuli"
+      },
+      {
+        "id": "cambridge-unit-5-give-yourself-something-to-aim-for",
+        "term": "give yourself something to aim for",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "поставить себе цель",
+        "translationUz": "o‘zingizga maqsad qo‘ying"
+      },
+      {
+        "id": "cambridge-unit-5-make-a-concerted-effort",
+        "term": "make a concerted effort",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "приложить согласованные усилия",
+        "translationUz": "birgalikda harakat qilmoq"
+      },
+      {
+        "id": "cambridge-unit-5-set-yourself-a-goal",
+        "term": "set yourself a goal",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "поставить себе цель",
+        "translationUz": "o‘zingizga maqsad belgilang"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-6",
+    "title": "Unit 6: Powers of persuasion",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 6",
+    "level": "C1",
+    "topic": "Powers of persuasion",
+    "difficulty": "hard",
+    "order": 6,
+    "words": [
+      {
+        "id": "cambridge-unit-6-billboard",
+        "term": "billboard",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "рекламный щит",
+        "translationUz": "reklama taxtasi"
+      },
+      {
+        "id": "cambridge-unit-6-branding",
+        "term": "branding",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "брендинг",
+        "translationUz": "brending"
+      },
+      {
+        "id": "cambridge-unit-6-distributor",
+        "term": "distributor",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "дистрибьютор",
+        "translationUz": "tarqatuvchi"
+      },
+      {
+        "id": "cambridge-unit-6-flyer",
+        "term": "flyer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "листовка",
+        "translationUz": "varoqa"
+      },
+      {
+        "id": "cambridge-unit-6-gimmick",
+        "term": "gimmick",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "трюк, уловка",
+        "translationUz": "hiyla"
+      },
+      {
+        "id": "cambridge-unit-6-jingle",
+        "term": "jingle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "рекламная мелодия",
+        "translationUz": "reklama kuysi"
+      },
+      {
+        "id": "cambridge-unit-6-manufacturer",
+        "term": "manufacturer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "производитель",
+        "translationUz": "ishlab chiqaruvchi"
+      },
+      {
+        "id": "cambridge-unit-6-marketing",
+        "term": "marketing",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "маркетинг",
+        "translationUz": "marketing"
+      },
+      {
+        "id": "cambridge-unit-6-online-retailer",
+        "term": "online retailer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "онлайн-ритейлер",
+        "translationUz": "onlayn sotuvchi"
+      },
+      {
+        "id": "cambridge-unit-6-ploy",
+        "term": "ploy",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "уловка",
+        "translationUz": "hiyla-nayrang"
+      },
+      {
+        "id": "cambridge-unit-6-rebate",
+        "term": "rebate",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "скидка, возврат части суммы",
+        "translationUz": "chegirma"
+      },
+      {
+        "id": "cambridge-unit-6-sales-representative",
+        "term": "sales representative",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "торговый представитель",
+        "translationUz": "sotuv vakili"
+      },
+      {
+        "id": "cambridge-unit-6-slogan",
+        "term": "slogan",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "слоган",
+        "translationUz": "shior"
+      },
+      {
+        "id": "cambridge-unit-6-telemarketing",
+        "term": "telemarketing",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "телемаркетинг",
+        "translationUz": "telemarketing"
+      },
+      {
+        "id": "cambridge-unit-6-vendor",
+        "term": "vendor",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "продавец, поставщик",
+        "translationUz": "sotuvchi"
+      },
+      {
+        "id": "cambridge-unit-6-catchy",
+        "term": "catchy",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "запоминающийся",
+        "translationUz": "esda qoladigan"
+      },
+      {
+        "id": "cambridge-unit-6-compelling",
+        "term": "compelling",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "убедительный",
+        "translationUz": "ishontiruvchi"
+      },
+      {
+        "id": "cambridge-unit-6-distracting",
+        "term": "distracting",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "отвлекающий",
+        "translationUz": "diqqatni chalg‘ituvchi"
+      },
+      {
+        "id": "cambridge-unit-6-disturbing",
+        "term": "disturbing",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "тревожный, беспокоящий",
+        "translationUz": "bezovta qiluvchi"
+      },
+      {
+        "id": "cambridge-unit-6-infuriating",
+        "term": "infuriating",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "бесящий",
+        "translationUz": "g‘azablantiruvchi"
+      },
+      {
+        "id": "cambridge-unit-6-invasive",
+        "term": "invasive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "навязчивый, вторгающийся",
+        "translationUz": "bosqinchi"
+      },
+      {
+        "id": "cambridge-unit-6-irritating",
+        "term": "irritating",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "раздражающий",
+        "translationUz": "asabga teguvchi"
+      },
+      {
+        "id": "cambridge-unit-6-monetary",
+        "term": "monetary",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "денежный",
+        "translationUz": "pulga oid"
+      },
+      {
+        "id": "cambridge-unit-6-persuasive",
+        "term": "persuasive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "убедительный",
+        "translationUz": "ishontiruvchi"
+      },
+      {
+        "id": "cambridge-unit-6-promotional",
+        "term": "promotional",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "рекламный, промо",
+        "translationUz": "reklama"
+      },
+      {
+        "id": "cambridge-unit-6-repetitive",
+        "term": "repetitive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "повторяющийся",
+        "translationUz": "takroriy"
+      },
+      {
+        "id": "cambridge-unit-6-slick",
+        "term": "slick",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "глянцевый, ловкий",
+        "translationUz": "silliq, ustalangan"
+      },
+      {
+        "id": "cambridge-unit-6-ubiquitous",
+        "term": "ubiquitous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "вездесущий",
+        "translationUz": "hamma joyda uchraydigan"
+      },
+      {
+        "id": "cambridge-unit-6-unavoidable",
+        "term": "unavoidable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "неизбежный",
+        "translationUz": "muqarrar"
+      },
+      {
+        "id": "cambridge-unit-6-assure",
+        "term": "assure",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "заверять",
+        "translationUz": "ishontirmoq"
+      },
+      {
+        "id": "cambridge-unit-6-cultivate",
+        "term": "cultivate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "культивировать, развивать",
+        "translationUz": "rivojlantirmoq"
+      },
+      {
+        "id": "cambridge-unit-6-entice",
+        "term": "entice",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "завлекать",
+        "translationUz": "jaldab etmoq"
+      },
+      {
+        "id": "cambridge-unit-6-induce",
+        "term": "induce",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "побуждать, вызывать",
+        "translationUz": "undamoq"
+      },
+      {
+        "id": "cambridge-unit-6-oblige",
+        "term": "oblige",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "обязывать",
+        "translationUz": "majbur qilmoq"
+      },
+      {
+        "id": "cambridge-unit-6-pressurise",
+        "term": "pressurise",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "оказывать давление",
+        "translationUz": "bosim o‘tkazmoq"
+      },
+      {
+        "id": "cambridge-unit-6-reassure",
+        "term": "reassure",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "успокаивать, уверять",
+        "translationUz": "tinchlantirmoq"
+      },
+      {
+        "id": "cambridge-unit-6-tempt",
+        "term": "tempt",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "искушать",
+        "translationUz": "vasvasa qilmoq"
+      },
+      {
+        "id": "cambridge-unit-6-urge",
+        "term": "urge",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "призывать, убеждать",
+        "translationUz": "chaqirmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-7",
+    "title": "Unit 7: Ways and means",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 7",
+    "level": "C1",
+    "topic": "Ways and means",
+    "difficulty": "hard",
+    "order": 7,
+    "words": [
+      {
+        "id": "cambridge-unit-7-breathtaking",
+        "term": "breathtaking",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "захватывающий дух",
+        "translationUz": "hayratlanarli"
+      },
+      {
+        "id": "cambridge-unit-7-charming",
+        "term": "charming",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "очаровательный",
+        "translationUz": "maftunkor"
+      },
+      {
+        "id": "cambridge-unit-7-comfortable",
+        "term": "comfortable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "удобный",
+        "translationUz": "qulay"
+      },
+      {
+        "id": "cambridge-unit-7-dramatic",
+        "term": "dramatic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "драматичный",
+        "translationUz": "dramatik"
+      },
+      {
+        "id": "cambridge-unit-7-magnificent",
+        "term": "magnificent",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "великолепный",
+        "translationUz": "ulug‘vor"
+      },
+      {
+        "id": "cambridge-unit-7-memorable",
+        "term": "memorable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "памятный",
+        "translationUz": "esda qolarli"
+      },
+      {
+        "id": "cambridge-unit-7-mountainous",
+        "term": "mountainous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "гористый",
+        "translationUz": "tog‘li"
+      },
+      {
+        "id": "cambridge-unit-7-precarious",
+        "term": "precarious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ненадёжный, опасный",
+        "translationUz": "xavfli"
+      },
+      {
+        "id": "cambridge-unit-7-remote",
+        "term": "remote",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "отдалённый",
+        "translationUz": "oliso"
+      },
+      {
+        "id": "cambridge-unit-7-rustic",
+        "term": "rustic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "деревенский, сельский",
+        "translationUz": "qishloqcha"
+      },
+      {
+        "id": "cambridge-unit-7-spectacular",
+        "term": "spectacular",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "зрелищный",
+        "translationUz": "hayratlanarli"
+      },
+      {
+        "id": "cambridge-unit-7-stunning",
+        "term": "stunning",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ошеломляющий",
+        "translationUz": "hayratlanarli"
+      },
+      {
+        "id": "cambridge-unit-7-attract",
+        "term": "attract",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "привлекать",
+        "translationUz": "jalb qilmoq"
+      },
+      {
+        "id": "cambridge-unit-7-damage",
+        "term": "damage",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "повреждать",
+        "translationUz": "zarar yetkazmoq"
+      },
+      {
+        "id": "cambridge-unit-7-outweigh",
+        "term": "outweigh",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "перевешивать",
+        "translationUz": "ustun kelmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-8",
+    "title": "Unit 8: State control",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 8",
+    "level": "C1",
+    "topic": "State control",
+    "difficulty": "hard",
+    "order": 8,
+    "words": [
+      {
+        "id": "cambridge-unit-8-bureaucrat",
+        "term": "bureaucrat",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "бюрократ",
+        "translationUz": "byurokrat"
+      },
+      {
+        "id": "cambridge-unit-8-civil-servant",
+        "term": "civil servant",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "государственный служащий",
+        "translationUz": "davlat xizmatchisi"
+      },
+      {
+        "id": "cambridge-unit-8-community",
+        "term": "community",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "сообщество",
+        "translationUz": "jamiyat"
+      },
+      {
+        "id": "cambridge-unit-8-healthcare",
+        "term": "healthcare",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "здравоохранение",
+        "translationUz": "sog‘liqni saqlash"
+      },
+      {
+        "id": "cambridge-unit-8-mayor",
+        "term": "mayor",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "мэр",
+        "translationUz": "hokim"
+      },
+      {
+        "id": "cambridge-unit-8-member-of-parliament",
+        "term": "member of parliament",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "член парламента",
+        "translationUz": "parlament aʼzosi"
+      },
+      {
+        "id": "cambridge-unit-8-military-service",
+        "term": "military service",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "военная служба",
+        "translationUz": "harbiy xizmat"
+      },
+      {
+        "id": "cambridge-unit-8-notion",
+        "term": "notion",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "понятие, представление",
+        "translationUz": "tushuncha"
+      },
+      {
+        "id": "cambridge-unit-8-old-age-pension",
+        "term": "old-age pension",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пенсия по старости",
+        "translationUz": "keksalik pensiyasi"
+      },
+      {
+        "id": "cambridge-unit-8-safety-net",
+        "term": "safety net",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "система социальной защиты",
+        "translationUz": "ijtimoiy himoya tarmog‘i"
+      },
+      {
+        "id": "cambridge-unit-8-social-services",
+        "term": "social services",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "социальные службы",
+        "translationUz": "ijtimoiy xizmatlar"
+      },
+      {
+        "id": "cambridge-unit-8-state",
+        "term": "state",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "государство",
+        "translationUz": "davlat"
+      },
+      {
+        "id": "cambridge-unit-8-unemployment-benefit",
+        "term": "unemployment benefit",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пособие по безработице",
+        "translationUz": "ishsizlik nafaqasi"
+      },
+      {
+        "id": "cambridge-unit-8-leader-of-the-opposition",
+        "term": "leader of the opposition",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "лидер оппозиции",
+        "translationUz": "oppozitsiya yetakchisi"
+      },
+      {
+        "id": "cambridge-unit-8-lose-control-of",
+        "term": "lose control of",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "потерять контроль над",
+        "translationUz": "nazoratni yo‘qotmoq"
+      },
+      {
+        "id": "cambridge-unit-8-means-tested",
+        "term": "means tested",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "проверяемый по нуждаемости",
+        "translationUz": "daromadga qarab beriladigan"
+      },
+      {
+        "id": "cambridge-unit-8-social-well-being",
+        "term": "social well-being",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "социальное благополучие",
+        "translationUz": "ijtimoiy farovonlik"
+      },
+      {
+        "id": "cambridge-unit-8-miscalculate",
+        "term": "miscalculate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "просчитывать ошибочно",
+        "translationUz": "noto‘g‘ri hisoblamoq"
+      },
+      {
+        "id": "cambridge-unit-8-misinform",
+        "term": "misinform",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "дезинформировать",
+        "translationUz": "noto‘g‘ri maʼlumot bermoq"
+      },
+      {
+        "id": "cambridge-unit-8-misdiagnose",
+        "term": "misdiagnose",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "неправильно диагностировать",
+        "translationUz": "noto‘g‘ri tashxis qo‘ymoq"
+      },
+      {
+        "id": "cambridge-unit-8-mismanage",
+        "term": "mismanage",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "плохо управлять",
+        "translationUz": "noto‘g‘ri boshqarmoq"
+      },
+      {
+        "id": "cambridge-unit-8-misunderstand",
+        "term": "misunderstand",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "неправильно понять",
+        "translationUz": "noto‘g‘ri tushunmoq"
+      },
+      {
+        "id": "cambridge-unit-8-misinterpret",
+        "term": "misinterpret",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "неправильно истолковать",
+        "translationUz": "noto‘g‘ri talqin qilmoq"
+      },
+      {
+        "id": "cambridge-unit-8-mislead",
+        "term": "mislead",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "вводить в заблуждение",
+        "translationUz": "chalg‘itmoq"
+      },
+      {
+        "id": "cambridge-unit-8-misjudge",
+        "term": "misjudge",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "неправильно оценить",
+        "translationUz": "noto‘g‘ri baholamoq"
+      },
+      {
+        "id": "cambridge-unit-8-mistrust",
+        "term": "mistrust",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "не доверять",
+        "translationUz": "ishonmaslik"
+      },
+      {
+        "id": "cambridge-unit-8-subsidise",
+        "term": "subsidise",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "субсидировать",
+        "translationUz": "subsidiya bermoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-9",
+    "title": "Unit 9: Natural history",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 9",
+    "level": "C1",
+    "topic": "Natural history",
+    "difficulty": "hard",
+    "order": 9,
+    "words": [
+      {
+        "id": "cambridge-unit-9-burrow",
+        "term": "burrow",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "нора",
+        "translationUz": "in"
+      },
+      {
+        "id": "cambridge-unit-9-colony",
+        "term": "colony",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "колония",
+        "translationUz": "koloniya"
+      },
+      {
+        "id": "cambridge-unit-9-deforestation",
+        "term": "deforestation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вырубка лесов",
+        "translationUz": "o‘rmonlarni kesish"
+      },
+      {
+        "id": "cambridge-unit-9-degradation",
+        "term": "degradation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "деградация",
+        "translationUz": "degradatsiya"
+      },
+      {
+        "id": "cambridge-unit-9-demise",
+        "term": "demise",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кончина, упадок",
+        "translationUz": "halokat"
+      },
+      {
+        "id": "cambridge-unit-9-devastation",
+        "term": "devastation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "опустошение",
+        "translationUz": "vayronagarchilik"
+      },
+      {
+        "id": "cambridge-unit-9-flooding",
+        "term": "flooding",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "наводнение",
+        "translationUz": "suv toshqini"
+      },
+      {
+        "id": "cambridge-unit-9-habitat",
+        "term": "habitat",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "среда обитания",
+        "translationUz": "yashash muhiti"
+      },
+      {
+        "id": "cambridge-unit-9-harm",
+        "term": "harm",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вред",
+        "translationUz": "zarar"
+      },
+      {
+        "id": "cambridge-unit-9-herd",
+        "term": "herd",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "стадо",
+        "translationUz": "poda"
+      },
+      {
+        "id": "cambridge-unit-9-hive",
+        "term": "hive",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "улей",
+        "translationUz": "ari uyasi"
+      },
+      {
+        "id": "cambridge-unit-9-lifespan",
+        "term": "lifespan",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "продолжительность жизни",
+        "translationUz": "umr davomiyligi"
+      },
+      {
+        "id": "cambridge-unit-9-pack",
+        "term": "pack",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "стая",
+        "translationUz": "to‘da"
+      },
+      {
+        "id": "cambridge-unit-9-parasite",
+        "term": "parasite",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "паразит",
+        "translationUz": "parazit"
+      },
+      {
+        "id": "cambridge-unit-9-prey",
+        "term": "prey",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "жертва, добыча",
+        "translationUz": "o‘lja"
+      },
+      {
+        "id": "cambridge-unit-9-rival",
+        "term": "rival",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "соперник",
+        "translationUz": "raqib"
+      },
+      {
+        "id": "cambridge-unit-9-swarm",
+        "term": "swarm",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "рой",
+        "translationUz": "to‘da"
+      },
+      {
+        "id": "cambridge-unit-9-threshold",
+        "term": "threshold",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "порог",
+        "translationUz": "chegara"
+      },
+      {
+        "id": "cambridge-unit-9-appalling",
+        "term": "appalling",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ужасный",
+        "translationUz": "dahshatli"
+      },
+      {
+        "id": "cambridge-unit-9-aquatic",
+        "term": "aquatic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "водный",
+        "translationUz": "suvda yashovchi"
+      },
+      {
+        "id": "cambridge-unit-9-hypocritical",
+        "term": "hypocritical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "лицемерный",
+        "translationUz": "riyo"
+      },
+      {
+        "id": "cambridge-unit-9-impartial",
+        "term": "impartial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "беспристрастный",
+        "translationUz": "xolis"
+      },
+      {
+        "id": "cambridge-unit-9-irresponsible",
+        "term": "irresponsible",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "безответственный",
+        "translationUz": "masʼuliyatsiz"
+      },
+      {
+        "id": "cambridge-unit-9-nocturnal",
+        "term": "nocturnal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ночной",
+        "translationUz": "tunda faol"
+      },
+      {
+        "id": "cambridge-unit-9-outrageous",
+        "term": "outrageous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "возмутительный",
+        "translationUz": "dahshatli"
+      },
+      {
+        "id": "cambridge-unit-9-risky",
+        "term": "risky",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "рискованный",
+        "translationUz": "xatarli"
+      },
+      {
+        "id": "cambridge-unit-9-venomous",
+        "term": "venomous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ядовитый",
+        "translationUz": "zaharli"
+      },
+      {
+        "id": "cambridge-unit-9-flourish",
+        "term": "flourish",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "процветать",
+        "translationUz": "rivojlanmoq"
+      },
+      {
+        "id": "cambridge-unit-9-forage",
+        "term": "forage",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "искать пищу",
+        "translationUz": "oziq izlamoq"
+      },
+      {
+        "id": "cambridge-unit-9-hibernate",
+        "term": "hibernate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "впадать в спячку",
+        "translationUz": "qishlaymoq"
+      },
+      {
+        "id": "cambridge-unit-9-lay",
+        "term": "lay",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "откладывать (яйца)",
+        "translationUz": "tuxum qo‘ymoq"
+      },
+      {
+        "id": "cambridge-unit-9-poach",
+        "term": "poach",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "заниматься браконьерством",
+        "translationUz": "brakonyerlik qilmoq"
+      },
+      {
+        "id": "cambridge-unit-9-thrive",
+        "term": "thrive",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "процветать",
+        "translationUz": "gullab-yashnamoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-10",
+    "title": "Unit 10: Rocket science",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 10",
+    "level": "C1",
+    "topic": "Rocket science",
+    "difficulty": "hard",
+    "order": 10,
+    "words": [
+      {
+        "id": "cambridge-unit-10-aftershock",
+        "term": "aftershock",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "афтершок",
+        "translationUz": "takroriy zilzila"
+      },
+      {
+        "id": "cambridge-unit-10-debris",
+        "term": "debris",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "обломки",
+        "translationUz": "vayronalar"
+      },
+      {
+        "id": "cambridge-unit-10-eclipse",
+        "term": "eclipse",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "затмение",
+        "translationUz": "tutulish"
+      },
+      {
+        "id": "cambridge-unit-10-gravity",
+        "term": "gravity",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "гравитация",
+        "translationUz": "gravitatsiya"
+      },
+      {
+        "id": "cambridge-unit-10-impact",
+        "term": "impact",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "воздействие, удар",
+        "translationUz": "taʼsir"
+      },
+      {
+        "id": "cambridge-unit-10-planet",
+        "term": "planet",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "планета",
+        "translationUz": "sayyora"
+      },
+      {
+        "id": "cambridge-unit-10-surface",
+        "term": "surface",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "поверхность",
+        "translationUz": "sirt"
+      },
+      {
+        "id": "cambridge-unit-10-colossal",
+        "term": "colossal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "колоссальный",
+        "translationUz": "ulkan"
+      },
+      {
+        "id": "cambridge-unit-10-imperceptible",
+        "term": "imperceptible",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "незаметный",
+        "translationUz": "sezilmas"
+      },
+      {
+        "id": "cambridge-unit-10-infinitesimal",
+        "term": "infinitesimal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ничтожно малый",
+        "translationUz": "juda kichik"
+      },
+      {
+        "id": "cambridge-unit-10-microscopic",
+        "term": "microscopic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "микроскопический",
+        "translationUz": "mikroskopik"
+      },
+      {
+        "id": "cambridge-unit-10-minuscule",
+        "term": "minuscule",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "крошечный",
+        "translationUz": "juda kichik"
+      },
+      {
+        "id": "cambridge-unit-10-minute",
+        "term": "minute",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мельчайший",
+        "translationUz": "juda mayda"
+      },
+      {
+        "id": "cambridge-unit-10-protracted",
+        "term": "protracted",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "затяжной",
+        "translationUz": "cho‘zilgan"
+      },
+      {
+        "id": "cambridge-unit-10-sustained",
+        "term": "sustained",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "продолжительный",
+        "translationUz": "uzoq davom etgan"
+      },
+      {
+        "id": "cambridge-unit-10-transient",
+        "term": "transient",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "преходящий",
+        "translationUz": "vaqtinchalik"
+      },
+      {
+        "id": "cambridge-unit-10-absorb",
+        "term": "absorb",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "поглощать",
+        "translationUz": "yutmoq"
+      },
+      {
+        "id": "cambridge-unit-10-activate",
+        "term": "activate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "активировать",
+        "translationUz": "faollashtirmoq"
+      },
+      {
+        "id": "cambridge-unit-10-burst",
+        "term": "burst",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "лопаться, взрываться",
+        "translationUz": "portlamoq"
+      },
+      {
+        "id": "cambridge-unit-10-collide",
+        "term": "collide",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сталкиваться",
+        "translationUz": "to‘qnashmoq"
+      },
+      {
+        "id": "cambridge-unit-10-condense",
+        "term": "condense",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "конденсироваться",
+        "translationUz": "quyuqlashmoq"
+      },
+      {
+        "id": "cambridge-unit-10-dilute",
+        "term": "dilute",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "разбавлять",
+        "translationUz": "suyultirmoq"
+      },
+      {
+        "id": "cambridge-unit-10-dissolve",
+        "term": "dissolve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "растворять(ся)",
+        "translationUz": "eritmoq"
+      },
+      {
+        "id": "cambridge-unit-10-evaporate",
+        "term": "evaporate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "испаряться",
+        "translationUz": "bug‘lanmoq"
+      },
+      {
+        "id": "cambridge-unit-10-expand",
+        "term": "expand",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "расширяться",
+        "translationUz": "kengaymoq"
+      },
+      {
+        "id": "cambridge-unit-10-explode",
+        "term": "explode",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "взрываться",
+        "translationUz": "portlamoq"
+      },
+      {
+        "id": "cambridge-unit-10-melt",
+        "term": "melt",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "таять",
+        "translationUz": "erimoq"
+      },
+      {
+        "id": "cambridge-unit-10-pierce",
+        "term": "pierce",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "пронзать",
+        "translationUz": "teshmoq"
+      },
+      {
+        "id": "cambridge-unit-10-reflect",
+        "term": "reflect",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "отражать",
+        "translationUz": "aks ettirmoq"
+      },
+      {
+        "id": "cambridge-unit-10-release",
+        "term": "release",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "высвобождать, выпускать",
+        "translationUz": "chiqarmoq"
+      },
+      {
+        "id": "cambridge-unit-10-repel",
+        "term": "repel",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "отталкивать",
+        "translationUz": "itarib yubormoq"
+      },
+      {
+        "id": "cambridge-unit-10-spin",
+        "term": "spin",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "вращаться",
+        "translationUz": "aylanmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-11",
+    "title": "Unit 11: Progress",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 11",
+    "level": "C1",
+    "topic": "Progress",
+    "difficulty": "hard",
+    "order": 11,
+    "words": [
+      {
+        "id": "cambridge-unit-11-advances",
+        "term": "advances",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "достижения, прогресс",
+        "translationUz": "yutuqlar"
+      },
+      {
+        "id": "cambridge-unit-11-communication",
+        "term": "communication",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "общение, связь",
+        "translationUz": "aloqa"
+      },
+      {
+        "id": "cambridge-unit-11-download",
+        "term": "download",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "загрузка",
+        "translationUz": "yuklab olish"
+      },
+      {
+        "id": "cambridge-unit-11-entertainment",
+        "term": "entertainment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "развлечение",
+        "translationUz": "ko‘ngilochar"
+      },
+      {
+        "id": "cambridge-unit-11-information",
+        "term": "information",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "информация",
+        "translationUz": "maʼlumot"
+      },
+      {
+        "id": "cambridge-unit-11-overload",
+        "term": "overload",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "перегрузка",
+        "translationUz": "ortiqcha yuk"
+      },
+      {
+        "id": "cambridge-unit-11-technology",
+        "term": "technology",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "технология",
+        "translationUz": "texnologiya"
+      },
+      {
+        "id": "cambridge-unit-11-cutting-edge",
+        "term": "cutting-edge",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "передовой",
+        "translationUz": "eng zamonaviy"
+      },
+      {
+        "id": "cambridge-unit-11-futuristic",
+        "term": "futuristic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "футуристический",
+        "translationUz": "futuristik"
+      },
+      {
+        "id": "cambridge-unit-11-virtual",
+        "term": "virtual",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "виртуальный",
+        "translationUz": "virtual"
+      },
+      {
+        "id": "cambridge-unit-11-demolish",
+        "term": "demolish",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сносить, разрушать",
+        "translationUz": "buzmoq"
+      },
+      {
+        "id": "cambridge-unit-11-dye",
+        "term": "dye",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "красить",
+        "translationUz": "bo‘yamoq"
+      },
+      {
+        "id": "cambridge-unit-11-innovate",
+        "term": "innovate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "вносить новшества",
+        "translationUz": "innovatsiya qilmoq"
+      },
+      {
+        "id": "cambridge-unit-11-revolve",
+        "term": "revolve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "вращаться вокруг",
+        "translationUz": "aylanmoq"
+      },
+      {
+        "id": "cambridge-unit-11-rotate",
+        "term": "rotate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "вращаться",
+        "translationUz": "aylantirmoq"
+      },
+      {
+        "id": "cambridge-unit-11-strike",
+        "term": "strike",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "ударять; бастовать",
+        "translationUz": "urmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-12",
+    "title": "Unit 12: The latest thing",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 12",
+    "level": "C1",
+    "topic": "The latest thing",
+    "difficulty": "hard",
+    "order": 12,
+    "words": [
+      {
+        "id": "cambridge-unit-12-acquisitiveness",
+        "term": "acquisitiveness",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "склонность к приобретательству",
+        "translationUz": "egallash ishtiyoqi"
+      },
+      {
+        "id": "cambridge-unit-12-archive",
+        "term": "archive",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "архив",
+        "translationUz": "arxiv"
+      },
+      {
+        "id": "cambridge-unit-12-consumerism",
+        "term": "consumerism",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "консьюмеризм",
+        "translationUz": "isteʼmolchilik"
+      },
+      {
+        "id": "cambridge-unit-12-disposable-income",
+        "term": "disposable income",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "располагаемый доход",
+        "translationUz": "erkin daromad"
+      },
+      {
+        "id": "cambridge-unit-12-personal-consumption",
+        "term": "personal consumption",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "личное потребление",
+        "translationUz": "shaxsiy isteʼmol"
+      },
+      {
+        "id": "cambridge-unit-12-spending-patterns",
+        "term": "spending patterns",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "модели расходов",
+        "translationUz": "xarajat naqshlari"
+      },
+      {
+        "id": "cambridge-unit-12-stockpile",
+        "term": "stockpile",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "запас, складывать запас",
+        "translationUz": "zaxira"
+      },
+      {
+        "id": "cambridge-unit-12-supplies",
+        "term": "supplies",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "припасы, поставки",
+        "translationUz": "taʼminot"
+      },
+      {
+        "id": "cambridge-unit-12-chic",
+        "term": "chic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "шикарный",
+        "translationUz": "zamonaviy"
+      },
+      {
+        "id": "cambridge-unit-12-drab",
+        "term": "drab",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "унылый, тусклый",
+        "translationUz": "rang-barang emas"
+      },
+      {
+        "id": "cambridge-unit-12-mundane",
+        "term": "mundane",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "обыденный",
+        "translationUz": "oddiy"
+      },
+      {
+        "id": "cambridge-unit-12-sophisticated",
+        "term": "sophisticated",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "изысканный, сложный",
+        "translationUz": "murakkab"
+      },
+      {
+        "id": "cambridge-unit-12-a-must-have-item",
+        "term": "a must-have item",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "необходимая вещь",
+        "translationUz": "zarur narsa"
+      },
+      {
+        "id": "cambridge-unit-12-a-passing-trend",
+        "term": "a passing trend",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "мимолетный тренд",
+        "translationUz": "o‘kinchi moda"
+      },
+      {
+        "id": "cambridge-unit-12-all-the-rage",
+        "term": "all the rage",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "в большой моде",
+        "translationUz": "juda mashhur"
+      },
+      {
+        "id": "cambridge-unit-12-casual-dress",
+        "term": "casual dress",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "повседневная одежда",
+        "translationUz": "kundalik kiyim"
+      },
+      {
+        "id": "cambridge-unit-12-conspicuous",
+        "term": "conspicuous",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "заметный, броский",
+        "translationUz": "ko‘zga tashlanuvchi"
+      },
+      {
+        "id": "cambridge-unit-12-designer-label",
+        "term": "designer label",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "дизайнерский бренд",
+        "translationUz": "dizayner belgisi"
+      },
+      {
+        "id": "cambridge-unit-12-fashion-accessory",
+        "term": "fashion accessory",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "аксессуар моды",
+        "translationUz": "moda aksessuari"
+      },
+      {
+        "id": "cambridge-unit-12-in-vogue",
+        "term": "in vogue",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "в моде",
+        "translationUz": "modada"
+      },
+      {
+        "id": "cambridge-unit-12-mass-branding",
+        "term": "mass branding",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "массовый брендинг",
+        "translationUz": "ommaviy brending"
+      },
+      {
+        "id": "cambridge-unit-12-the-latest-trend",
+        "term": "the latest trend",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "последний тренд",
+        "translationUz": "eng so‘nggi moda"
+      },
+      {
+        "id": "cambridge-unit-12-traditional-dress",
+        "term": "traditional dress",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "традиционная одежда",
+        "translationUz": "anʼanaviy kiyim"
+      },
+      {
+        "id": "cambridge-unit-12-abandon",
+        "term": "abandon",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "отказаться, покинуть",
+        "translationUz": "tashlab ketmoq"
+      },
+      {
+        "id": "cambridge-unit-12-conserve",
+        "term": "conserve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сохранять, беречь",
+        "translationUz": "saqlamoq"
+      },
+      {
+        "id": "cambridge-unit-12-consume",
+        "term": "consume",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "потреблять",
+        "translationUz": "isteʼmol qilmoq"
+      },
+      {
+        "id": "cambridge-unit-12-discard",
+        "term": "discard",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "выбрасывать",
+        "translationUz": "tashlamoq"
+      },
+      {
+        "id": "cambridge-unit-12-dump",
+        "term": "dump",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сваливать, выбрасывать",
+        "translationUz": "dump qilmoq"
+      },
+      {
+        "id": "cambridge-unit-12-eradicate",
+        "term": "eradicate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "искоренять",
+        "translationUz": "yo‘q qilmoq"
+      },
+      {
+        "id": "cambridge-unit-12-hoard",
+        "term": "hoard",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "копить, накапливать",
+        "translationUz": "yig‘ib qo‘ymoq"
+      },
+      {
+        "id": "cambridge-unit-12-maintain",
+        "term": "maintain",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "поддерживать",
+        "translationUz": "saqlab turmoq"
+      },
+      {
+        "id": "cambridge-unit-12-preserve",
+        "term": "preserve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сохранять",
+        "translationUz": "muhofaza qilmoq"
+      },
+      {
+        "id": "cambridge-unit-12-retain",
+        "term": "retain",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "удерживать, сохранять",
+        "translationUz": "saqlab qolmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-13",
+    "title": "Unit 13: Urban jungle",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 13",
+    "level": "C1",
+    "topic": "Urban jungle",
+    "difficulty": "hard",
+    "order": 13,
+    "words": [
+      {
+        "id": "cambridge-unit-13-concrete-jungle",
+        "term": "concrete jungle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "бетонные джунгли",
+        "translationUz": "beton o‘rmon"
+      },
+      {
+        "id": "cambridge-unit-13-employment",
+        "term": "employment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "занятость",
+        "translationUz": "bandlik"
+      },
+      {
+        "id": "cambridge-unit-13-garbage-collection",
+        "term": "garbage collection",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вывоз мусора",
+        "translationUz": "axlat yig‘ish"
+      },
+      {
+        "id": "cambridge-unit-13-high-rise-building",
+        "term": "high-rise building",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "высотное здание",
+        "translationUz": "baland bino"
+      },
+      {
+        "id": "cambridge-unit-13-housing-estate",
+        "term": "housing estate",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "жилой массив",
+        "translationUz": "turar joy massivi"
+      },
+      {
+        "id": "cambridge-unit-13-inner-city-slum",
+        "term": "inner-city slum",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "городские трущобы",
+        "translationUz": "shahar markazidagi xonadon"
+      },
+      {
+        "id": "cambridge-unit-13-noise-pollution",
+        "term": "noise pollution",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "шумовое загрязнение",
+        "translationUz": "shovqin ifloslanishi"
+      },
+      {
+        "id": "cambridge-unit-13-outer-suburbs",
+        "term": "outer suburbs",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "далёкие пригороды",
+        "translationUz": "tashqi shahar atrofi"
+      },
+      {
+        "id": "cambridge-unit-13-sewage-system",
+        "term": "sewage system",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "канализационная система",
+        "translationUz": "kanalizatsiya tizimi"
+      },
+      {
+        "id": "cambridge-unit-13-traffic-congestion",
+        "term": "traffic congestion",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "транспортная загруженность",
+        "translationUz": "yo‘l tirbandligi"
+      },
+      {
+        "id": "cambridge-unit-13-urban-sprawl",
+        "term": "urban sprawl",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "расползание городов",
+        "translationUz": "shahar kengayishi"
+      },
+      {
+        "id": "cambridge-unit-13-frantic",
+        "term": "frantic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "нервный, лихорадочный",
+        "translationUz": "tashvishli"
+      },
+      {
+        "id": "cambridge-unit-13-isolated",
+        "term": "isolated",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "изолированный",
+        "translationUz": "yakkalangan"
+      },
+      {
+        "id": "cambridge-unit-13-overpopulated",
+        "term": "overpopulated",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "перенаселённый",
+        "translationUz": "haddan tashqari zich"
+      },
+      {
+        "id": "cambridge-unit-13-tranquil",
+        "term": "tranquil",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "спокойный",
+        "translationUz": "tinch"
+      },
+      {
+        "id": "cambridge-unit-13-migrate",
+        "term": "migrate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "мигрировать",
+        "translationUz": "ko‘chmoq"
+      },
+      {
+        "id": "cambridge-unit-13-settle",
+        "term": "settle",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "поселяться",
+        "translationUz": "joylashmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-14",
+    "title": "Unit 14: Tackling issues",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 14",
+    "level": "C1",
+    "topic": "Tackling issues",
+    "difficulty": "hard",
+    "order": 14,
+    "words": [
+      {
+        "id": "cambridge-unit-14-catastrophe",
+        "term": "catastrophe",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "катастрофа",
+        "translationUz": "falokat"
+      },
+      {
+        "id": "cambridge-unit-14-cloning",
+        "term": "cloning",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "клонирование",
+        "translationUz": "klonlash"
+      },
+      {
+        "id": "cambridge-unit-14-controversy",
+        "term": "controversy",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "спор, полемика",
+        "translationUz": "bahs"
+      },
+      {
+        "id": "cambridge-unit-14-crisis",
+        "term": "crisis",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кризис",
+        "translationUz": "inqiroz"
+      },
+      {
+        "id": "cambridge-unit-14-dilemma",
+        "term": "dilemma",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "дилемма",
+        "translationUz": "dilemma"
+      },
+      {
+        "id": "cambridge-unit-14-disaster",
+        "term": "disaster",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "бедствие",
+        "translationUz": "ofat"
+      },
+      {
+        "id": "cambridge-unit-14-hurdle",
+        "term": "hurdle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "препятствие",
+        "translationUz": "to‘siq"
+      },
+      {
+        "id": "cambridge-unit-14-obstacle",
+        "term": "obstacle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "препятствие",
+        "translationUz": "to‘siq"
+      },
+      {
+        "id": "cambridge-unit-14-predicament",
+        "term": "predicament",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "затруднительное положение",
+        "translationUz": "qiyin ahvol"
+      },
+      {
+        "id": "cambridge-unit-14-setback",
+        "term": "setback",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "неудача, откат",
+        "translationUz": "orqaga ketish"
+      },
+      {
+        "id": "cambridge-unit-14-catastrophic",
+        "term": "catastrophic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "катастрофический",
+        "translationUz": "falokatli"
+      },
+      {
+        "id": "cambridge-unit-14-controversial",
+        "term": "controversial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "спорный",
+        "translationUz": "bahsli"
+      },
+      {
+        "id": "cambridge-unit-14-daunting",
+        "term": "daunting",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "пугающий, устрашающий",
+        "translationUz": "qo‘rqinchli"
+      },
+      {
+        "id": "cambridge-unit-14-disastrous",
+        "term": "disastrous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "бедственный",
+        "translationUz": "ofatli"
+      },
+      {
+        "id": "cambridge-unit-14-insurmountable",
+        "term": "insurmountable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "непреодолимый",
+        "translationUz": "engib bo‘lmaydigan"
+      },
+      {
+        "id": "cambridge-unit-14-ongoing",
+        "term": "ongoing",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "текущий, продолжающийся",
+        "translationUz": "davom etayotgan"
+      },
+      {
+        "id": "cambridge-unit-14-pervasive",
+        "term": "pervasive",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "всепроникающий",
+        "translationUz": "keng tarqalgan"
+      },
+      {
+        "id": "cambridge-unit-14-problematic",
+        "term": "problematic",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "проблемный",
+        "translationUz": "muammoli"
+      },
+      {
+        "id": "cambridge-unit-14-do-more-harm-than-good",
+        "term": "do more harm than good",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "причинять больше вреда, чем пользы",
+        "translationUz": "foydadan ko‘ra ko‘proq zarar"
+      },
+      {
+        "id": "cambridge-unit-14-dwell-on",
+        "term": "dwell on",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "зацикливаться на",
+        "translationUz": "ustida o‘ylamoq"
+      },
+      {
+        "id": "cambridge-unit-14-energy-crisis",
+        "term": "energy crisis",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "энергетический кризис",
+        "translationUz": "energiya inqirozi"
+      },
+      {
+        "id": "cambridge-unit-14-gain-insight-into",
+        "term": "gain insight into",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "понять глубже",
+        "translationUz": "chuqurroq tushunmoq"
+      },
+      {
+        "id": "cambridge-unit-14-genetically-modified-food",
+        "term": "genetically modified food",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "генно-модифицированная еда",
+        "translationUz": "genetik o‘zgartirilgan oziq-ovqat"
+      },
+      {
+        "id": "cambridge-unit-14-take-stock",
+        "term": "take stock",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "подводить итоги",
+        "translationUz": "hisob-kitob qilmoq"
+      },
+      {
+        "id": "cambridge-unit-14-aggravate",
+        "term": "aggravate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "ухудшать",
+        "translationUz": "yomonlashtirmoq"
+      },
+      {
+        "id": "cambridge-unit-14-alleviate",
+        "term": "alleviate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "облегчать",
+        "translationUz": "yumshatmoq"
+      },
+      {
+        "id": "cambridge-unit-14-arise",
+        "term": "arise",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "возникать",
+        "translationUz": "paydo bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-14-exacerbate",
+        "term": "exacerbate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "обострять",
+        "translationUz": "kuchaytirmoq"
+      },
+      {
+        "id": "cambridge-unit-14-hinder",
+        "term": "hinder",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "мешать",
+        "translationUz": "to‘sqinlik qilmoq"
+      },
+      {
+        "id": "cambridge-unit-14-ignore",
+        "term": "ignore",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "игнорировать",
+        "translationUz": "eʼtibor bermaslik"
+      },
+      {
+        "id": "cambridge-unit-14-improve",
+        "term": "improve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "улучшать",
+        "translationUz": "yaxshilamoq"
+      },
+      {
+        "id": "cambridge-unit-14-mitigate",
+        "term": "mitigate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "смягчать",
+        "translationUz": "yumshatmoq"
+      },
+      {
+        "id": "cambridge-unit-14-rectify",
+        "term": "rectify",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "исправлять",
+        "translationUz": "tuzatmoq"
+      },
+      {
+        "id": "cambridge-unit-14-resolve",
+        "term": "resolve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "разрешать (проблему)",
+        "translationUz": "hal qilmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-15",
+    "title": "Unit 15: This Earth",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 15",
+    "level": "C1",
+    "topic": "This Earth",
+    "difficulty": "hard",
+    "order": 15,
+    "words": [
+      {
+        "id": "cambridge-unit-15-acid-rain",
+        "term": "acid rain",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кислотный дождь",
+        "translationUz": "kislotali yomg‘ir"
+      },
+      {
+        "id": "cambridge-unit-15-agriculture",
+        "term": "agriculture",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "сельское хозяйство",
+        "translationUz": "qishloq xo‘jaligi"
+      },
+      {
+        "id": "cambridge-unit-15-cattle",
+        "term": "cattle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "крупный рогатый скот",
+        "translationUz": "qoramol"
+      },
+      {
+        "id": "cambridge-unit-15-coast",
+        "term": "coast",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "побережье",
+        "translationUz": "qirg‘oq"
+      },
+      {
+        "id": "cambridge-unit-15-deforestation",
+        "term": "deforestation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вырубка лесов",
+        "translationUz": "o‘rmonlarni kesish"
+      },
+      {
+        "id": "cambridge-unit-15-desalination",
+        "term": "desalination",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "опреснение",
+        "translationUz": "tuzsizlantirish"
+      },
+      {
+        "id": "cambridge-unit-15-drought",
+        "term": "drought",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "засуха",
+        "translationUz": "qurg‘oqchilik"
+      },
+      {
+        "id": "cambridge-unit-15-erosion",
+        "term": "erosion",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "эрозия",
+        "translationUz": "eroziya"
+      },
+      {
+        "id": "cambridge-unit-15-flooding",
+        "term": "flooding",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "наводнение",
+        "translationUz": "suv toshqini"
+      },
+      {
+        "id": "cambridge-unit-15-fungus",
+        "term": "fungus",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "грибок",
+        "translationUz": "zamburug‘"
+      },
+      {
+        "id": "cambridge-unit-15-lava",
+        "term": "lava",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "лава",
+        "translationUz": "lava"
+      },
+      {
+        "id": "cambridge-unit-15-petal",
+        "term": "petal",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "лепесток",
+        "translationUz": "gul bargi"
+      },
+      {
+        "id": "cambridge-unit-15-productivity",
+        "term": "productivity",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "продуктивность",
+        "translationUz": "unumlilik"
+      },
+      {
+        "id": "cambridge-unit-15-puddle",
+        "term": "puddle",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "лужа",
+        "translationUz": "ko‘lmak"
+      },
+      {
+        "id": "cambridge-unit-15-reservoir",
+        "term": "reservoir",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "водохранилище",
+        "translationUz": "suv ombori"
+      },
+      {
+        "id": "cambridge-unit-15-shore",
+        "term": "shore",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "берег",
+        "translationUz": "qirg‘oq"
+      },
+      {
+        "id": "cambridge-unit-15-species",
+        "term": "species",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вид (биол.)",
+        "translationUz": "tur"
+      },
+      {
+        "id": "cambridge-unit-15-stem",
+        "term": "stem",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "стебель",
+        "translationUz": "poya"
+      },
+      {
+        "id": "cambridge-unit-15-tide",
+        "term": "tide",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "прилив/отлив",
+        "translationUz": "suv oqimi"
+      },
+      {
+        "id": "cambridge-unit-15-tremor",
+        "term": "tremor",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "толчок, дрожь",
+        "translationUz": "titrash"
+      },
+      {
+        "id": "cambridge-unit-15-current",
+        "term": "current",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "текущий; течение",
+        "translationUz": "joriy"
+      },
+      {
+        "id": "cambridge-unit-15-dense",
+        "term": "dense",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "плотный",
+        "translationUz": "zich"
+      },
+      {
+        "id": "cambridge-unit-15-freezing",
+        "term": "freezing",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "морозный",
+        "translationUz": "muzlayotgan"
+      },
+      {
+        "id": "cambridge-unit-15-heavy",
+        "term": "heavy",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "тяжёлый; сильный",
+        "translationUz": "og‘ir"
+      },
+      {
+        "id": "cambridge-unit-15-long-term",
+        "term": "long-term",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "долгосрочный",
+        "translationUz": "uzoq muddatli"
+      },
+      {
+        "id": "cambridge-unit-15-native",
+        "term": "native",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "местный, исконный",
+        "translationUz": "mahalliy"
+      },
+      {
+        "id": "cambridge-unit-15-resistant",
+        "term": "resistant",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "устойчивый",
+        "translationUz": "bardoshli"
+      },
+      {
+        "id": "cambridge-unit-15-severe",
+        "term": "severe",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "суровый, серьёзный",
+        "translationUz": "qattiq"
+      },
+      {
+        "id": "cambridge-unit-15-torrential",
+        "term": "torrential",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ливневый",
+        "translationUz": "sel"
+      },
+      {
+        "id": "cambridge-unit-15-tropical",
+        "term": "tropical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "тропический",
+        "translationUz": "tropik"
+      },
+      {
+        "id": "cambridge-unit-15-a-storm-in-a-teacup",
+        "term": "a storm in a teacup",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "буря в стакане воды",
+        "translationUz": "kichik ishdan katta shovqin"
+      },
+      {
+        "id": "cambridge-unit-15-be-snowed-under",
+        "term": "be snowed under",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "быть заваленным работой",
+        "translationUz": "ishga ko‘milmoq"
+      },
+      {
+        "id": "cambridge-unit-15-every-cloud-has-a-silver-lining",
+        "term": "every cloud has a silver lining",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "нет худа без добра",
+        "translationUz": "har bulutning yorug‘ tomoni bor"
+      },
+      {
+        "id": "cambridge-unit-15-in-the-cold-light-of-day",
+        "term": "in the cold light of day",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "при трезвом взгляде",
+        "translationUz": "sovuq voqelikda"
+      },
+      {
+        "id": "cambridge-unit-15-know-which-way-the-wind-is-blowing",
+        "term": "know which way the wind is blowing",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "понимать, куда ветер дует",
+        "translationUz": "vaziyatni sezmoq"
+      },
+      {
+        "id": "cambridge-unit-15-not-have-the-foggiest-idea",
+        "term": "not have the foggiest idea",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "не иметь ни малейшего понятия",
+        "translationUz": "hech narsa bilmaslik"
+      },
+      {
+        "id": "cambridge-unit-15-the-calm-before-the-storm",
+        "term": "the calm before the storm",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "тишь перед бурей",
+        "translationUz": "bo‘rondan oldingi tinchlik"
+      },
+      {
+        "id": "cambridge-unit-15-vicious-circle",
+        "term": "vicious circle",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "порочный круг",
+        "translationUz": "yomon doira"
+      },
+      {
+        "id": "cambridge-unit-15-weather-the-storm",
+        "term": "weather the storm",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "пережить трудные времена",
+        "translationUz": "qiyinchilikni engmoq"
+      },
+      {
+        "id": "cambridge-unit-15-breed",
+        "term": "breed",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "разводить, порождать",
+        "translationUz": "nasl chiqarmoq"
+      },
+      {
+        "id": "cambridge-unit-15-cultivate",
+        "term": "cultivate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "культивировать, развивать",
+        "translationUz": "rivojlantirmoq"
+      },
+      {
+        "id": "cambridge-unit-15-flow",
+        "term": "flow",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "течь",
+        "translationUz": "oqmoq"
+      },
+      {
+        "id": "cambridge-unit-15-sow",
+        "term": "sow",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сеять",
+        "translationUz": "ekmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-16",
+    "title": "Unit 16: Energy efficient",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 16",
+    "level": "C1",
+    "topic": "Energy efficient",
+    "difficulty": "hard",
+    "order": 16,
+    "words": [
+      {
+        "id": "cambridge-unit-16-biofuel",
+        "term": "biofuel",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "биотопливо",
+        "translationUz": "biyo yoqilg‘i"
+      },
+      {
+        "id": "cambridge-unit-16-carbon-footprint",
+        "term": "carbon footprint",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "углеродный след",
+        "translationUz": "uglerod izi"
+      },
+      {
+        "id": "cambridge-unit-16-consumption",
+        "term": "consumption",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "потребление",
+        "translationUz": "isteʼmol"
+      },
+      {
+        "id": "cambridge-unit-16-emissions",
+        "term": "emissions",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "выбросы",
+        "translationUz": "chiqindilar"
+      },
+      {
+        "id": "cambridge-unit-16-fumes",
+        "term": "fumes",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "испарения, выхлопы",
+        "translationUz": "tutun"
+      },
+      {
+        "id": "cambridge-unit-16-greenhouse-gas",
+        "term": "greenhouse gas",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "парниковый газ",
+        "translationUz": "issiqxona gazi"
+      },
+      {
+        "id": "cambridge-unit-16-mining",
+        "term": "mining",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "добыча полезных ископаемых",
+        "translationUz": "konchilik"
+      },
+      {
+        "id": "cambridge-unit-16-natural-resources",
+        "term": "natural resources",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "природные ресурсы",
+        "translationUz": "tabiiy resurslar"
+      },
+      {
+        "id": "cambridge-unit-16-precious-metal",
+        "term": "precious metal",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "драгоценный металл",
+        "translationUz": "qimmatbaho metall"
+      },
+      {
+        "id": "cambridge-unit-16-scale",
+        "term": "scale",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "масштаб",
+        "translationUz": "miqyos"
+      },
+      {
+        "id": "cambridge-unit-16-wind-farm",
+        "term": "wind farm",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "ветряная электростанция",
+        "translationUz": "shamollik stansiya"
+      },
+      {
+        "id": "cambridge-unit-16-carbon-neutral",
+        "term": "carbon neutral",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "углеродно нейтральный",
+        "translationUz": "uglerod neytral"
+      },
+      {
+        "id": "cambridge-unit-16-eco-friendly",
+        "term": "eco-friendly",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "экологичный",
+        "translationUz": "ekologik toza"
+      },
+      {
+        "id": "cambridge-unit-16-rechargeable",
+        "term": "rechargeable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "перезаряжаемый",
+        "translationUz": "zaryadlanadigan"
+      },
+      {
+        "id": "cambridge-unit-16-recyclable",
+        "term": "recyclable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "подлежащий переработке",
+        "translationUz": "qayta ishlanadigan"
+      },
+      {
+        "id": "cambridge-unit-16-renewable",
+        "term": "renewable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "возобновляемый",
+        "translationUz": "qayta tiklanadigan"
+      },
+      {
+        "id": "cambridge-unit-16-precious",
+        "term": "precious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "драгоценный",
+        "translationUz": "qimmatbaho"
+      },
+      {
+        "id": "cambridge-unit-16-sustainable",
+        "term": "sustainable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "устойчивый",
+        "translationUz": "barqaror"
+      },
+      {
+        "id": "cambridge-unit-16-unleaded",
+        "term": "unleaded",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "неэтилированный",
+        "translationUz": "qo‘rg‘oshinsiz"
+      },
+      {
+        "id": "cambridge-unit-16-capture",
+        "term": "capture",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "улавливать, захватывать",
+        "translationUz": "ushlamoq"
+      },
+      {
+        "id": "cambridge-unit-16-conserve",
+        "term": "conserve",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сохранять, беречь",
+        "translationUz": "saqlamoq"
+      },
+      {
+        "id": "cambridge-unit-16-curb",
+        "term": "curb",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сдерживать",
+        "translationUz": "cheklamoq"
+      },
+      {
+        "id": "cambridge-unit-16-discard",
+        "term": "discard",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "выбрасывать",
+        "translationUz": "tashlamoq"
+      },
+      {
+        "id": "cambridge-unit-16-emit",
+        "term": "emit",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "выделять (газ)",
+        "translationUz": "chiqarmoq"
+      },
+      {
+        "id": "cambridge-unit-16-exhaust",
+        "term": "exhaust",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "истощать; выхлоп",
+        "translationUz": "tugatmoq"
+      },
+      {
+        "id": "cambridge-unit-16-harness",
+        "term": "harness",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "использовать (энергию)",
+        "translationUz": "foydalanmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-17",
+    "title": "Unit 17: Getting down to business",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 17",
+    "level": "C1",
+    "topic": "Getting down to business",
+    "difficulty": "hard",
+    "order": 17,
+    "words": [
+      {
+        "id": "cambridge-unit-17-assets",
+        "term": "assets",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "активы",
+        "translationUz": "aktivlar"
+      },
+      {
+        "id": "cambridge-unit-17-bankruptcy",
+        "term": "bankruptcy",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "банкротство",
+        "translationUz": "bankrotlik"
+      },
+      {
+        "id": "cambridge-unit-17-bottom-line",
+        "term": "bottom line",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "итог, чистая прибыль",
+        "translationUz": "asosiy natija"
+      },
+      {
+        "id": "cambridge-unit-17-budget",
+        "term": "budget",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "бюджет",
+        "translationUz": "byudjet"
+      },
+      {
+        "id": "cambridge-unit-17-client",
+        "term": "client",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "клиент",
+        "translationUz": "mijoz"
+      },
+      {
+        "id": "cambridge-unit-17-credit-rating",
+        "term": "credit rating",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кредитный рейтинг",
+        "translationUz": "kredit reytingi"
+      },
+      {
+        "id": "cambridge-unit-17-cutback",
+        "term": "cutback",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "сокращение",
+        "translationUz": "qisqartirish"
+      },
+      {
+        "id": "cambridge-unit-17-earnings",
+        "term": "earnings",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "заработок",
+        "translationUz": "daromad"
+      },
+      {
+        "id": "cambridge-unit-17-equity",
+        "term": "equity",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "капитал, справедливость",
+        "translationUz": "kapital"
+      },
+      {
+        "id": "cambridge-unit-17-household-name",
+        "term": "household name",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "широко известное имя",
+        "translationUz": "hammaga tanish nom"
+      },
+      {
+        "id": "cambridge-unit-17-luxury-goods",
+        "term": "luxury goods",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "предметы роскоши",
+        "translationUz": "hashamatli tovarlar"
+      },
+      {
+        "id": "cambridge-unit-17-bankrupt",
+        "term": "bankrupt",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "банкрот",
+        "translationUz": "bankrot"
+      },
+      {
+        "id": "cambridge-unit-17-hands-on",
+        "term": "hands-on",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "практический",
+        "translationUz": "amaliy"
+      },
+      {
+        "id": "cambridge-unit-17-managerial",
+        "term": "managerial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "управленческий",
+        "translationUz": "boshqaruv"
+      },
+      {
+        "id": "cambridge-unit-17-calculated-risk",
+        "term": "calculated risk",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "продуманный риск",
+        "translationUz": "hisoblangan xavf"
+      },
+      {
+        "id": "cambridge-unit-17-chair-a-meeting",
+        "term": "chair a meeting",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "вести заседание",
+        "translationUz": "yig‘ilishni boshqarmoq"
+      },
+      {
+        "id": "cambridge-unit-17-golden-opportunity",
+        "term": "golden opportunity",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "золотая возможность",
+        "translationUz": "oltin imkoniyat"
+      },
+      {
+        "id": "cambridge-unit-17-keep-track-of",
+        "term": "keep track of",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "следить за",
+        "translationUz": "kuzatib bormoq"
+      },
+      {
+        "id": "cambridge-unit-17-make-a-name-for-yourself",
+        "term": "make a name for yourself",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "сделать себе имя",
+        "translationUz": "o‘zingizga nom chiqarmoq"
+      },
+      {
+        "id": "cambridge-unit-17-win-win-situation",
+        "term": "win-win situation",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "ситуация, выгодная всем",
+        "translationUz": "ikkala tomon uchun foydali"
+      },
+      {
+        "id": "cambridge-unit-17-amalgamate",
+        "term": "amalgamate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "объединять(ся)",
+        "translationUz": "birlashmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-18",
+    "title": "Unit 18: Law enforcement",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 18",
+    "level": "C1",
+    "topic": "Law enforcement",
+    "difficulty": "hard",
+    "order": 18,
+    "words": [
+      {
+        "id": "cambridge-unit-18-capital-punishment",
+        "term": "capital punishment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "смертная казнь",
+        "translationUz": "o‘lim jazosi"
+      },
+      {
+        "id": "cambridge-unit-18-community-service",
+        "term": "community service",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "общественные работы",
+        "translationUz": "jamoat ishlari"
+      },
+      {
+        "id": "cambridge-unit-18-life-sentence",
+        "term": "life sentence",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пожизненное заключение",
+        "translationUz": "umrbod qamoq"
+      },
+      {
+        "id": "cambridge-unit-18-mugging",
+        "term": "mugging",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "уличное ограбление",
+        "translationUz": "ko‘cha taloni"
+      },
+      {
+        "id": "cambridge-unit-18-offence",
+        "term": "offence",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "правонарушение",
+        "translationUz": "jinoyat"
+      },
+      {
+        "id": "cambridge-unit-18-organised-crime",
+        "term": "organised crime",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "организованная преступность",
+        "translationUz": "uyushgan jinoyatchilik"
+      },
+      {
+        "id": "cambridge-unit-18-peer-pressure",
+        "term": "peer pressure",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "давление сверстников",
+        "translationUz": "tengdoshlar bosimi"
+      },
+      {
+        "id": "cambridge-unit-18-petty-crime",
+        "term": "petty crime",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "мелкое преступление",
+        "translationUz": "mayda jinoyat"
+      },
+      {
+        "id": "cambridge-unit-18-robbery",
+        "term": "robbery",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "ограбление",
+        "translationUz": "o‘g‘irlik"
+      },
+      {
+        "id": "cambridge-unit-18-vandalism",
+        "term": "vandalism",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вандализм",
+        "translationUz": "vandalizm"
+      },
+      {
+        "id": "cambridge-unit-18-violence",
+        "term": "violence",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "насилие",
+        "translationUz": "zo‘ravonlik"
+      },
+      {
+        "id": "cambridge-unit-18-hostile",
+        "term": "hostile",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "враждебный",
+        "translationUz": "dushmanona"
+      },
+      {
+        "id": "cambridge-unit-18-lenient",
+        "term": "lenient",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мягкий (о наказании)",
+        "translationUz": "yumshoq"
+      },
+      {
+        "id": "cambridge-unit-18-accept-the-consequences-of",
+        "term": "accept the consequences of",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "принять последствия",
+        "translationUz": "oqibatlarini qabul qilmoq"
+      },
+      {
+        "id": "cambridge-unit-18-accuse-someone-of",
+        "term": "accuse someone of",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "обвинять кого-либо в",
+        "translationUz": "ayblamoq"
+      },
+      {
+        "id": "cambridge-unit-18-arrest-someone-for",
+        "term": "arrest someone for",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "арестовать кого-либо за",
+        "translationUz": "hibsga olmoq"
+      },
+      {
+        "id": "cambridge-unit-18-be-held-responsible-for",
+        "term": "be (held) responsible for",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "нести ответственность за",
+        "translationUz": "javobgar bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-18-convicted-criminal",
+        "term": "convicted criminal",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "осуждённый преступник",
+        "translationUz": "hukm qilingan jinoyatchi"
+      },
+      {
+        "id": "cambridge-unit-18-criminal-activity",
+        "term": "criminal activity",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "преступная деятельность",
+        "translationUz": "jinoyat faoliyati"
+      },
+      {
+        "id": "cambridge-unit-18-criminal-offence",
+        "term": "criminal offence",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "уголовное преступление",
+        "translationUz": "jinoyat"
+      },
+      {
+        "id": "cambridge-unit-18-criminal-record",
+        "term": "criminal record",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "судимость",
+        "translationUz": "sudlanganlik"
+      },
+      {
+        "id": "cambridge-unit-18-hardened-criminal",
+        "term": "hardened criminal",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "закоренелый преступник",
+        "translationUz": "qattiqqo‘l jinoyatchi"
+      },
+      {
+        "id": "cambridge-unit-18-juvenile-crime",
+        "term": "juvenile crime",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "преступность несовершеннолетних",
+        "translationUz": "voyaga yetmaganlar jinoyati"
+      },
+      {
+        "id": "cambridge-unit-18-underlying-causes",
+        "term": "underlying causes",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "глубинные причины",
+        "translationUz": "asosiy sabablar"
+      },
+      {
+        "id": "cambridge-unit-18-jail",
+        "term": "jail",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сажать в тюрьму",
+        "translationUz": "qamoqqa tashlamoq"
+      },
+      {
+        "id": "cambridge-unit-18-punish",
+        "term": "punish",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "наказывать",
+        "translationUz": "jazolamoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-19",
+    "title": "Unit 19: The media",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 19",
+    "level": "C1",
+    "topic": "The media",
+    "difficulty": "hard",
+    "order": 19,
+    "words": [
+      {
+        "id": "cambridge-unit-19-bias",
+        "term": "bias",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "предвзятость",
+        "translationUz": "tarafdorlik"
+      },
+      {
+        "id": "cambridge-unit-19-broadcaster",
+        "term": "broadcaster",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вещатель",
+        "translationUz": "eshittiruvchi"
+      },
+      {
+        "id": "cambridge-unit-19-episode",
+        "term": "episode",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "эпизод",
+        "translationUz": "epizod"
+      },
+      {
+        "id": "cambridge-unit-19-headline",
+        "term": "headline",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "заголовок",
+        "translationUz": "sarlavha"
+      },
+      {
+        "id": "cambridge-unit-19-paparazzi",
+        "term": "paparazzi",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "папарацци",
+        "translationUz": "paparatstsi"
+      },
+      {
+        "id": "cambridge-unit-19-press",
+        "term": "press",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "пресса",
+        "translationUz": "matbuot"
+      },
+      {
+        "id": "cambridge-unit-19-viewer",
+        "term": "viewer",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "зритель",
+        "translationUz": "tomoshabin"
+      },
+      {
+        "id": "cambridge-unit-19-biased",
+        "term": "biased",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "предвзятый",
+        "translationUz": "tarafdor"
+      },
+      {
+        "id": "cambridge-unit-19-eminent",
+        "term": "eminent",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "выдающийся",
+        "translationUz": "mashhur"
+      },
+      {
+        "id": "cambridge-unit-19-high-profile",
+        "term": "high-profile",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "высокопрофильный",
+        "translationUz": "taniqli"
+      },
+      {
+        "id": "cambridge-unit-19-impartial",
+        "term": "impartial",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "беспристрастный",
+        "translationUz": "xolis"
+      },
+      {
+        "id": "cambridge-unit-19-influential",
+        "term": "influential",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "влиятельный",
+        "translationUz": "nufuzli"
+      },
+      {
+        "id": "cambridge-unit-19-prejudiced",
+        "term": "prejudiced",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "предубеждённый",
+        "translationUz": "xurofotli"
+      },
+      {
+        "id": "cambridge-unit-19-prominent",
+        "term": "prominent",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "видный",
+        "translationUz": "ko‘zga ko‘ringan"
+      },
+      {
+        "id": "cambridge-unit-19-subjective",
+        "term": "subjective",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "субъективный",
+        "translationUz": "subyektiv"
+      },
+      {
+        "id": "cambridge-unit-19-world-famous",
+        "term": "world-famous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "всемирно известный",
+        "translationUz": "dunyo miqyosida mashhur"
+      },
+      {
+        "id": "cambridge-unit-19-become-famous-overnight",
+        "term": "become famous overnight",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "прославиться за ночь",
+        "translationUz": "bir kechada mashhur bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-19-chief-claim-to-fame",
+        "term": "chief claim to fame",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "главная причина известности",
+        "translationUz": "mashhurlikning asosiy sababi"
+      },
+      {
+        "id": "cambridge-unit-19-in-the-public-eye",
+        "term": "in the public eye",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "на виду у публики",
+        "translationUz": "ommaviy eʼtiborda"
+      },
+      {
+        "id": "cambridge-unit-19-instant-celebrities",
+        "term": "instant celebrities",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "мгновенные знаменитости",
+        "translationUz": "tez mashhur bo‘lganlar"
+      },
+      {
+        "id": "cambridge-unit-19-making-headlines",
+        "term": "making headlines",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "попадать в заголовки",
+        "translationUz": "sarlavhalarga chiqmoq"
+      },
+      {
+        "id": "cambridge-unit-19-media-attention",
+        "term": "media attention",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "внимание СМИ",
+        "translationUz": "media eʼtibori"
+      },
+      {
+        "id": "cambridge-unit-19-new-found-fame",
+        "term": "new-found fame",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "новообретённая слава",
+        "translationUz": "yangi mashhurlik"
+      },
+      {
+        "id": "cambridge-unit-19-tabloid-press",
+        "term": "tabloid press",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "бульварная пресса",
+        "translationUz": "tabloid matbuot"
+      },
+      {
+        "id": "cambridge-unit-19-assert",
+        "term": "assert",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "утверждать",
+        "translationUz": "taʼkidlamoq"
+      },
+      {
+        "id": "cambridge-unit-19-broadcast",
+        "term": "broadcast",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "транслировать",
+        "translationUz": "eshittirmoq"
+      },
+      {
+        "id": "cambridge-unit-19-contend",
+        "term": "contend",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "утверждать, спорить",
+        "translationUz": "daʼvo qilmoq"
+      },
+      {
+        "id": "cambridge-unit-19-gossip",
+        "term": "gossip",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сплетничать",
+        "translationUz": "g‘iybat qilmoq"
+      },
+      {
+        "id": "cambridge-unit-19-indicate",
+        "term": "indicate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "указывать",
+        "translationUz": "ko‘rsatmoq"
+      },
+      {
+        "id": "cambridge-unit-19-speculate",
+        "term": "speculate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "строить догадки",
+        "translationUz": "taxmin qilmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-20",
+    "title": "Unit 20: A matter of taste",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 20",
+    "level": "C1",
+    "topic": "A matter of taste",
+    "difficulty": "hard",
+    "order": 20,
+    "words": [
+      {
+        "id": "cambridge-unit-20-animation",
+        "term": "animation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "анимация",
+        "translationUz": "animatsiya"
+      },
+      {
+        "id": "cambridge-unit-20-culture",
+        "term": "culture",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "культура",
+        "translationUz": "madaniyat"
+      },
+      {
+        "id": "cambridge-unit-20-drama",
+        "term": "drama",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "драма",
+        "translationUz": "drama"
+      },
+      {
+        "id": "cambridge-unit-20-echo",
+        "term": "echo",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "эхо",
+        "translationUz": "aks-sado"
+      },
+      {
+        "id": "cambridge-unit-20-engraving",
+        "term": "engraving",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "гравюра",
+        "translationUz": "o‘yma"
+      },
+      {
+        "id": "cambridge-unit-20-fiction",
+        "term": "fiction",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "художественная литература",
+        "translationUz": "badiiy adabiyot"
+      },
+      {
+        "id": "cambridge-unit-20-imagination",
+        "term": "imagination",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "воображение",
+        "translationUz": "tasavvur"
+      },
+      {
+        "id": "cambridge-unit-20-inspiration",
+        "term": "inspiration",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "вдохновение",
+        "translationUz": "ilhom"
+      },
+      {
+        "id": "cambridge-unit-20-abominable",
+        "term": "abominable",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "отвратительный",
+        "translationUz": "jirkanch"
+      },
+      {
+        "id": "cambridge-unit-20-abysmal",
+        "term": "abysmal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ужасный",
+        "translationUz": "juda yomon"
+      },
+      {
+        "id": "cambridge-unit-20-dismal",
+        "term": "dismal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мрачный",
+        "translationUz": "g‘amgin"
+      },
+      {
+        "id": "cambridge-unit-20-fictional",
+        "term": "fictional",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "вымышленный",
+        "translationUz": "xayoliy"
+      },
+      {
+        "id": "cambridge-unit-20-figurative",
+        "term": "figurative",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "переносный, образный",
+        "translationUz": "ko‘chma"
+      },
+      {
+        "id": "cambridge-unit-20-hilarious",
+        "term": "hilarious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "уморительный",
+        "translationUz": "juda kulgili"
+      },
+      {
+        "id": "cambridge-unit-20-inspirational",
+        "term": "inspirational",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "вдохновляющий",
+        "translationUz": "ilhomlantiruvchi"
+      },
+      {
+        "id": "cambridge-unit-20-petrified",
+        "term": "petrified",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "окаменевший от страха",
+        "translationUz": "qo‘rquvdan qotgan"
+      },
+      {
+        "id": "cambridge-unit-20-spectacular",
+        "term": "spectacular",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "зрелищный",
+        "translationUz": "hayratlanarli"
+      },
+      {
+        "id": "cambridge-unit-20-spine-chilling",
+        "term": "spine-chilling",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "мороз по коже",
+        "translationUz": "dahshatli"
+      },
+      {
+        "id": "cambridge-unit-20-talented",
+        "term": "talented",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "талантливый",
+        "translationUz": "iqtidorli"
+      },
+      {
+        "id": "cambridge-unit-20-tedious",
+        "term": "tedious",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "нудный",
+        "translationUz": "zerikarli"
+      },
+      {
+        "id": "cambridge-unit-20-terrified",
+        "term": "terrified",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ужаснувшийся",
+        "translationUz": "dahshatga tushgan"
+      },
+      {
+        "id": "cambridge-unit-20-terrifying",
+        "term": "terrifying",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "ужасающий",
+        "translationUz": "dahshatli"
+      },
+      {
+        "id": "cambridge-unit-20-thrilling",
+        "term": "thrilling",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "захватывающий",
+        "translationUz": "hayajonli"
+      },
+      {
+        "id": "cambridge-unit-20-a-matter-of-taste",
+        "term": "a matter of taste",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "дело вкуса",
+        "translationUz": "did masalasi"
+      },
+      {
+        "id": "cambridge-unit-20-acquire-a-taste-for",
+        "term": "acquire a taste for",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "приобрести вкус к",
+        "translationUz": "did hosil qilmoq"
+      },
+      {
+        "id": "cambridge-unit-20-be-in-bad-taste",
+        "term": "be in bad taste",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "быть в плохом вкусе",
+        "translationUz": "yomon didda bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-20-compose-a-song",
+        "term": "compose a song",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "сочинить песню",
+        "translationUz": "qo‘shiq yozmoq"
+      },
+      {
+        "id": "cambridge-unit-20-have-diverse-tastes",
+        "term": "have diverse tastes",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "иметь разнообразные вкусы",
+        "translationUz": "turli didlarga ega bo‘lmoq"
+      },
+      {
+        "id": "cambridge-unit-20-share-the-same-taste",
+        "term": "share the same taste",
+        "partOfSpeech": "phrase",
+        "definition": "",
+        "example": "",
+        "translation": "иметь одинаковый вкус",
+        "translationUz": "bir xil didga ega bo‘lmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-21",
+    "title": "Unit 21: Learning vocabulary",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 21",
+    "level": "C1",
+    "topic": "Learning vocabulary",
+    "difficulty": "hard",
+    "order": 21,
+    "words": [
+      {
+        "id": "cambridge-unit-21-bilingual",
+        "term": "bilingual",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "двуязычный",
+        "translationUz": "ikki tilli"
+      },
+      {
+        "id": "cambridge-unit-21-context",
+        "term": "context",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "контекст",
+        "translationUz": "kontekst"
+      },
+      {
+        "id": "cambridge-unit-21-definition",
+        "term": "definition",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "определение",
+        "translationUz": "taʼrif"
+      },
+      {
+        "id": "cambridge-unit-21-phonemic",
+        "term": "phonemic",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "фонемический",
+        "translationUz": "fonemik"
+      },
+      {
+        "id": "cambridge-unit-21-pronunciation",
+        "term": "pronunciation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "произношение",
+        "translationUz": "talaffuz"
+      },
+      {
+        "id": "cambridge-unit-21-synonym",
+        "term": "synonym",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "синоним",
+        "translationUz": "sinonim"
+      },
+      {
+        "id": "cambridge-unit-21-translation",
+        "term": "translation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "перевод",
+        "translationUz": "tarjima"
+      },
+      {
+        "id": "cambridge-unit-21-grammatical",
+        "term": "grammatical",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "грамматический",
+        "translationUz": "grammatik"
+      },
+      {
+        "id": "cambridge-unit-21-informal",
+        "term": "informal",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "неформальный",
+        "translationUz": "norasmiy"
+      },
+      {
+        "id": "cambridge-unit-21-taboo",
+        "term": "taboo",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "табу",
+        "translationUz": "tabu"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-22",
+    "title": "Unit 22: IELTS Reading",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 22",
+    "level": "C1",
+    "topic": "IELTS Reading",
+    "difficulty": "hard",
+    "order": 22,
+    "words": [
+      {
+        "id": "cambridge-unit-22-concentration",
+        "term": "concentration",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "концентрация",
+        "translationUz": "diqqat"
+      },
+      {
+        "id": "cambridge-unit-22-gist",
+        "term": "gist",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "суть",
+        "translationUz": "asosiy mazmun"
+      },
+      {
+        "id": "cambridge-unit-22-novice",
+        "term": "novice",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "новичок",
+        "translationUz": "yangi boshlovchi"
+      },
+      {
+        "id": "cambridge-unit-22-analyse",
+        "term": "analyse",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "анализировать",
+        "translationUz": "tahlil qilmoq"
+      },
+      {
+        "id": "cambridge-unit-22-interpret",
+        "term": "interpret",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "интерпретировать",
+        "translationUz": "talqin qilmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-23",
+    "title": "Unit 23: IELTS Writing",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 23",
+    "level": "C1",
+    "topic": "IELTS Writing",
+    "difficulty": "hard",
+    "order": 23,
+    "words": [
+      {
+        "id": "cambridge-unit-23-amount",
+        "term": "amount",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "количество",
+        "translationUz": "miqdor"
+      },
+      {
+        "id": "cambridge-unit-23-percentage",
+        "term": "percentage",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "процент",
+        "translationUz": "foiz"
+      },
+      {
+        "id": "cambridge-unit-23-current",
+        "term": "current",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "текущий; течение",
+        "translationUz": "joriy"
+      },
+      {
+        "id": "cambridge-unit-23-existing",
+        "term": "existing",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "существующий",
+        "translationUz": "mavjud"
+      },
+      {
+        "id": "cambridge-unit-23-proposed",
+        "term": "proposed",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "предложенный",
+        "translationUz": "taklif etilgan"
+      },
+      {
+        "id": "cambridge-unit-23-compare",
+        "term": "compare",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сравнивать",
+        "translationUz": "taqqoslamoq"
+      },
+      {
+        "id": "cambridge-unit-23-convert",
+        "term": "convert",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "преобразовывать",
+        "translationUz": "o‘zgartirmoq"
+      },
+      {
+        "id": "cambridge-unit-23-demolish",
+        "term": "demolish",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "сносить, разрушать",
+        "translationUz": "buzmoq"
+      },
+      {
+        "id": "cambridge-unit-23-extend",
+        "term": "extend",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "расширять",
+        "translationUz": "kengaytirmoq"
+      },
+      {
+        "id": "cambridge-unit-23-renovate",
+        "term": "renovate",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "ремонтировать",
+        "translationUz": "taʼmirlamoq"
+      },
+      {
+        "id": "cambridge-unit-23-replace",
+        "term": "replace",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "заменять",
+        "translationUz": "almashtirmoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-24",
+    "title": "Unit 24: IELTS Listening",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 24",
+    "level": "C1",
+    "topic": "IELTS Listening",
+    "difficulty": "hard",
+    "order": 24,
+    "words": [
+      {
+        "id": "cambridge-unit-24-assignment",
+        "term": "assignment",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "задание",
+        "translationUz": "topshiriq"
+      },
+      {
+        "id": "cambridge-unit-24-campus",
+        "term": "campus",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кампус",
+        "translationUz": "kampus"
+      },
+      {
+        "id": "cambridge-unit-24-case-study",
+        "term": "case study",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "кейс-стади",
+        "translationUz": "keys tadqiqot"
+      },
+      {
+        "id": "cambridge-unit-24-dissertation",
+        "term": "dissertation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "диссертация",
+        "translationUz": "dissertatsiya"
+      },
+      {
+        "id": "cambridge-unit-24-fieldwork",
+        "term": "fieldwork",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "полевая работа",
+        "translationUz": "dala ishi"
+      },
+      {
+        "id": "cambridge-unit-24-journal",
+        "term": "journal",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "журнал",
+        "translationUz": "jurnal"
+      },
+      {
+        "id": "cambridge-unit-24-presentation",
+        "term": "presentation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "презентация",
+        "translationUz": "taqdimot"
+      },
+      {
+        "id": "cambridge-unit-24-tutorial",
+        "term": "tutorial",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "семинар / тьюториал",
+        "translationUz": "tutorlik mashg‘uloti"
+      },
+      {
+        "id": "cambridge-unit-24-tutor",
+        "term": "tutor",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "тьютор, репетитор",
+        "translationUz": "tutor"
+      },
+      {
+        "id": "cambridge-unit-24-arduous",
+        "term": "arduous",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "трудный, тяжёлый",
+        "translationUz": "qiyin"
+      },
+      {
+        "id": "cambridge-unit-24-prolonged",
+        "term": "prolonged",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "длительный",
+        "translationUz": "uzoq davom etgan"
+      },
+      {
+        "id": "cambridge-unit-24-supplementary",
+        "term": "supplementary",
+        "partOfSpeech": "adjective",
+        "definition": "",
+        "example": "",
+        "translation": "дополнительный",
+        "translationUz": "qo‘shimcha"
+      },
+      {
+        "id": "cambridge-unit-24-conduct",
+        "term": "conduct",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "проводить",
+        "translationUz": "o‘tkazmoq"
+      },
+      {
+        "id": "cambridge-unit-24-spur",
+        "term": "spur",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "стимулировать",
+        "translationUz": "undamoq"
+      }
+    ]
+  },
+  {
+    "slug": "cambridge-unit-25",
+    "title": "Unit 25: IELTS Speaking",
+    "description": "Vocabulary from Cambridge Vocabulary for IELTS Advanced — Unit 25",
+    "level": "C1",
+    "topic": "IELTS Speaking",
+    "difficulty": "hard",
+    "order": 25,
+    "words": [
+      {
+        "id": "cambridge-unit-25-fluency",
+        "term": "fluency",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "беглость",
+        "translationUz": "ravonlik"
+      },
+      {
+        "id": "cambridge-unit-25-lexical-resource",
+        "term": "lexical resource",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "лексический запас",
+        "translationUz": "leksik resurs"
+      },
+      {
+        "id": "cambridge-unit-25-pronunciation",
+        "term": "pronunciation",
+        "partOfSpeech": "noun",
+        "definition": "",
+        "example": "",
+        "translation": "произношение",
+        "translationUz": "talaffuz"
+      },
+      {
+        "id": "cambridge-unit-25-influence",
+        "term": "influence",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "влиять",
+        "translationUz": "taʼsir qilmoq"
+      },
+      {
+        "id": "cambridge-unit-25-paraphrase",
+        "term": "paraphrase",
+        "partOfSpeech": "verb",
+        "definition": "",
+        "example": "",
+        "translation": "перефразировать",
+        "translationUz": "qayta ifodalamoq"
+      }
+    ]
+  }
+]

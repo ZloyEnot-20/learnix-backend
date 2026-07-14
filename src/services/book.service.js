@@ -175,12 +175,19 @@ export async function loadBook(bookId) {
     row = await CurriculumBook.findOne({ _id: id, published: true })
   }
 
-  // Refresh seed when curriculum pages are missing or units are still empty stubs.
+  // Refresh seed when curriculum pages are missing, units incomplete, or tests not yet imported.
   if (row && id === BOOK_ID) {
     const pages = row.data?.pages
     const ready = Number(row.readyUnitCount ?? 0)
     const total = Number(row.unitCount ?? 0)
-    const needsRefresh = !Array.isArray(pages) || pages.length === 0 || ready < total
+    const tests = row.data?.tests
+    const needsRefresh =
+      !Array.isArray(pages) ||
+      pages.length === 0 ||
+      ready < total ||
+      total < 25 ||
+      !Array.isArray(tests) ||
+      tests.length < 3
     if (needsRefresh) {
       await seedCurriculumBooks()
       row = await CurriculumBook.findOne({ _id: id, published: true })

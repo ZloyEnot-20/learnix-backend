@@ -1,0 +1,2306 @@
+{
+  "a matter of taste": {
+    "ru": "дело вкуса",
+    "uz": "did masalasi"
+  },
+  "a must-have item": {
+    "ru": "необходимая вещь",
+    "uz": "zarur narsa"
+  },
+  "a passing trend": {
+    "ru": "мимолетный тренд",
+    "uz": "o‘kinchi moda"
+  },
+  "a process of trial and error": {
+    "ru": "метод проб и ошибок",
+    "uz": "sinov va xato usuli"
+  },
+  "a storm in a teacup": {
+    "ru": "буря в стакане воды",
+    "uz": "kichik ishdan katta shovqin"
+  },
+  "abandon": {
+    "ru": "отказаться, покинуть",
+    "uz": "tashlab ketmoq"
+  },
+  "abominable": {
+    "ru": "отвратительный",
+    "uz": "jirkanch"
+  },
+  "abrupt": {
+    "ru": "внезапный, резкий",
+    "uz": "to‘satdan"
+  },
+  "absorb": {
+    "ru": "поглощать",
+    "uz": "yutmoq"
+  },
+  "abysmal": {
+    "ru": "ужасный",
+    "uz": "juda yomon"
+  },
+  "accept the consequences of": {
+    "ru": "принять последствия",
+    "uz": "oqibatlarini qabul qilmoq"
+  },
+  "accounting": {
+    "ru": "бухгалтерия",
+    "uz": "buxgalteriya"
+  },
+  "accuse someone of": {
+    "ru": "обвинять кого-либо в",
+    "uz": "ayblamoq"
+  },
+  "acid rain": {
+    "ru": "кислотный дождь",
+    "uz": "kislotali yomg‘ir"
+  },
+  "acquire a taste for": {
+    "ru": "приобрести вкус к",
+    "uz": "did hosil qilmoq"
+  },
+  "acquisitiveness": {
+    "ru": "склонность к приобретательству",
+    "uz": "egallash ishtiyoqi"
+  },
+  "activate": {
+    "ru": "активировать",
+    "uz": "faollashtirmoq"
+  },
+  "adolescent": {
+    "ru": "подросток",
+    "uz": "o‘smir"
+  },
+  "advances": {
+    "ru": "достижения, прогресс",
+    "uz": "yutuqlar"
+  },
+  "aftershock": {
+    "ru": "афтершок",
+    "uz": "takroriy zilzila"
+  },
+  "aggravate": {
+    "ru": "ухудшать",
+    "uz": "yomonlashtirmoq"
+  },
+  "agriculture": {
+    "ru": "сельское хозяйство",
+    "uz": "qishloq xo‘jaligi"
+  },
+  "all the rage": {
+    "ru": "в большой моде",
+    "uz": "juda mashhur"
+  },
+  "alleviate": {
+    "ru": "облегчать",
+    "uz": "yumshatmoq"
+  },
+  "amalgamate": {
+    "ru": "объединять(ся)",
+    "uz": "birlashmoq"
+  },
+  "amount": {
+    "ru": "количество",
+    "uz": "miqdor"
+  },
+  "analyse": {
+    "ru": "анализировать",
+    "uz": "tahlil qilmoq"
+  },
+  "analytical": {
+    "ru": "аналитический",
+    "uz": "analitik"
+  },
+  "animation": {
+    "ru": "анимация",
+    "uz": "animatsiya"
+  },
+  "anti-social": {
+    "ru": "антисоциальный",
+    "uz": "ijtimoiyga qarshi"
+  },
+  "appalling": {
+    "ru": "ужасный",
+    "uz": "dahshatli"
+  },
+  "apprehensive": {
+    "ru": "тревожный, опасающийся",
+    "uz": "xavotirli"
+  },
+  "apprenticeship": {
+    "ru": "ученичество",
+    "uz": "shogirdlik"
+  },
+  "aquatic": {
+    "ru": "водный",
+    "uz": "suvda yashovchi"
+  },
+  "archive": {
+    "ru": "архив",
+    "uz": "arxiv"
+  },
+  "arduous": {
+    "ru": "трудный, тяжёлый",
+    "uz": "qiyin"
+  },
+  "arise": {
+    "ru": "возникать",
+    "uz": "paydo bo‘lmoq"
+  },
+  "arrest someone for": {
+    "ru": "арестовать кого-либо за",
+    "uz": "hibsga olmoq"
+  },
+  "assert": {
+    "ru": "утверждать",
+    "uz": "taʼkidlamoq"
+  },
+  "assertive": {
+    "ru": "уверенный, настойчивый",
+    "uz": "qatʼiy"
+  },
+  "assets": {
+    "ru": "активы",
+    "uz": "aktivlar"
+  },
+  "assignment": {
+    "ru": "задание",
+    "uz": "topshiriq"
+  },
+  "assure": {
+    "ru": "заверять",
+    "uz": "ishontirmoq"
+  },
+  "attract": {
+    "ru": "привлекать",
+    "uz": "jalb qilmoq"
+  },
+  "bacterial": {
+    "ru": "бактериальный",
+    "uz": "bakterial"
+  },
+  "bankrupt": {
+    "ru": "банкрот",
+    "uz": "bankrot"
+  },
+  "bankruptcy": {
+    "ru": "банкротство",
+    "uz": "bankrotlik"
+  },
+  "be (held) responsible for": {
+    "ru": "нести ответственность за",
+    "uz": "javobgar bo‘lmoq"
+  },
+  "be in bad taste": {
+    "ru": "быть в плохом вкусе",
+    "uz": "yomon didda bo‘lmoq"
+  },
+  "be snowed under": {
+    "ru": "быть заваленным работой",
+    "uz": "ishga ko‘milmoq"
+  },
+  "become famous overnight": {
+    "ru": "прославиться за ночь",
+    "uz": "bir kechada mashhur bo‘lmoq"
+  },
+  "behaviour": {
+    "ru": "поведение",
+    "uz": "xulq-atvor"
+  },
+  "bias": {
+    "ru": "предвзятость",
+    "uz": "tarafdorlik"
+  },
+  "biased": {
+    "ru": "предвзятый",
+    "uz": "tarafdor"
+  },
+  "bilingual": {
+    "ru": "двуязычный",
+    "uz": "ikki tilli"
+  },
+  "billboard": {
+    "ru": "рекламный щит",
+    "uz": "reklama taxtasi"
+  },
+  "biofuel": {
+    "ru": "биотопливо",
+    "uz": "biyo yoqilg‘i"
+  },
+  "blue-collar": {
+    "ru": "рабочий (физический труд)",
+    "uz": "ko‘k yoqali (ishchi)"
+  },
+  "bottom line": {
+    "ru": "итог, чистая прибыль",
+    "uz": "asosiy natija"
+  },
+  "branding": {
+    "ru": "брендинг",
+    "uz": "brending"
+  },
+  "breathtaking": {
+    "ru": "захватывающий дух",
+    "uz": "hayratlanarli"
+  },
+  "breed": {
+    "ru": "разводить, порождать",
+    "uz": "nasl chiqarmoq"
+  },
+  "broadcast": {
+    "ru": "транслировать",
+    "uz": "eshittirmoq"
+  },
+  "broadcaster": {
+    "ru": "вещатель",
+    "uz": "eshittiruvchi"
+  },
+  "budget": {
+    "ru": "бюджет",
+    "uz": "byudjet"
+  },
+  "bureaucrat": {
+    "ru": "бюрократ",
+    "uz": "byurokrat"
+  },
+  "burrow": {
+    "ru": "нора",
+    "uz": "in"
+  },
+  "burst": {
+    "ru": "лопаться, взрываться",
+    "uz": "portlamoq"
+  },
+  "bygone": {
+    "ru": "былой, прошлый",
+    "uz": "o‘tgan"
+  },
+  "calculated risk": {
+    "ru": "продуманный риск",
+    "uz": "hisoblangan xavf"
+  },
+  "campus": {
+    "ru": "кампус",
+    "uz": "kampus"
+  },
+  "capital punishment": {
+    "ru": "смертная казнь",
+    "uz": "o‘lim jazosi"
+  },
+  "capsule": {
+    "ru": "капсула",
+    "uz": "kapsula"
+  },
+  "capture": {
+    "ru": "улавливать, захватывать",
+    "uz": "ushlamoq"
+  },
+  "carbon dioxide": {
+    "ru": "углекислый газ",
+    "uz": "karbonat angidrid"
+  },
+  "carbon footprint": {
+    "ru": "углеродный след",
+    "uz": "uglerod izi"
+  },
+  "carbon neutral": {
+    "ru": "углеродно нейтральный",
+    "uz": "uglerod neytral"
+  },
+  "case study": {
+    "ru": "кейс-стади",
+    "uz": "keys tadqiqot"
+  },
+  "casual dress": {
+    "ru": "повседневная одежда",
+    "uz": "kundalik kiyim"
+  },
+  "catastrophe": {
+    "ru": "катастрофа",
+    "uz": "falokat"
+  },
+  "catastrophic": {
+    "ru": "катастрофический",
+    "uz": "falokatli"
+  },
+  "catchy": {
+    "ru": "запоминающийся",
+    "uz": "esda qoladigan"
+  },
+  "cattle": {
+    "ru": "крупный рогатый скот",
+    "uz": "qoramol"
+  },
+  "chair a meeting": {
+    "ru": "вести заседание",
+    "uz": "yig‘ilishni boshqarmoq"
+  },
+  "characteristic": {
+    "ru": "характеристика, черта",
+    "uz": "xususiyat"
+  },
+  "charming": {
+    "ru": "очаровательный",
+    "uz": "maftunkor"
+  },
+  "chic": {
+    "ru": "шикарный",
+    "uz": "zamonaviy"
+  },
+  "chief claim to fame": {
+    "ru": "главная причина известности",
+    "uz": "mashhurlikning asosiy sababi"
+  },
+  "civil servant": {
+    "ru": "государственный служащий",
+    "uz": "davlat xizmatchisi"
+  },
+  "client": {
+    "ru": "клиент",
+    "uz": "mijoz"
+  },
+  "cloning": {
+    "ru": "клонирование",
+    "uz": "klonlash"
+  },
+  "clumsy": {
+    "ru": "неуклюжий",
+    "uz": "qo‘pol, noqulay"
+  },
+  "coast": {
+    "ru": "побережье",
+    "uz": "qirg‘oq"
+  },
+  "collide": {
+    "ru": "сталкиваться",
+    "uz": "to‘qnashmoq"
+  },
+  "colony": {
+    "ru": "колония",
+    "uz": "koloniya"
+  },
+  "colossal": {
+    "ru": "колоссальный",
+    "uz": "ulkan"
+  },
+  "comfortable": {
+    "ru": "удобный",
+    "uz": "qulay"
+  },
+  "communication": {
+    "ru": "общение, связь",
+    "uz": "aloqa"
+  },
+  "community": {
+    "ru": "сообщество",
+    "uz": "jamiyat"
+  },
+  "community service": {
+    "ru": "общественные работы",
+    "uz": "jamoat ishlari"
+  },
+  "compare": {
+    "ru": "сравнивать",
+    "uz": "taqqoslamoq"
+  },
+  "compelling": {
+    "ru": "убедительный",
+    "uz": "ishontiruvchi"
+  },
+  "compose a song": {
+    "ru": "сочинить песню",
+    "uz": "qo‘shiq yozmoq"
+  },
+  "compound": {
+    "ru": "соединение",
+    "uz": "birikma"
+  },
+  "concentration": {
+    "ru": "концентрация",
+    "uz": "diqqat"
+  },
+  "conceptual": {
+    "ru": "концептуальный",
+    "uz": "konseptual"
+  },
+  "conceptualisation": {
+    "ru": "концептуализация",
+    "uz": "konseptualizatsiya"
+  },
+  "concrete jungle": {
+    "ru": "бетонные джунгли",
+    "uz": "beton o‘rmon"
+  },
+  "condense": {
+    "ru": "конденсироваться",
+    "uz": "quyuqlashmoq"
+  },
+  "conduct": {
+    "ru": "проводить",
+    "uz": "o‘tkazmoq"
+  },
+  "conform": {
+    "ru": "соответствовать, подчиняться",
+    "uz": "moslashmoq"
+  },
+  "consequences": {
+    "ru": "последствия",
+    "uz": "oqibatlar"
+  },
+  "conservative": {
+    "ru": "консервативный",
+    "uz": "konservativ"
+  },
+  "conserve": {
+    "ru": "сохранять, беречь",
+    "uz": "saqlamoq"
+  },
+  "consistency": {
+    "ru": "последовательность, согласованность",
+    "uz": "izchillik"
+  },
+  "conspicuous": {
+    "ru": "заметный, броский",
+    "uz": "ko‘zga tashlanuvchi"
+  },
+  "consume": {
+    "ru": "потреблять",
+    "uz": "isteʼmol qilmoq"
+  },
+  "consumerism": {
+    "ru": "консьюмеризм",
+    "uz": "isteʼmolchilik"
+  },
+  "consumption": {
+    "ru": "потребление",
+    "uz": "isteʼmol"
+  },
+  "contagious": {
+    "ru": "заразный",
+    "uz": "yuqumli"
+  },
+  "contaminate": {
+    "ru": "загрязнять",
+    "uz": "ifloslantirmoq"
+  },
+  "contaminated": {
+    "ru": "заражённый, загрязнённый",
+    "uz": "ifloslangan"
+  },
+  "contend": {
+    "ru": "утверждать, спорить",
+    "uz": "daʼvo qilmoq"
+  },
+  "context": {
+    "ru": "контекст",
+    "uz": "kontekst"
+  },
+  "controversial": {
+    "ru": "спорный",
+    "uz": "bahsli"
+  },
+  "controversy": {
+    "ru": "спор, полемика",
+    "uz": "bahs"
+  },
+  "conventional": {
+    "ru": "традиционный, общепринятый",
+    "uz": "anʼanaviy"
+  },
+  "convert": {
+    "ru": "преобразовывать",
+    "uz": "o‘zgartirmoq"
+  },
+  "convicted criminal": {
+    "ru": "осуждённый преступник",
+    "uz": "hukm qilingan jinoyatchi"
+  },
+  "credit rating": {
+    "ru": "кредитный рейтинг",
+    "uz": "kredit reytingi"
+  },
+  "criminal activity": {
+    "ru": "преступная деятельность",
+    "uz": "jinoyat faoliyati"
+  },
+  "criminal offence": {
+    "ru": "уголовное преступление",
+    "uz": "jinoyat"
+  },
+  "criminal record": {
+    "ru": "судимость",
+    "uz": "sudlanganlik"
+  },
+  "crisis": {
+    "ru": "кризис",
+    "uz": "inqiroz"
+  },
+  "crucial": {
+    "ru": "важнейший",
+    "uz": "muhim"
+  },
+  "cultivate": {
+    "ru": "культивировать, развивать",
+    "uz": "rivojlantirmoq"
+  },
+  "culture": {
+    "ru": "культура",
+    "uz": "madaniyat"
+  },
+  "curb": {
+    "ru": "сдерживать",
+    "uz": "cheklamoq"
+  },
+  "current": {
+    "ru": "текущий; течение",
+    "uz": "joriy"
+  },
+  "cutback": {
+    "ru": "сокращение",
+    "uz": "qisqartirish"
+  },
+  "cutting-edge": {
+    "ru": "передовой",
+    "uz": "eng zamonaviy"
+  },
+  "cynical": {
+    "ru": "циничный",
+    "uz": "sinik"
+  },
+  "damage": {
+    "ru": "повреждать",
+    "uz": "zarar yetkazmoq"
+  },
+  "daunting": {
+    "ru": "пугающий, устрашающий",
+    "uz": "qo‘rqinchli"
+  },
+  "debris": {
+    "ru": "обломки",
+    "uz": "vayronalar"
+  },
+  "definition": {
+    "ru": "определение",
+    "uz": "taʼrif"
+  },
+  "deforestation": {
+    "ru": "вырубка лесов",
+    "uz": "o‘rmonlarni kesish"
+  },
+  "degradation": {
+    "ru": "деградация",
+    "uz": "degradatsiya"
+  },
+  "demise": {
+    "ru": "кончина, упадок",
+    "uz": "halokat"
+  },
+  "demographics": {
+    "ru": "демография",
+    "uz": "demografiya"
+  },
+  "demolish": {
+    "ru": "сносить, разрушать",
+    "uz": "buzmoq"
+  },
+  "dense": {
+    "ru": "плотный",
+    "uz": "zich"
+  },
+  "desalination": {
+    "ru": "опреснение",
+    "uz": "tuzsizlantirish"
+  },
+  "designer label": {
+    "ru": "дизайнерский бренд",
+    "uz": "dizayner belgisi"
+  },
+  "desirable": {
+    "ru": "желательный, желанный",
+    "uz": "istaladigan"
+  },
+  "devastation": {
+    "ru": "опустошение",
+    "uz": "vayronagarchilik"
+  },
+  "dilemma": {
+    "ru": "дилемма",
+    "uz": "dilemma"
+  },
+  "dilute": {
+    "ru": "разбавлять",
+    "uz": "suyultirmoq"
+  },
+  "disaster": {
+    "ru": "бедствие",
+    "uz": "ofat"
+  },
+  "disastrous": {
+    "ru": "бедственный",
+    "uz": "ofatli"
+  },
+  "discard": {
+    "ru": "выбрасывать",
+    "uz": "tashlamoq"
+  },
+  "dismal": {
+    "ru": "мрачный",
+    "uz": "g‘amgin"
+  },
+  "disposable income": {
+    "ru": "располагаемый доход",
+    "uz": "erkin daromad"
+  },
+  "dissertation": {
+    "ru": "диссертация",
+    "uz": "dissertatsiya"
+  },
+  "dissolve": {
+    "ru": "растворять(ся)",
+    "uz": "eritmoq"
+  },
+  "distracting": {
+    "ru": "отвлекающий",
+    "uz": "diqqatni chalg‘ituvchi"
+  },
+  "distributor": {
+    "ru": "дистрибьютор",
+    "uz": "tarqatuvchi"
+  },
+  "disturbing": {
+    "ru": "тревожный, беспокоящий",
+    "uz": "bezovta qiluvchi"
+  },
+  "do more harm than good": {
+    "ru": "причинять больше вреда, чем пользы",
+    "uz": "foydadan ko‘ra ko‘proq zarar"
+  },
+  "dose": {
+    "ru": "доза",
+    "uz": "doza"
+  },
+  "download": {
+    "ru": "загрузка",
+    "uz": "yuklab olish"
+  },
+  "drab": {
+    "ru": "унылый, тусклый",
+    "uz": "rang-barang emas"
+  },
+  "drama": {
+    "ru": "драма",
+    "uz": "drama"
+  },
+  "dramatic": {
+    "ru": "драматичный",
+    "uz": "dramatik"
+  },
+  "drought": {
+    "ru": "засуха",
+    "uz": "qurg‘oqchilik"
+  },
+  "dump": {
+    "ru": "сваливать, выбрасывать",
+    "uz": "dump qilmoq"
+  },
+  "dwell on": {
+    "ru": "зацикливаться на",
+    "uz": "ustida o‘ylamoq"
+  },
+  "dye": {
+    "ru": "красить",
+    "uz": "bo‘yamoq"
+  },
+  "earnings": {
+    "ru": "заработок",
+    "uz": "daromad"
+  },
+  "eccentric": {
+    "ru": "эксцентричный",
+    "uz": "g‘alatoy"
+  },
+  "echo": {
+    "ru": "эхо",
+    "uz": "aks-sado"
+  },
+  "eclipse": {
+    "ru": "затмение",
+    "uz": "tutulish"
+  },
+  "eco-friendly": {
+    "ru": "экологичный",
+    "uz": "ekologik toza"
+  },
+  "egotistical": {
+    "ru": "эгоистичный",
+    "uz": "egotsentrik"
+  },
+  "eminent": {
+    "ru": "выдающийся",
+    "uz": "mashhur"
+  },
+  "emissions": {
+    "ru": "выбросы",
+    "uz": "chiqindilar"
+  },
+  "emit": {
+    "ru": "выделять (газ)",
+    "uz": "chiqarmoq"
+  },
+  "employment": {
+    "ru": "занятость",
+    "uz": "bandlik"
+  },
+  "energy crisis": {
+    "ru": "энергетический кризис",
+    "uz": "energiya inqirozi"
+  },
+  "engraving": {
+    "ru": "гравюра",
+    "uz": "o‘yma"
+  },
+  "entertainment": {
+    "ru": "развлечение",
+    "uz": "ko‘ngilochar"
+  },
+  "entice": {
+    "ru": "завлекать",
+    "uz": "jaldab etmoq"
+  },
+  "episode": {
+    "ru": "эпизод",
+    "uz": "epizod"
+  },
+  "equity": {
+    "ru": "капитал, справедливость",
+    "uz": "kapital"
+  },
+  "era": {
+    "ru": "эра, эпоха",
+    "uz": "davr"
+  },
+  "eradicate": {
+    "ru": "искоренять",
+    "uz": "yo‘q qilmoq"
+  },
+  "erosion": {
+    "ru": "эрозия",
+    "uz": "eroziya"
+  },
+  "essential": {
+    "ru": "существенный, необходимый",
+    "uz": "zarur"
+  },
+  "establishment": {
+    "ru": "учреждение, создание",
+    "uz": "muassasa"
+  },
+  "evaporate": {
+    "ru": "испаряться",
+    "uz": "bug‘lanmoq"
+  },
+  "every cloud has a silver lining": {
+    "ru": "нет худа без добра",
+    "uz": "har bulutning yorug‘ tomoni bor"
+  },
+  "evolution": {
+    "ru": "эволюция",
+    "uz": "evolyutsiya"
+  },
+  "exacerbate": {
+    "ru": "обострять",
+    "uz": "kuchaytirmoq"
+  },
+  "exclude": {
+    "ru": "исключать",
+    "uz": "chiqarib tashlamoq"
+  },
+  "exhaust": {
+    "ru": "истощать; выхлоп",
+    "uz": "tugatmoq"
+  },
+  "existing": {
+    "ru": "существующий",
+    "uz": "mavjud"
+  },
+  "expand": {
+    "ru": "расширяться",
+    "uz": "kengaymoq"
+  },
+  "explode": {
+    "ru": "взрываться",
+    "uz": "portlamoq"
+  },
+  "exposure": {
+    "ru": "воздействие, подверженность",
+    "uz": "taʼsir"
+  },
+  "extend": {
+    "ru": "расширять",
+    "uz": "kengaytirmoq"
+  },
+  "fashion accessory": {
+    "ru": "аксессуар моды",
+    "uz": "moda aksessuari"
+  },
+  "fiction": {
+    "ru": "художественная литература",
+    "uz": "badiiy adabiyot"
+  },
+  "fictional": {
+    "ru": "вымышленный",
+    "uz": "xayoliy"
+  },
+  "fieldwork": {
+    "ru": "полевая работа",
+    "uz": "dala ishi"
+  },
+  "figurative": {
+    "ru": "переносный, образный",
+    "uz": "ko‘chma"
+  },
+  "finds": {
+    "ru": "находки",
+    "uz": "topilmalar"
+  },
+  "flaunt": {
+    "ru": "выставлять напоказ",
+    "uz": "ko‘z-ko‘z qilmoq"
+  },
+  "fleeting": {
+    "ru": "мимолетный",
+    "uz": "o‘kinchi"
+  },
+  "flooding": {
+    "ru": "наводнение",
+    "uz": "suv toshqini"
+  },
+  "flourish": {
+    "ru": "процветать",
+    "uz": "rivojlanmoq"
+  },
+  "flow": {
+    "ru": "течь",
+    "uz": "oqmoq"
+  },
+  "fluency": {
+    "ru": "беглость",
+    "uz": "ravonlik"
+  },
+  "flyer": {
+    "ru": "листовка",
+    "uz": "varoqa"
+  },
+  "follow accepted behaviour": {
+    "ru": "следовать принятому поведению",
+    "uz": "qabul qilingan xatti-harakatga rioya qilmoq"
+  },
+  "food chain": {
+    "ru": "пищевая цепь",
+    "uz": "oziq zanjiri"
+  },
+  "forage": {
+    "ru": "искать пищу",
+    "uz": "oziq izlamoq"
+  },
+  "formulation": {
+    "ru": "формулировка",
+    "uz": "shakllantirish"
+  },
+  "frantic": {
+    "ru": "нервный, лихорадочный",
+    "uz": "tashvishli"
+  },
+  "freezing": {
+    "ru": "морозный",
+    "uz": "muzlayotgan"
+  },
+  "fumes": {
+    "ru": "испарения, выхлопы",
+    "uz": "tutun"
+  },
+  "fungus": {
+    "ru": "грибок",
+    "uz": "zamburug‘"
+  },
+  "futuristic": {
+    "ru": "футуристический",
+    "uz": "futuristik"
+  },
+  "gain insight into": {
+    "ru": "понять глубже",
+    "uz": "chuqurroq tushunmoq"
+  },
+  "garbage collection": {
+    "ru": "вывоз мусора",
+    "uz": "axlat yig‘ish"
+  },
+  "genetically modified food": {
+    "ru": "генно-модифицированная еда",
+    "uz": "genetik o‘zgartirilgan oziq-ovqat"
+  },
+  "gimmick": {
+    "ru": "трюк, уловка",
+    "uz": "hiyla"
+  },
+  "gist": {
+    "ru": "суть",
+    "uz": "asosiy mazmun"
+  },
+  "give yourself something to aim for": {
+    "ru": "поставить себе цель",
+    "uz": "o‘zingizga maqsad qo‘ying"
+  },
+  "golden opportunity": {
+    "ru": "золотая возможность",
+    "uz": "oltin imkoniyat"
+  },
+  "gossip": {
+    "ru": "сплетничать",
+    "uz": "g‘iybat qilmoq"
+  },
+  "grammatical": {
+    "ru": "грамматический",
+    "uz": "grammatik"
+  },
+  "gravity": {
+    "ru": "гравитация",
+    "uz": "gravitatsiya"
+  },
+  "greenhouse gas": {
+    "ru": "парниковый газ",
+    "uz": "issiqxona gazi"
+  },
+  "gullible": {
+    "ru": "легковерный",
+    "uz": "ishonuvchan"
+  },
+  "habitat": {
+    "ru": "среда обитания",
+    "uz": "yashash muhiti"
+  },
+  "hands-on": {
+    "ru": "практический",
+    "uz": "amaliy"
+  },
+  "hardened criminal": {
+    "ru": "закоренелый преступник",
+    "uz": "qattiqqo‘l jinoyatchi"
+  },
+  "harm": {
+    "ru": "вред",
+    "uz": "zarar"
+  },
+  "harmonious": {
+    "ru": "гармоничный",
+    "uz": "totuv"
+  },
+  "harness": {
+    "ru": "использовать (энергию)",
+    "uz": "foydalanmoq"
+  },
+  "have diverse tastes": {
+    "ru": "иметь разнообразные вкусы",
+    "uz": "turli didlarga ega bo‘lmoq"
+  },
+  "have the time of your life": {
+    "ru": "отлично провести время",
+    "uz": "hayotining eng yaxshi vaqtini o‘tkazmoq"
+  },
+  "have time on your hands": {
+    "ru": "иметь свободное время",
+    "uz": "bo‘sh vaqti bo‘lmoq"
+  },
+  "headline": {
+    "ru": "заголовок",
+    "uz": "sarlavha"
+  },
+  "healthcare": {
+    "ru": "здравоохранение",
+    "uz": "sog‘liqni saqlash"
+  },
+  "heavy": {
+    "ru": "тяжёлый; сильный",
+    "uz": "og‘ir"
+  },
+  "herd": {
+    "ru": "стадо",
+    "uz": "poda"
+  },
+  "heritage": {
+    "ru": "наследие",
+    "uz": "meros"
+  },
+  "hibernate": {
+    "ru": "впадать в спячку",
+    "uz": "qishlaymoq"
+  },
+  "high-profile": {
+    "ru": "высокопрофильный",
+    "uz": "taniqli"
+  },
+  "high-rise building": {
+    "ru": "высотное здание",
+    "uz": "baland bino"
+  },
+  "hilarious": {
+    "ru": "уморительный",
+    "uz": "juda kulgili"
+  },
+  "hinder": {
+    "ru": "мешать",
+    "uz": "to‘sqinlik qilmoq"
+  },
+  "hive": {
+    "ru": "улей",
+    "uz": "ari uyasi"
+  },
+  "hoard": {
+    "ru": "копить, накапливать",
+    "uz": "yig‘ib qo‘ymoq"
+  },
+  "hostile": {
+    "ru": "враждебный",
+    "uz": "dushmanona"
+  },
+  "household name": {
+    "ru": "широко известное имя",
+    "uz": "hammaga tanish nom"
+  },
+  "housing estate": {
+    "ru": "жилой массив",
+    "uz": "turar joy massivi"
+  },
+  "hurdle": {
+    "ru": "препятствие",
+    "uz": "to‘siq"
+  },
+  "hypocritical": {
+    "ru": "лицемерный",
+    "uz": "riyo"
+  },
+  "hypothesis": {
+    "ru": "гипотеза",
+    "uz": "gipoteza"
+  },
+  "hypothetical": {
+    "ru": "гипотетический",
+    "uz": "gipotetik"
+  },
+  "idealised": {
+    "ru": "идеализированный",
+    "uz": "ideallashtirilgan"
+  },
+  "ignore": {
+    "ru": "игнорировать",
+    "uz": "eʼtibor bermaslik"
+  },
+  "imagination": {
+    "ru": "воображение",
+    "uz": "tasavvur"
+  },
+  "immense": {
+    "ru": "огромный",
+    "uz": "ulkan"
+  },
+  "impact": {
+    "ru": "воздействие, удар",
+    "uz": "taʼsir"
+  },
+  "impartial": {
+    "ru": "беспристрастный",
+    "uz": "xolis"
+  },
+  "imperceptible": {
+    "ru": "незаметный",
+    "uz": "sezilmas"
+  },
+  "improve": {
+    "ru": "улучшать",
+    "uz": "yaxshilamoq"
+  },
+  "in next to no time": {
+    "ru": "очень быстро, моментально",
+    "uz": "juda tez"
+  },
+  "in the blink of an eye": {
+    "ru": "в мгновение ока",
+    "uz": "ko‘z ochib yumguncha"
+  },
+  "in the cold light of day": {
+    "ru": "при трезвом взгляде",
+    "uz": "sovuq voqelikda"
+  },
+  "in the public eye": {
+    "ru": "на виду у публики",
+    "uz": "ommaviy eʼtiborda"
+  },
+  "in vogue": {
+    "ru": "в моде",
+    "uz": "modada"
+  },
+  "inconsiderate": {
+    "ru": "бестактный, невнимательный к другим",
+    "uz": "eʼtiborsiz"
+  },
+  "inconsistency": {
+    "ru": "непоследовательность",
+    "uz": "nomuvofiqlik"
+  },
+  "indecisive": {
+    "ru": "нерешительный",
+    "uz": "ikkilamchi"
+  },
+  "indicate": {
+    "ru": "указывать",
+    "uz": "ko‘rsatmoq"
+  },
+  "indicative": {
+    "ru": "указывающий, индикативный",
+    "uz": "ko‘rsatuvchi"
+  },
+  "induce": {
+    "ru": "побуждать, вызывать",
+    "uz": "undamoq"
+  },
+  "infection": {
+    "ru": "инфекция",
+    "uz": "infeksiya"
+  },
+  "infinitesimal": {
+    "ru": "ничтожно малый",
+    "uz": "juda kichik"
+  },
+  "influence": {
+    "ru": "влиять",
+    "uz": "taʼsir qilmoq"
+  },
+  "influential": {
+    "ru": "влиятельный",
+    "uz": "nufuzli"
+  },
+  "informal": {
+    "ru": "неформальный",
+    "uz": "norasmiy"
+  },
+  "information": {
+    "ru": "информация",
+    "uz": "maʼlumot"
+  },
+  "infuriating": {
+    "ru": "бесящий",
+    "uz": "g‘azablantiruvchi"
+  },
+  "inner-city slum": {
+    "ru": "городские трущобы",
+    "uz": "shahar markazidagi xonadon"
+  },
+  "innovate": {
+    "ru": "вносить новшества",
+    "uz": "innovatsiya qilmoq"
+  },
+  "inspiration": {
+    "ru": "вдохновение",
+    "uz": "ilhom"
+  },
+  "inspirational": {
+    "ru": "вдохновляющий",
+    "uz": "ilhomlantiruvchi"
+  },
+  "instant celebrities": {
+    "ru": "мгновенные знаменитости",
+    "uz": "tez mashhur bo‘lganlar"
+  },
+  "insurmountable": {
+    "ru": "непреодолимый",
+    "uz": "engib bo‘lmaydigan"
+  },
+  "interaction": {
+    "ru": "взаимодействие",
+    "uz": "o‘zaro taʼsir"
+  },
+  "interpret": {
+    "ru": "интерпретировать",
+    "uz": "talqin qilmoq"
+  },
+  "interpretation": {
+    "ru": "интерпретация",
+    "uz": "talqin"
+  },
+  "invasive": {
+    "ru": "навязчивый, вторгающийся",
+    "uz": "bosqinchi"
+  },
+  "irresponsible": {
+    "ru": "безответственный",
+    "uz": "masʼuliyatsiz"
+  },
+  "irritating": {
+    "ru": "раздражающий",
+    "uz": "asabga teguvchi"
+  },
+  "isolated": {
+    "ru": "изолированный",
+    "uz": "yakkalangan"
+  },
+  "jail": {
+    "ru": "сажать в тюрьму",
+    "uz": "qamoqqa tashlamoq"
+  },
+  "jingle": {
+    "ru": "рекламная мелодия",
+    "uz": "reklama kuysi"
+  },
+  "journal": {
+    "ru": "журнал",
+    "uz": "jurnal"
+  },
+  "juvenile crime": {
+    "ru": "преступность несовершеннолетних",
+    "uz": "voyaga yetmaganlar jinoyati"
+  },
+  "keep track of": {
+    "ru": "следить за",
+    "uz": "kuzatib bormoq"
+  },
+  "know which way the wind is blowing": {
+    "ru": "понимать, куда ветер дует",
+    "uz": "vaziyatni sezmoq"
+  },
+  "lava": {
+    "ru": "лава",
+    "uz": "lava"
+  },
+  "lay": {
+    "ru": "откладывать (яйца)",
+    "uz": "tuxum qo‘ymoq"
+  },
+  "leader of the opposition": {
+    "ru": "лидер оппозиции",
+    "uz": "oppozitsiya yetakchisi"
+  },
+  "lenient": {
+    "ru": "мягкий (о наказании)",
+    "uz": "yumshoq"
+  },
+  "lexical resource": {
+    "ru": "лексический запас",
+    "uz": "leksik resurs"
+  },
+  "life sentence": {
+    "ru": "пожизненное заключение",
+    "uz": "umrbod qamoq"
+  },
+  "lifespan": {
+    "ru": "продолжительность жизни",
+    "uz": "umr davomiyligi"
+  },
+  "long-term": {
+    "ru": "долгосрочный",
+    "uz": "uzoq muddatli"
+  },
+  "lose control of": {
+    "ru": "потерять контроль над",
+    "uz": "nazoratni yo‘qotmoq"
+  },
+  "luxury goods": {
+    "ru": "предметы роскоши",
+    "uz": "hashamatli tovarlar"
+  },
+  "magnificent": {
+    "ru": "великолепный",
+    "uz": "ulug‘vor"
+  },
+  "maintain": {
+    "ru": "поддерживать",
+    "uz": "saqlab turmoq"
+  },
+  "make a concerted effort": {
+    "ru": "приложить согласованные усилия",
+    "uz": "birgalikda harakat qilmoq"
+  },
+  "make a name for yourself": {
+    "ru": "сделать себе имя",
+    "uz": "o‘zingizga nom chiqarmoq"
+  },
+  "making headlines": {
+    "ru": "попадать в заголовки",
+    "uz": "sarlavhalarga chiqmoq"
+  },
+  "managerial": {
+    "ru": "управленческий",
+    "uz": "boshqaruv"
+  },
+  "manufacturer": {
+    "ru": "производитель",
+    "uz": "ishlab chiqaruvchi"
+  },
+  "marketing": {
+    "ru": "маркетинг",
+    "uz": "marketing"
+  },
+  "mass branding": {
+    "ru": "массовый брендинг",
+    "uz": "ommaviy brending"
+  },
+  "mayor": {
+    "ru": "мэр",
+    "uz": "hokim"
+  },
+  "means tested": {
+    "ru": "проверяемый по нуждаемости",
+    "uz": "daromadga qarab beriladigan"
+  },
+  "media attention": {
+    "ru": "внимание СМИ",
+    "uz": "media eʼtibori"
+  },
+  "melt": {
+    "ru": "таять",
+    "uz": "erimoq"
+  },
+  "member of parliament": {
+    "ru": "член парламента",
+    "uz": "parlament aʼzosi"
+  },
+  "memorable": {
+    "ru": "памятный",
+    "uz": "esda qolarli"
+  },
+  "microscopic": {
+    "ru": "микроскопический",
+    "uz": "mikroskopik"
+  },
+  "migrate": {
+    "ru": "мигрировать",
+    "uz": "ko‘chmoq"
+  },
+  "military service": {
+    "ru": "военная служба",
+    "uz": "harbiy xizmat"
+  },
+  "mining": {
+    "ru": "добыча полезных ископаемых",
+    "uz": "konchilik"
+  },
+  "minority": {
+    "ru": "меньшинство",
+    "uz": "ozchilik"
+  },
+  "minuscule": {
+    "ru": "крошечный",
+    "uz": "juda kichik"
+  },
+  "minute": {
+    "ru": "мельчайший",
+    "uz": "juda mayda"
+  },
+  "miscalculate": {
+    "ru": "просчитывать ошибочно",
+    "uz": "noto‘g‘ri hisoblamoq"
+  },
+  "misdiagnose": {
+    "ru": "неправильно диагностировать",
+    "uz": "noto‘g‘ri tashxis qo‘ymoq"
+  },
+  "misinform": {
+    "ru": "дезинформировать",
+    "uz": "noto‘g‘ri maʼlumot bermoq"
+  },
+  "misinterpret": {
+    "ru": "неправильно истолковать",
+    "uz": "noto‘g‘ri talqin qilmoq"
+  },
+  "misjudge": {
+    "ru": "неправильно оценить",
+    "uz": "noto‘g‘ri baholamoq"
+  },
+  "mislead": {
+    "ru": "вводить в заблуждение",
+    "uz": "chalg‘itmoq"
+  },
+  "mismanage": {
+    "ru": "плохо управлять",
+    "uz": "noto‘g‘ri boshqarmoq"
+  },
+  "mistrust": {
+    "ru": "не доверять",
+    "uz": "ishonmaslik"
+  },
+  "misunderstand": {
+    "ru": "неправильно понять",
+    "uz": "noto‘g‘ri tushunmoq"
+  },
+  "mitigate": {
+    "ru": "смягчать",
+    "uz": "yumshatmoq"
+  },
+  "moderate": {
+    "ru": "умеренный",
+    "uz": "o‘rtacha"
+  },
+  "monetary": {
+    "ru": "денежный",
+    "uz": "pulga oid"
+  },
+  "mountainous": {
+    "ru": "гористый",
+    "uz": "tog‘li"
+  },
+  "mugging": {
+    "ru": "уличное ограбление",
+    "uz": "ko‘cha taloni"
+  },
+  "multicultural": {
+    "ru": "мультикультурный",
+    "uz": "ko‘p madaniyatli"
+  },
+  "mundane": {
+    "ru": "обыденный",
+    "uz": "oddiy"
+  },
+  "native": {
+    "ru": "местный, исконный",
+    "uz": "mahalliy"
+  },
+  "natural": {
+    "ru": "натуральный, естественный",
+    "uz": "tabiiy"
+  },
+  "natural resources": {
+    "ru": "природные ресурсы",
+    "uz": "tabiiy resurslar"
+  },
+  "new-found fame": {
+    "ru": "новообретённая слава",
+    "uz": "yangi mashhurlik"
+  },
+  "nocturnal": {
+    "ru": "ночной",
+    "uz": "tunda faol"
+  },
+  "noise pollution": {
+    "ru": "шумовое загрязнение",
+    "uz": "shovqin ifloslanishi"
+  },
+  "norm": {
+    "ru": "норма",
+    "uz": "meʼyor"
+  },
+  "not have the foggiest idea": {
+    "ru": "не иметь ни малейшего понятия",
+    "uz": "hech narsa bilmaslik"
+  },
+  "notion": {
+    "ru": "понятие, представление",
+    "uz": "tushuncha"
+  },
+  "novice": {
+    "ru": "новичок",
+    "uz": "yangi boshlovchi"
+  },
+  "obey": {
+    "ru": "подчиняться",
+    "uz": "itoat qilmoq"
+  },
+  "oblige": {
+    "ru": "обязывать",
+    "uz": "majbur qilmoq"
+  },
+  "obstacle": {
+    "ru": "препятствие",
+    "uz": "to‘siq"
+  },
+  "offence": {
+    "ru": "правонарушение",
+    "uz": "jinoyat"
+  },
+  "old-age pension": {
+    "ru": "пенсия по старости",
+    "uz": "keksalik pensiyasi"
+  },
+  "ongoing": {
+    "ru": "текущий, продолжающийся",
+    "uz": "davom etayotgan"
+  },
+  "online retailer": {
+    "ru": "онлайн-ритейлер",
+    "uz": "onlayn sotuvchi"
+  },
+  "organic": {
+    "ru": "органический",
+    "uz": "organik"
+  },
+  "organised crime": {
+    "ru": "организованная преступность",
+    "uz": "uyushgan jinoyatchilik"
+  },
+  "outer suburbs": {
+    "ru": "далёкие пригороды",
+    "uz": "tashqi shahar atrofi"
+  },
+  "outrageous": {
+    "ru": "возмутительный",
+    "uz": "dahshatli"
+  },
+  "outweigh": {
+    "ru": "перевешивать",
+    "uz": "ustun kelmoq"
+  },
+  "overload": {
+    "ru": "перегрузка",
+    "uz": "ortiqcha yuk"
+  },
+  "overpopulated": {
+    "ru": "перенаселённый",
+    "uz": "haddan tashqari zich"
+  },
+  "pack": {
+    "ru": "стая",
+    "uz": "to‘da"
+  },
+  "paparazzi": {
+    "ru": "папарацци",
+    "uz": "paparatstsi"
+  },
+  "paraphrase": {
+    "ru": "перефразировать",
+    "uz": "qayta ifodalamoq"
+  },
+  "parasite": {
+    "ru": "паразит",
+    "uz": "parazit"
+  },
+  "peer": {
+    "ru": "сверстник",
+    "uz": "tengdosh"
+  },
+  "peer pressure": {
+    "ru": "давление сверстников",
+    "uz": "tengdoshlar bosimi"
+  },
+  "percentage": {
+    "ru": "процент",
+    "uz": "foiz"
+  },
+  "periodic": {
+    "ru": "периодический",
+    "uz": "davriy"
+  },
+  "personal consumption": {
+    "ru": "личное потребление",
+    "uz": "shaxsiy isteʼmol"
+  },
+  "persuasive": {
+    "ru": "убедительный",
+    "uz": "ishontiruvchi"
+  },
+  "pervasive": {
+    "ru": "всепроникающий",
+    "uz": "keng tarqalgan"
+  },
+  "pesticide": {
+    "ru": "пестицид",
+    "uz": "pestisid"
+  },
+  "petal": {
+    "ru": "лепесток",
+    "uz": "gul bargi"
+  },
+  "petrified": {
+    "ru": "окаменевший от страха",
+    "uz": "qo‘rquvdan qotgan"
+  },
+  "petrochemicals": {
+    "ru": "нефтехимия",
+    "uz": "neftkimyo mahsulotlari"
+  },
+  "petty crime": {
+    "ru": "мелкое преступление",
+    "uz": "mayda jinoyat"
+  },
+  "phonemic": {
+    "ru": "фонемический",
+    "uz": "fonemik"
+  },
+  "pierce": {
+    "ru": "пронзать",
+    "uz": "teshmoq"
+  },
+  "pioneer": {
+    "ru": "первопроходец",
+    "uz": "kashshof"
+  },
+  "planet": {
+    "ru": "планета",
+    "uz": "sayyora"
+  },
+  "ploy": {
+    "ru": "уловка",
+    "uz": "hiyla-nayrang"
+  },
+  "poach": {
+    "ru": "заниматься браконьерством",
+    "uz": "brakonyerlik qilmoq"
+  },
+  "precarious": {
+    "ru": "ненадёжный, опасный",
+    "uz": "xavfli"
+  },
+  "preceding": {
+    "ru": "предшествующий",
+    "uz": "oldingi"
+  },
+  "precious": {
+    "ru": "драгоценный",
+    "uz": "qimmatbaho"
+  },
+  "precious metal": {
+    "ru": "драгоценный металл",
+    "uz": "qimmatbaho metall"
+  },
+  "predicament": {
+    "ru": "затруднительное положение",
+    "uz": "qiyin ahvol"
+  },
+  "prehistoric": {
+    "ru": "доисторический",
+    "uz": "tarixdan oldingi"
+  },
+  "prejudiced": {
+    "ru": "предубеждённый",
+    "uz": "xurofotli"
+  },
+  "presentation": {
+    "ru": "презентация",
+    "uz": "taqdimot"
+  },
+  "preserve": {
+    "ru": "сохранять",
+    "uz": "muhofaza qilmoq"
+  },
+  "press": {
+    "ru": "пресса",
+    "uz": "matbuot"
+  },
+  "pressed for time": {
+    "ru": "ограничен во времени",
+    "uz": "vaqti oz"
+  },
+  "pressure": {
+    "ru": "давление",
+    "uz": "bosim"
+  },
+  "pressurise": {
+    "ru": "оказывать давление",
+    "uz": "bosim o‘tkazmoq"
+  },
+  "prey": {
+    "ru": "жертва, добыча",
+    "uz": "o‘lja"
+  },
+  "problematic": {
+    "ru": "проблемный",
+    "uz": "muammoli"
+  },
+  "productivity": {
+    "ru": "продуктивность",
+    "uz": "unumlilik"
+  },
+  "profound": {
+    "ru": "глубокий",
+    "uz": "chuqur"
+  },
+  "prolonged": {
+    "ru": "длительный",
+    "uz": "uzoq davom etgan"
+  },
+  "prominent": {
+    "ru": "видный",
+    "uz": "ko‘zga ko‘ringan"
+  },
+  "promotional": {
+    "ru": "рекламный, промо",
+    "uz": "reklama"
+  },
+  "pronunciation": {
+    "ru": "произношение",
+    "uz": "talaffuz"
+  },
+  "proposed": {
+    "ru": "предложенный",
+    "uz": "taklif etilgan"
+  },
+  "protein": {
+    "ru": "белок",
+    "uz": "oqsil"
+  },
+  "protracted": {
+    "ru": "затяжной",
+    "uz": "cho‘zilgan"
+  },
+  "puddle": {
+    "ru": "лужа",
+    "uz": "ko‘lmak"
+  },
+  "punish": {
+    "ru": "наказывать",
+    "uz": "jazolamoq"
+  },
+  "rapid": {
+    "ru": "быстрый",
+    "uz": "tez"
+  },
+  "reaction": {
+    "ru": "реакция",
+    "uz": "reaksiya"
+  },
+  "reassure": {
+    "ru": "успокаивать, уверять",
+    "uz": "tinchlantirmoq"
+  },
+  "rebate": {
+    "ru": "скидка, возврат части суммы",
+    "uz": "chegirma"
+  },
+  "rechargeable": {
+    "ru": "перезаряжаемый",
+    "uz": "zaryadlanadigan"
+  },
+  "rectify": {
+    "ru": "исправлять",
+    "uz": "tuzatmoq"
+  },
+  "recyclable": {
+    "ru": "подлежащий переработке",
+    "uz": "qayta ishlanadigan"
+  },
+  "reflect": {
+    "ru": "отражать",
+    "uz": "aks ettirmoq"
+  },
+  "release": {
+    "ru": "высвобождать, выпускать",
+    "uz": "chiqarmoq"
+  },
+  "remnants": {
+    "ru": "остатки, руины",
+    "uz": "qoldiqlar"
+  },
+  "remote": {
+    "ru": "отдалённый",
+    "uz": "oliso"
+  },
+  "renewable": {
+    "ru": "возобновляемый",
+    "uz": "qayta tiklanadigan"
+  },
+  "renovate": {
+    "ru": "ремонтировать",
+    "uz": "taʼmirlamoq"
+  },
+  "repel": {
+    "ru": "отталкивать",
+    "uz": "itarib yubormoq"
+  },
+  "repetitive": {
+    "ru": "повторяющийся",
+    "uz": "takroriy"
+  },
+  "replace": {
+    "ru": "заменять",
+    "uz": "almashtirmoq"
+  },
+  "reservoir": {
+    "ru": "водохранилище",
+    "uz": "suv ombori"
+  },
+  "resistant": {
+    "ru": "устойчивый",
+    "uz": "bardoshli"
+  },
+  "resolve": {
+    "ru": "разрешать (проблему)",
+    "uz": "hal qilmoq"
+  },
+  "retain": {
+    "ru": "удерживать, сохранять",
+    "uz": "saqlab qolmoq"
+  },
+  "retrospect": {
+    "ru": "ретроспектива",
+    "uz": "orqaga nazar"
+  },
+  "revolve": {
+    "ru": "вращаться вокруг",
+    "uz": "aylanmoq"
+  },
+  "risky": {
+    "ru": "рискованный",
+    "uz": "xatarli"
+  },
+  "rival": {
+    "ru": "соперник",
+    "uz": "raqib"
+  },
+  "robbery": {
+    "ru": "ограбление",
+    "uz": "o‘g‘irlik"
+  },
+  "rotate": {
+    "ru": "вращаться",
+    "uz": "aylantirmoq"
+  },
+  "rustic": {
+    "ru": "деревенский, сельский",
+    "uz": "qishloqcha"
+  },
+  "safety net": {
+    "ru": "система социальной защиты",
+    "uz": "ijtimoiy himoya tarmog‘i"
+  },
+  "sales representative": {
+    "ru": "торговый представитель",
+    "uz": "sotuv vakili"
+  },
+  "scale": {
+    "ru": "масштаб",
+    "uz": "miqyos"
+  },
+  "segment": {
+    "ru": "сегмент, часть",
+    "uz": "bo‘lim"
+  },
+  "self-absorbed": {
+    "ru": "поглощённый собой",
+    "uz": "o‘zini o‘ylagan"
+  },
+  "self-assured": {
+    "ru": "уверенный в себе",
+    "uz": "o‘ziga ishongan"
+  },
+  "self-centred": {
+    "ru": "эгоцентричный",
+    "uz": "o‘zini o‘ylagan"
+  },
+  "self-congratulatory": {
+    "ru": "самодовольный",
+    "uz": "o‘zini maqtaydigan"
+  },
+  "self-deprecating": {
+    "ru": "склонный к самоуничижению",
+    "uz": "o‘zini past ko‘radigan"
+  },
+  "self-important": {
+    "ru": "важительный, зазнавшийся",
+    "uz": "o‘zini katta hisoblagan"
+  },
+  "set yourself a goal": {
+    "ru": "поставить себе цель",
+    "uz": "o‘zingizga maqsad belgilang"
+  },
+  "setback": {
+    "ru": "неудача, откат",
+    "uz": "orqaga ketish"
+  },
+  "settle": {
+    "ru": "поселяться",
+    "uz": "joylashmoq"
+  },
+  "severe": {
+    "ru": "суровый, серьёзный",
+    "uz": "qattiq"
+  },
+  "sewage system": {
+    "ru": "канализационная система",
+    "uz": "kanalizatsiya tizimi"
+  },
+  "share the same taste": {
+    "ru": "иметь одинаковый вкус",
+    "uz": "bir xil didga ega bo‘lmoq"
+  },
+  "shore": {
+    "ru": "берег",
+    "uz": "qirg‘oq"
+  },
+  "shun mainstream values": {
+    "ru": "избегать ценностей большинства",
+    "uz": "asosiy qadriyatlardan qochmoq"
+  },
+  "side effects": {
+    "ru": "побочные эффекты",
+    "uz": "yon taʼsirlar"
+  },
+  "skew": {
+    "ru": "искажать, смещать",
+    "uz": "burib ko‘rsatmoq"
+  },
+  "slick": {
+    "ru": "глянцевый, ловкий",
+    "uz": "silliq, ustalangan"
+  },
+  "slogan": {
+    "ru": "слоган",
+    "uz": "shior"
+  },
+  "social services": {
+    "ru": "социальные службы",
+    "uz": "ijtimoiy xizmatlar"
+  },
+  "social well-being": {
+    "ru": "социальное благополучие",
+    "uz": "ijtimoiy farovonlik"
+  },
+  "sophisticated": {
+    "ru": "изысканный, сложный",
+    "uz": "murakkab"
+  },
+  "sow": {
+    "ru": "сеять",
+    "uz": "ekmoq"
+  },
+  "species": {
+    "ru": "вид (биол.)",
+    "uz": "tur"
+  },
+  "spectacular": {
+    "ru": "зрелищный",
+    "uz": "hayratlanarli"
+  },
+  "speculate": {
+    "ru": "строить догадки",
+    "uz": "taxmin qilmoq"
+  },
+  "spending patterns": {
+    "ru": "модели расходов",
+    "uz": "xarajat naqshlari"
+  },
+  "spin": {
+    "ru": "вращаться",
+    "uz": "aylanmoq"
+  },
+  "spine-chilling": {
+    "ru": "мороз по коже",
+    "uz": "dahshatli"
+  },
+  "spur": {
+    "ru": "стимулировать",
+    "uz": "undamoq"
+  },
+  "standard": {
+    "ru": "стандарт",
+    "uz": "standart"
+  },
+  "state": {
+    "ru": "государство",
+    "uz": "davlat"
+  },
+  "status": {
+    "ru": "статус",
+    "uz": "maqom"
+  },
+  "status quo": {
+    "ru": "существующее положение",
+    "uz": "mavjud holat"
+  },
+  "stem": {
+    "ru": "стебель",
+    "uz": "poya"
+  },
+  "stockpile": {
+    "ru": "запас, складывать запас",
+    "uz": "zaxira"
+  },
+  "strike": {
+    "ru": "ударять; бастовать",
+    "uz": "urmoq"
+  },
+  "stunning": {
+    "ru": "ошеломляющий",
+    "uz": "hayratlanarli"
+  },
+  "subjective": {
+    "ru": "субъективный",
+    "uz": "subyektiv"
+  },
+  "subsidise": {
+    "ru": "субсидировать",
+    "uz": "subsidiya bermoq"
+  },
+  "suburban": {
+    "ru": "пригородный",
+    "uz": "shahar atrofidagi"
+  },
+  "supplementary": {
+    "ru": "дополнительный",
+    "uz": "qo‘shimcha"
+  },
+  "supplies": {
+    "ru": "припасы, поставки",
+    "uz": "taʼminot"
+  },
+  "surface": {
+    "ru": "поверхность",
+    "uz": "sirt"
+  },
+  "sustainable": {
+    "ru": "устойчивый",
+    "uz": "barqaror"
+  },
+  "sustained": {
+    "ru": "продолжительный",
+    "uz": "uzoq davom etgan"
+  },
+  "swarm": {
+    "ru": "рой",
+    "uz": "to‘da"
+  },
+  "synonym": {
+    "ru": "синоним",
+    "uz": "sinonim"
+  },
+  "tabloid press": {
+    "ru": "бульварная пресса",
+    "uz": "tabloid matbuot"
+  },
+  "taboo": {
+    "ru": "табу",
+    "uz": "tabu"
+  },
+  "tactful": {
+    "ru": "тактичный",
+    "uz": "xushmuomala"
+  },
+  "take stock": {
+    "ru": "подводить итоги",
+    "uz": "hisob-kitob qilmoq"
+  },
+  "talented": {
+    "ru": "талантливый",
+    "uz": "iqtidorli"
+  },
+  "technician": {
+    "ru": "техник",
+    "uz": "texnik"
+  },
+  "technology": {
+    "ru": "технология",
+    "uz": "texnologiya"
+  },
+  "tedious": {
+    "ru": "нудный",
+    "uz": "zerikarli"
+  },
+  "telemarketing": {
+    "ru": "телемаркетинг",
+    "uz": "telemarketing"
+  },
+  "tempt": {
+    "ru": "искушать",
+    "uz": "vasvasa qilmoq"
+  },
+  "terrified": {
+    "ru": "ужаснувшийся",
+    "uz": "dahshatga tushgan"
+  },
+  "terrifying": {
+    "ru": "ужасающий",
+    "uz": "dahshatli"
+  },
+  "the calm before the storm": {
+    "ru": "тишь перед бурей",
+    "uz": "bo‘rondan oldingi tinchlik"
+  },
+  "the latest trend": {
+    "ru": "последний тренд",
+    "uz": "eng so‘nggi moda"
+  },
+  "theorist": {
+    "ru": "теоретик",
+    "uz": "nazariyachi"
+  },
+  "there aren't enough hours in the day": {
+    "ru": "не хватает времени в сутках",
+    "uz": "kunda soat yetmaydi"
+  },
+  "threshold": {
+    "ru": "порог",
+    "uz": "chegara"
+  },
+  "thrilling": {
+    "ru": "захватывающий",
+    "uz": "hayajonli"
+  },
+  "thrive": {
+    "ru": "процветать",
+    "uz": "gullab-yashnamoq"
+  },
+  "tide": {
+    "ru": "прилив/отлив",
+    "uz": "suv oqimi"
+  },
+  "time goes so fast": {
+    "ru": "время летит так быстро",
+    "uz": "vaqt juda tez o‘tadi"
+  },
+  "topical": {
+    "ru": "актуальный",
+    "uz": "dolzarb"
+  },
+  "torrential": {
+    "ru": "ливневый",
+    "uz": "sel"
+  },
+  "traditional dress": {
+    "ru": "традиционная одежда",
+    "uz": "anʼanaviy kiyim"
+  },
+  "traffic congestion": {
+    "ru": "транспортная загруженность",
+    "uz": "yo‘l tirbandligi"
+  },
+  "trait": {
+    "ru": "черта характера",
+    "uz": "xislat"
+  },
+  "tranquil": {
+    "ru": "спокойный",
+    "uz": "tinch"
+  },
+  "transient": {
+    "ru": "преходящий",
+    "uz": "vaqtinchalik"
+  },
+  "transition": {
+    "ru": "переход",
+    "uz": "o‘tish"
+  },
+  "translation": {
+    "ru": "перевод",
+    "uz": "tarjima"
+  },
+  "tremendous": {
+    "ru": "огромный, громадный",
+    "uz": "juda katta"
+  },
+  "tremor": {
+    "ru": "толчок, дрожь",
+    "uz": "titrash"
+  },
+  "trend": {
+    "ru": "тенденция",
+    "uz": "tendensiya"
+  },
+  "tropical": {
+    "ru": "тропический",
+    "uz": "tropik"
+  },
+  "turbulent": {
+    "ru": "бурный, неспокойный",
+    "uz": "notinch"
+  },
+  "tutor": {
+    "ru": "тьютор, репетитор",
+    "uz": "tutor"
+  },
+  "tutorial": {
+    "ru": "семинар / тьюториал",
+    "uz": "tutorlik mashg‘uloti"
+  },
+  "ubiquitous": {
+    "ru": "вездесущий",
+    "uz": "hamma joyda uchraydigan"
+  },
+  "unavoidable": {
+    "ru": "неизбежный",
+    "uz": "muqarrar"
+  },
+  "unconventional": {
+    "ru": "нетрадиционный",
+    "uz": "noodatiy"
+  },
+  "underlying causes": {
+    "ru": "глубинные причины",
+    "uz": "asosiy sabablar"
+  },
+  "unemployment benefit": {
+    "ru": "пособие по безработице",
+    "uz": "ishsizlik nafaqasi"
+  },
+  "unleaded": {
+    "ru": "неэтилированный",
+    "uz": "qo‘rg‘oshinsiz"
+  },
+  "urban sprawl": {
+    "ru": "расползание городов",
+    "uz": "shahar kengayishi"
+  },
+  "urge": {
+    "ru": "призывать, убеждать",
+    "uz": "chaqirmoq"
+  },
+  "vandalism": {
+    "ru": "вандализм",
+    "uz": "vandalizm"
+  },
+  "vendor": {
+    "ru": "продавец, поставщик",
+    "uz": "sotuvchi"
+  },
+  "venomous": {
+    "ru": "ядовитый",
+    "uz": "zaharli"
+  },
+  "vicious circle": {
+    "ru": "порочный круг",
+    "uz": "yomon doira"
+  },
+  "viewer": {
+    "ru": "зритель",
+    "uz": "tomoshabin"
+  },
+  "violence": {
+    "ru": "насилие",
+    "uz": "zo‘ravonlik"
+  },
+  "virtual": {
+    "ru": "виртуальный",
+    "uz": "virtual"
+  },
+  "vocation": {
+    "ru": "призвание, профессия",
+    "uz": "kasb"
+  },
+  "weather the storm": {
+    "ru": "пережить трудные времена",
+    "uz": "qiyinchilikni engmoq"
+  },
+  "well-adjusted": {
+    "ru": "хорошо адаптированный",
+    "uz": "moslashgan"
+  },
+  "well-bred": {
+    "ru": "хорошо воспитанный",
+    "uz": "tarbiyali"
+  },
+  "well-brought-up": {
+    "ru": "хорошо воспитанный",
+    "uz": "yaxshi tarbiyalangan"
+  },
+  "well-dressed": {
+    "ru": "хорошо одетый",
+    "uz": "chiroyli kiyingan"
+  },
+  "win-win situation": {
+    "ru": "ситуация, выгодная всем",
+    "uz": "ikkala tomon uchun foydali"
+  },
+  "wind farm": {
+    "ru": "ветряная электростанция",
+    "uz": "shamollik stansiya"
+  },
+  "world-famous": {
+    "ru": "всемирно известный",
+    "uz": "dunyo miqyosida mashhur"
+  }
+}

@@ -8,6 +8,7 @@ import {
   getUnitAnswerKey,
   gradeLiveExerciseAnswers,
 } from "./book-exercise-grade.service.js"
+import { assignUnitVocabHomework } from "./unit-vocab-homework.service.js"
 
 const ACTIVE_STATUSES = ["idle", "active", "paused"]
 const STUDENT_STATUSES = new Set(["offline", "online", "working", "done"])
@@ -384,7 +385,8 @@ export async function assignUnit(sessionId, unitNumber) {
   return session
 }
 
-/** Mark the assigned unit complete so the teacher can assign the next one. */
+/** Mark the assigned unit complete so the teacher can assign the next one.
+ * Also auto-assigns the matching Cambridge unit vocabulary homework. */
 export async function completeUnit(sessionId) {
   const session = await getById(sessionId)
   if (session.lessonStatus === "finished") {
@@ -396,6 +398,16 @@ export async function completeUnit(sessionId) {
   session.unitCompleted = true
   session.openForStudents = false
   await session.save()
+
+  try {
+    await assignUnitVocabHomework(session)
+  } catch (err) {
+    console.error(
+      `[live-lesson] failed to auto-assign vocab homework for unit ${session.currentUnit}:`,
+      err?.message || err,
+    )
+  }
+
   return session
 }
 
