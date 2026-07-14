@@ -158,6 +158,47 @@ export async function uploadIeltsListeningAudio({ buffer, slug, publicBaseUrl })
   return uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl })
 }
 
+/**
+ * Upload a curriculum book CD track with a stable key per track number.
+ * @param {{ buffer: Buffer, bookId: string, track: string, publicBaseUrl?: string, requireS3?: boolean }} opts
+ * `track` should be zero-padded digits only, e.g. "02", "09", "44".
+ */
+export async function uploadBookListeningTrack({
+  buffer,
+  bookId,
+  track,
+  publicBaseUrl,
+  requireS3 = false,
+}) {
+  const safeBook = String(bookId || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+  const nn = String(track || "")
+    .trim()
+    .replace(/^D/i, "")
+    .padStart(2, "0")
+  if (!safeBook || !/^\d{2,}$/.test(nn)) {
+    throw new Error(`Invalid bookId/track for book audio upload: ${bookId}/${track}`)
+  }
+
+  const key = `books/${safeBook}/tracks/${nn}.mp3`
+  const mimeType = "audio/mpeg"
+
+  if (env.s3.enabled) {
+    try {
+      return await uploadImageToS3({ buffer, mimeType, key })
+    } catch (err) {
+      console.error("[s3] book track upload failed:", err?.message ?? err)
+      if (isProd || requireS3) throw err
+      console.warn("[s3] falling back to local book track storage (development only)")
+    }
+  } else if (isProd || requireS3) {
+    throw new Error("S3 storage is not configured")
+  }
+
+  return uploadImageToLocal({ buffer, mimeType, key, publicBaseUrl })
+}
+
 export async function uploadAvatar({ buffer, mimeType, userId, publicBaseUrl }) {
   const ext = imageExtForMime(mimeType)
   const key = `avatars/${userId}.${ext}`

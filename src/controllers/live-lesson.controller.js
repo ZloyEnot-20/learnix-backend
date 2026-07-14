@@ -42,8 +42,15 @@ export const getBook = asyncHandler(async (req, res) => {
       exerciseIds: bookService.flattenUnitExerciseIds(u),
       pages: (book.pages ?? []).filter((p) => Number(p.unit) === Number(u.unit_number)),
     })),
-    // Full unit payloads are fetched per-unit; answer_key only for staff
-    ...(staff ? { answer_key: book.answer_key ?? {} } : {}),
+    // Full unit payloads are fetched per-unit; answer_key / CD URLs only for staff
+    ...(staff
+      ? {
+          answer_key: book.answer_key ?? {},
+          ...(book.audio_urls && Object.keys(book.audio_urls).length > 0
+            ? { audio_urls: book.audio_urls }
+            : {}),
+        }
+      : {}),
   })
 })
 

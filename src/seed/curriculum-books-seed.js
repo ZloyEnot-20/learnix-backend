@@ -33,6 +33,16 @@ export async function seedCurriculumBooks() {
   const meta = data.book ?? {}
   const readyUnitCount = countReadyUnits(units)
 
+  // Keep previously uploaded CD track URLs when re-seeding unit JSON.
+  const existing = await CurriculumBook.findById(BOOK_ID).select("data.audio_urls").lean()
+  const existingAudioUrls =
+    existing?.data?.audio_urls && typeof existing.data.audio_urls === "object"
+      ? existing.data.audio_urls
+      : null
+  const fileAudioUrls =
+    data.audio_urls && typeof data.audio_urls === "object" ? data.audio_urls : null
+  const audio_urls = fileAudioUrls ?? existingAudioUrls
+
   await CurriculumBook.updateOne(
     { _id: BOOK_ID },
     {
@@ -49,6 +59,7 @@ export async function seedCurriculumBooks() {
           answer_key: data.answer_key ?? {},
           ...(Array.isArray(data.pages) ? { pages: data.pages } : {}),
           ...(data.tests ? { tests: data.tests } : {}),
+          ...(audio_urls ? { audio_urls } : {}),
         },
         unitCount: units.length,
         readyUnitCount,

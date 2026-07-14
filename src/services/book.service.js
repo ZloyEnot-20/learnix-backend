@@ -147,6 +147,10 @@ function toBookDoc(row) {
     units: data.units ?? [],
     pages: Array.isArray(data.pages) ? data.pages : [],
     answer_key: data.answer_key ?? {},
+    audio_urls:
+      data.audio_urls && typeof data.audio_urls === "object" && !Array.isArray(data.audio_urls)
+        ? data.audio_urls
+        : {},
     tests: data.tests,
     unitCount: row.unitCount ?? (data.units?.length ?? 0),
     readyUnitCount: row.readyUnitCount ?? 0,
@@ -268,5 +272,8 @@ export async function getUnit(bookId, unitNumber, { includeAnswers = true } = {}
     unit: safeUnit,
     exerciseIds: flattenUnitExerciseIds(unit),
     answer_key: answerKey,
+    ...(includeAnswers && book.audio_urls && Object.keys(book.audio_urls).length > 0
+      ? { audio_urls: book.audio_urls }
+      : {}),
   }
 }

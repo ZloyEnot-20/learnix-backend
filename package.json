@@ -11,6 +11,7 @@
     "seed": "node src/seed/seed.js",
     "seed:books": "node src/scripts/seed-books-only.mjs",
     "seed:cambridge-vocab": "node src/scripts/seed-cambridge-vocab.mjs",
+    "seed:cambridge-audio": "node src/scripts/seed-cambridge-vocab-audio.mjs",
     "seed:speaking": "node src/seed/speaking-seed.js",
     "seed:reading": "node src/seed/ielts-reading-seed.js",
     "seed:listening": "node src/seed/ielts-listening-seed.js",
