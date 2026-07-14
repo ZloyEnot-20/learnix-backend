@@ -28,6 +28,7 @@ router.get(
 )
 
 // Teacher session control
+router.get("/", isStaff, ctrl.listLiveLessons)
 router.post("/", isStaff, validate(createLiveLessonSchema), ctrl.createLiveLesson)
 
 // Student: active lesson for their group (must be before /:id)

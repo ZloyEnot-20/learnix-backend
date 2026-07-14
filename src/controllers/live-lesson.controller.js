@@ -55,6 +55,15 @@ export const getBookUnit = asyncHandler(async (req, res) => {
   res.json(result)
 })
 
+/** Teacher: org catalog of open + finished live lessons. */
+export const listLiveLessons = asyncHandler(async (req, res) => {
+  const { orgId } = withOrgId(req)
+  const data = await liveLessonService.listSessions(orgId, {
+    limit: req.query.limit,
+  })
+  res.json(data)
+})
+
 export const createLiveLesson = asyncHandler(async (req, res) => {
   const { groupId, bookId, unitNumber } = req.body
   const group = assertSelectableGroup(await assertOrgGroup(groupId, req))

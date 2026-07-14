@@ -198,6 +198,52 @@ export async function getActiveForStudent(studentId) {
 }
 
 /**
+ * Org-scoped lesson catalog for teachers: open rooms first, then finished history.
+ */
+export async function listSessions(orgId, { limit = 40 } = {}) {
+  if (!orgId) throw ApiError.forbidden("Organization context required")
+  const capped = Math.min(Math.max(Number(limit) || 40, 1), 100)
+
+  const rows = await LiveLesson.find({ orgId: String(orgId) })
+    .sort({ updatedAt: -1 })
+    .limit(capped)
+    .select(
+      "code groupId bookId teacherId currentUnit currentExercise lessonStatus openForStudents unitCompleted createdAt updatedAt startedAt finishedAt students",
+    )
+    .lean()
+
+  const mapped = rows.map((row) => ({
+    id: String(row._id),
+    code: row.code,
+    groupId: row.groupId,
+    bookId: row.bookId,
+    teacherId: row.teacherId,
+    currentUnit: row.currentUnit ?? null,
+    currentExercise: row.currentExercise ?? null,
+    lessonStatus: row.lessonStatus,
+    openForStudents: Boolean(row.openForStudents),
+    unitCompleted: Boolean(row.unitCompleted),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    startedAt: row.startedAt ?? null,
+    finishedAt: row.finishedAt ?? null,
+    studentCount: Array.isArray(row.students) ? row.students.length : 0,
+    onlineCount: Array.isArray(row.students)
+      ? row.students.filter((s) => s.status === "online" || s.status === "finished" || s.status === "working" || s.status === "done").length
+      : 0,
+  }))
+
+  const openRank = (status) => (status === "finished" ? 1 : 0)
+  mapped.sort((a, b) => {
+    const byStatus = openRank(a.lessonStatus) - openRank(b.lessonStatus)
+    if (byStatus !== 0) return byStatus
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  })
+
+  return mapped
+}
+
+/**
  * Join the active lesson for the student's group (membership via groupId).
  */
 export async function studentJoinActive(studentId) {
