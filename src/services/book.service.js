@@ -1,6 +1,7 @@
 import { CurriculumBook } from "../models/CurriculumBook.js"
 import { ApiError } from "../utils/ApiError.js"
 import { seedCurriculumBooks, BOOK_ID as SEED_BOOK_ID } from "../seed/curriculum-books-seed.js"
+import { repairListeningAudioTracks } from "../utils/repair-listening-audio.js"
 
 export const BOOK_ID = SEED_BOOK_ID
 
@@ -175,19 +176,23 @@ export async function loadBook(bookId) {
     row = await CurriculumBook.findOne({ _id: id, published: true })
   }
 
-  // Refresh seed when curriculum pages are missing, units incomplete, or tests not yet imported.
+  // Refresh seed when curriculum pages are missing, units incomplete, tests missing,
+  // or broken listening markers (D??) are still present in stored data.
   if (row && id === BOOK_ID) {
     const pages = row.data?.pages
     const ready = Number(row.readyUnitCount ?? 0)
     const total = Number(row.unitCount ?? 0)
     const tests = row.data?.tests
+    const rawBlob = JSON.stringify(row.data ?? {})
+    const hasBrokenAudio = /D\?\?|"audio(?:_track)?"\s*:\s*"[^"]*\?[^"]*"/i.test(rawBlob)
     const needsRefresh =
       !Array.isArray(pages) ||
       pages.length === 0 ||
       ready < total ||
       total < 25 ||
       !Array.isArray(tests) ||
-      tests.length < 3
+      tests.length < 3 ||
+      hasBrokenAudio
     if (needsRefresh) {
       await seedCurriculumBooks()
       row = await CurriculumBook.findOne({ _id: id, published: true })
@@ -197,6 +202,19 @@ export async function loadBook(bookId) {
   if (!row) throw ApiError.notFound(`Book not found: ${id}`)
 
   const doc = toBookDoc(row)
+  // Scrub broken "D??" markers before serving/caching.
+  if (Array.isArray(doc.units)) {
+    const changes = repairListeningAudioTracks(doc)
+    if (changes > 0 && id === BOOK_ID) {
+      // Persist once so production/dev stop serving OCR garbage after deploy.
+      CurriculumBook.updateOne(
+        { _id: id },
+        { $set: { "data.units": doc.units } },
+      ).catch((err) => {
+        console.warn("[books] failed to persist audio track repair:", err?.message || err)
+      })
+    }
+  }
   cacheSet(id, doc)
   return doc
 }

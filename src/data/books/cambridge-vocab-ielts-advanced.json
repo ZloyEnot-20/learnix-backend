@@ -1301,7 +1301,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D10",
               "instruction": "Listen to two people talking about studying. Which of the ideas in 1.1 are they talking about?",
               "speaker1": null,
               "speaker2": null,
@@ -1309,7 +1309,7 @@
             },
             {
               "type": "collocation",
-              "audio": "D10",
+              "audio": "D11",
               "instruction": "Now listen again and read recording script 10 at the back of the book. Highlight or underline the phrases connected with study and motivation.",
               "exercise_id": "1.3"
             },
@@ -1407,7 +1407,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D12",
               "instruction": "Listen to a talk about employment and complete the notes using NO MORE THAN TWO WORDS for each answer.",
               "notes": [
                 "Previous beliefs: need to be a graduate to get a job with good career prospects; not attending university will limit you to work in the 1. ______ sector",
@@ -1601,7 +1601,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D13",
               "instruction": "Listen to two people discussing advertising. Which types of advert/advertising do they mention?",
               "speakers": [
                 {
@@ -1639,7 +1639,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D14",
               "instruction": "Now listen to a third speaker. He describes four types of advert/advertising. What are they?",
               "exercise_id": "1.4"
             }
@@ -2012,7 +2012,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D15",
               "instruction": "Listen to a description of the place and note the adjectives you hear which describe these nouns.",
               "nouns": [
                 "place",
@@ -2180,7 +2180,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D16",
               "instruction": "Listen to a talk about the history of air travel in the USA and complete the timeline below with NO MORE THAN TWO WORDS for each answer.",
               "timeline": [
                 {
@@ -2709,7 +2709,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D18",
               "instruction": "Listen to three speakers and decide which question in 1.1 each of them is answering. Is their attitude negative or neutral?",
               "speakers": [
                 {
@@ -2732,7 +2732,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D19",
               "instruction": "Listen again and note the adjectives in the box that you hear.",
               "adjectives": [
                 "appalling",
@@ -3396,7 +3396,7 @@
           "exercises": [
             {
               "type": "pronunciation",
-              "audio": "D19",
+              "audio": "D20",
               "instruction": "The following words all end in the weak sound /ʒən/ or /ʃən/. Listen to the recording and decide whether the words end in /ʒən/ or /ʃən/.",
               "words": {
                 "collision": null,
@@ -3433,7 +3433,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D21",
               "instruction": "Complete the table below. Write NO MORE THAN TWO WORDS for each answer.",
               "table": {
                 "columns": [
@@ -3518,7 +3518,7 @@
             }
           ],
           "instruction": "Complete the table below. Write NO MORE THAN TWO WORDS for each answer.",
-          "audio_track": "D??",
+          "audio_track": "D21",
           "subtype": "Listening Section 4"
         }
       ]
@@ -3787,7 +3787,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D21",
+              "audio": "D22",
               "instruction": "You will hear a talk about Leonardo da Vinci. Listen and complete the notes below with NO MORE THAN ONE WORD for each answer.",
               "notes": {
                 "introduction": [
@@ -3877,7 +3877,7 @@
           "exercises": [
             {
               "type": "pronunciation",
-              "audio": "D22",
+              "audio": "D23",
               "instruction": "Underline the syllable with the main stress in these words. Then listen to check, and practise saying the words.",
               "words": [
                 "technology",
@@ -3894,7 +3894,7 @@
             },
             {
               "type": "pronunciation",
-              "audio": "D23",
+              "audio": "D24",
               "instruction": "Now listen to these phrases. Practise saying them, paying attention to the stress.",
               "phrases": [
                 "communication technology",
@@ -3940,7 +3940,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D25",
               "instruction": "Listen to a woman talking about fashion. What does she say about following fashion? Choose A, B or C.",
               "options": [
                 "A She realised the problems with fashion at an early age.",
@@ -3952,7 +3952,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D26",
               "instruction": "Now listen again and complete the sentences.",
               "sentences": [
                 {
@@ -4271,7 +4271,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D25",
+              "audio": "D27",
               "instruction": "Listen to two people talking about where they live. Decide whether they live in a rural or urban area.",
               "speakers": [
                 {
@@ -4287,7 +4287,7 @@
             },
             {
               "type": "listening",
-              "audio": "D25",
+              "audio": "D27",
               "instruction": "Now listen again and make a note of the advantages and disadvantages of rural life that the speakers mention.",
               "speakers": [
                 {
@@ -4503,7 +4503,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D28",
               "instruction": "Listen to a talk about urbanisation and answer the questions with NO MORE THAN THREE WORDS AND/OR A NUMBER for each answer.",
               "questions": [
                 {
@@ -4863,7 +4863,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D29",
               "instruction": "Listen to five people. Which problem in 1 is each person talking about?",
               "speakers": [
                 {
@@ -4891,7 +4891,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D30",
               "instruction": "Now listen again and complete the table above with expressions used to talk about dealing with problems.",
               "exercise_id": "5.3"
             }
@@ -5358,7 +5358,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D29",
+              "audio": "D31",
               "instruction": "Listen to a talk and complete the table with no more than ONE WORD for each answer.",
               "table": {
                 "rows": [
@@ -5473,7 +5473,7 @@
             },
             {
               "type": "listening",
-              "audio": "D29",
+              "audio": "D31",
               "instruction": "Now listen again while reading recording script 29 at the back of the book. Highlight or underline all the words and phrases used to show cause and effect.",
               "exercise_id": "5.2"
             }
@@ -5526,13 +5526,13 @@
             },
             {
               "type": "listening",
-              "audio": "D31",
+              "audio": "D32",
               "instruction": "Listen to a conversation between two students. Which types of power do they think are a good idea?",
               "exercise_id": "1.3"
             },
             {
               "type": "listening",
-              "audio": "D31",
+              "audio": "D32",
               "instruction": "Now listen again and note the phrases in 1.1 and 1.2 that you hear.",
               "exercise_id": "1.4"
             },
@@ -5725,7 +5725,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D32",
+              "audio": "D33",
               "instruction": "Listen to a talk about the history of mining in Australia and match the dates (1–5) with the events (A–H) in the box.",
               "dates": [
                 {
@@ -6508,7 +6508,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D37",
               "instruction": "Now listen to a conversation between Paul and Vickie and decide whether the opinions in 1.1 apply to Paul, Vickie or both.",
               "answers": {
                 "opinion_1": null,
@@ -6805,7 +6805,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D38",
               "instruction": "Listen to a recording and label the map. Write the correct letter A–H next to questions 1–6.",
               "places": [
                 {
@@ -7946,13 +7946,13 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D39",
               "instruction": "Listen and circle the number that you hear.",
               "exercise_id": "1.2"
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D40",
               "instruction": "Listen and complete the sentences with NO MORE THAN THREE WORDS AND/OR A NUMBER.",
               "sentences": [
                 {
@@ -7981,7 +7981,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D41",
               "instruction": "Listen and match the ideas in A–E with the ideas that you hear (1–5).",
               "ideas": [
                 "A. You need to be physically fit.",
@@ -8092,7 +8092,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D42",
               "instruction": "Context is important because many words can have more than one meaning. Listen and circle the synonym of the words in bold that match the context that you hear.",
               "words": [
                 {
@@ -8155,7 +8155,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D43",
               "instruction": "In the Listening test, you may be asked to match possible answers with the questions. Look at the question below. Before you listen, underline key words that you will need to listen out for.",
               "question": {
                 "instruction": "Listen to two students discussing animal psychology. Choose three answers from the box and write the correct letter (A–F) next to questions 1–3.",
@@ -8352,7 +8352,7 @@
             },
             {
               "type": "listening",
-              "audio": "D??",
+              "audio": "D44",
               "instruction": "Listen to the recording again. Which words from 4.3 are used by the students?",
               "exercise_id": "4.5"
             }
@@ -8364,7 +8364,7 @@
           "exercises": [
             {
               "type": "listening",
-              "audio": "D44",
+              "audio": "D45",
               "instruction": "In Section 4, you may be asked to complete a set of notes. Listen and complete the notes below with NO MORE THAN ONE WORD for each answer.",
               "notes": {
                 "title": "Animal Intelligence",
