@@ -119,6 +119,43 @@ function gradeSpeakers(payload, answerKey) {
   return { correct, total: items.length, items }
 }
 
+function gradeByNumberMap(byNumber, answerKey) {
+  if (!isRecord(answerKey)) return { correct: 0, total: 0, items: [] }
+  const items = Object.entries(answerKey).map(([id, expected]) => {
+    const given = byNumber?.[id] ?? ""
+    const ok = matchesKey(given, expected)
+    return {
+      id,
+      label: `Q${id}`,
+      given: given || "—",
+      expected: String(expected),
+      ok,
+    }
+  })
+  const correct = items.filter((i) => i.ok).length
+  return { correct, total: items.length, items }
+}
+
+function gradeChecklist(selected, answerKey) {
+  const expected = Array.isArray(answerKey) ? answerKey : []
+  const selectedNorm = new Set(
+    (Array.isArray(selected) ? selected : []).map((value) => normalize(value)),
+  )
+  const items = expected.map((word, index) => {
+    const text = String(word)
+    const ok = selectedNorm.has(normalize(text))
+    return {
+      id: String(index + 1),
+      label: text,
+      given: ok ? text : "—",
+      expected: text,
+      ok,
+    }
+  })
+  const correct = items.filter((i) => i.ok).length
+  return { correct, total: items.length, items }
+}
+
 /**
  * @param {{ answerKey: unknown, studentAnswers: unknown }} input
  * @returns {{ correct: number, total: number, score: number | null, items: Array<object>, graded: boolean }}
@@ -137,6 +174,14 @@ export function gradeLiveExerciseAnswers({ answerKey, studentAnswers }) {
     result = gradeBuckets(payload.placement ?? payload, answerKey)
   } else if (kind === "tfng" || (isRecord(payload.byNumber) && Array.isArray(answerKey))) {
     result = gradeTfng(payload.byNumber ?? payload, answerKey)
+  } else if (
+    (kind === "mcq" || kind === "tfng") &&
+    isRecord(payload.byNumber) &&
+    isRecord(answerKey)
+  ) {
+    result = gradeByNumberMap(payload.byNumber, answerKey)
+  } else if (kind === "checklist" && Array.isArray(answerKey)) {
+    result = gradeChecklist(payload.selected, answerKey)
   } else if (kind === "list" && Array.isArray(answerKey)) {
     result = gradeList(payload.values ?? payload.items, answerKey)
   } else if (kind === "speakers" && isRecord(answerKey)) {
@@ -146,6 +191,8 @@ export function gradeLiveExerciseAnswers({ answerKey, studentAnswers }) {
     result = gradeBuckets(payload.placement ?? payload, answerKey)
   } else if (Array.isArray(answerKey) && isRecord(payload.byNumber)) {
     result = gradeTfng(payload.byNumber, answerKey)
+  } else if (isRecord(payload.byNumber) && isRecord(answerKey)) {
+    result = gradeByNumberMap(payload.byNumber, answerKey)
   } else {
     return { correct: 0, total: 0, score: null, items: [], graded: false }
   }
