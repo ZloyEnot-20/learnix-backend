@@ -8,6 +8,10 @@ export const createIssueReport = asyncHandler(async (req, res) => {
   const {
     homeworkId,
     controlWorkId,
+    liveLessonId,
+    bookId,
+    unitNumber,
+    exerciseId,
     stepIndex,
     exerciseSlug,
     exerciseTitle,
@@ -18,8 +22,8 @@ export const createIssueReport = asyncHandler(async (req, res) => {
     message,
   } = req.body
 
-  if (!homeworkId && !controlWorkId) {
-    throw ApiError.badRequest("homeworkId or controlWorkId is required")
+  if (!homeworkId && !controlWorkId && !liveLessonId && !bookId) {
+    throw ApiError.badRequest("homeworkId, controlWorkId, liveLessonId, or bookId is required")
   }
 
   const doc = await IssueReport.create(
@@ -28,6 +32,10 @@ export const createIssueReport = asyncHandler(async (req, res) => {
       studentName: req.user.name ?? "Student",
       homeworkId: homeworkId ?? null,
       controlWorkId: controlWorkId ?? null,
+      liveLessonId: liveLessonId ?? null,
+      bookId: bookId ?? null,
+      unitNumber: unitNumber ?? null,
+      exerciseId: exerciseId != null ? String(exerciseId) : null,
       stepIndex: stepIndex ?? null,
       exerciseSlug,
       exerciseTitle,

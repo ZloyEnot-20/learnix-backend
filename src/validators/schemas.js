@@ -290,17 +290,28 @@ export const createIssueReportSchema = {
     .object({
       homeworkId: z.string().min(1).optional(),
       controlWorkId: z.string().min(1).optional(),
+      liveLessonId: z.string().min(1).optional(),
+      bookId: z.string().min(1).optional(),
+      unitNumber: z.number().int().min(1).optional(),
+      exerciseId: z.string().min(1).max(80).optional(),
       stepIndex: z.number().int().min(0).optional(),
       exerciseSlug: z.string().min(1).max(200),
       exerciseTitle: z.string().min(1).max(300),
-      exerciseKind: z.enum(["grammar", "vocabulary", "podcast", "speaking", "listening"]),
+      exerciseKind: z.enum([
+        "grammar",
+        "vocabulary",
+        "podcast",
+        "speaking",
+        "listening",
+        "book",
+      ]),
       questionIndex: z.number().int().min(0).optional(),
       questionId: z.number().int().min(0).optional(),
       questionPrompt: z.string().max(2000).optional(),
       message: z.string().max(50).optional(),
     })
-    .refine((b) => !!(b.homeworkId || b.controlWorkId), {
-      message: "homeworkId or controlWorkId is required",
+    .refine((b) => !!(b.homeworkId || b.controlWorkId || b.liveLessonId || b.bookId), {
+      message: "homeworkId, controlWorkId, liveLessonId, or bookId is required",
     }),
 }
 

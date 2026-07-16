@@ -351,9 +351,6 @@ export async function assignUnit(sessionId, unitNumber) {
   if (session.lessonStatus === "finished") {
     throw ApiError.badRequest("Lesson is already finished")
   }
-  if (session.lessonStatus === "idle") {
-    throw ApiError.badRequest("Start the lesson before assigning a unit")
-  }
 
   const nextUnit = Number(unitNumber)
   if (!Number.isFinite(nextUnit) || nextUnit < 1) {
