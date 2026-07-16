@@ -14,7 +14,7 @@ const issueReportSchema = new mongoose.Schema(
     exerciseTitle: { type: String, required: true },
     exerciseKind: {
       type: String,
-      enum: ["grammar", "vocabulary", "podcast", "speaking", "listening", "book"],
+      enum: ["grammar", "vocabulary", "podcast", "speaking", "listening", "reading", "book"],
       required: true,
     },
     questionIndex: { type: Number, default: null },

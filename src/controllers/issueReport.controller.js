@@ -22,8 +22,14 @@ export const createIssueReport = asyncHandler(async (req, res) => {
     message,
   } = req.body
 
-  if (!homeworkId && !controlWorkId && !liveLessonId && !bookId) {
-    throw ApiError.badRequest("homeworkId, controlWorkId, liveLessonId, or bookId is required")
+  if (!homeworkId && !controlWorkId && !liveLessonId && !bookId && !exerciseSlug) {
+    throw ApiError.badRequest(
+      "homeworkId, controlWorkId, liveLessonId, bookId, or exerciseSlug is required",
+    )
+  }
+
+  if (!exerciseSlug || !exerciseTitle || !exerciseKind) {
+    throw ApiError.badRequest("exerciseSlug, exerciseTitle, and exerciseKind are required")
   }
 
   const doc = await IssueReport.create(

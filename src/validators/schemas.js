@@ -303,15 +303,13 @@ export const createIssueReportSchema = {
         "podcast",
         "speaking",
         "listening",
+        "reading",
         "book",
       ]),
       questionIndex: z.number().int().min(0).optional(),
       questionId: z.number().int().min(0).optional(),
       questionPrompt: z.string().max(2000).optional(),
       message: z.string().max(50).optional(),
-    })
-    .refine((b) => !!(b.homeworkId || b.controlWorkId || b.liveLessonId || b.bookId), {
-      message: "homeworkId, controlWorkId, liveLessonId, or bookId is required",
     }),
 }
 
