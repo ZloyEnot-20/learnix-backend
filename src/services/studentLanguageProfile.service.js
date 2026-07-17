@@ -39,6 +39,12 @@ import {
   ieltsBandToLearnixScore,
   ieltsSkillConfidenceFromAttempts,
 } from "../config/ielts-band-tables.js"
+import {
+  computeAllTopicMasteries,
+  persistTopicMasteries,
+  buildIeltsLanguageProfile,
+  enrichTopicsWithMastery,
+} from "./ieltsLanguageProfile.service.js"
 
 const VOCAB_PREFIX = "vocab:"
 const PODCAST_SLUG_PREFIX = "podcast:"
@@ -925,6 +931,26 @@ export async function recomputeStudentLanguageProfile(studentId) {
   const reading = buildIeltsSkillProfile(ieltsBands.reading, now)
   const listening = buildIeltsSkillProfile(ieltsBands.listening, now)
 
+  const deckMap = await loadVocabDeckMap()
+  const topicMasteryRecords = computeAllTopicMasteries(
+    studentId,
+    orgId ?? "unknown",
+    {
+      grammarTopicStats: grammar.topics ?? [],
+      vocabTopicStats: vocabulary.topics ?? [],
+      grammarTopicAccumulators: grammarTopics,
+      deckMap,
+    },
+    now,
+  )
+  await persistTopicMasteries(topicMasteryRecords)
+
+  const skillProfiles = { grammar, vocabulary, speaking, reading, listening, writing: { hasData: false, score: 0 } }
+  const ieltsProfile = buildIeltsLanguageProfile(topicMasteryRecords, skillProfiles)
+
+  grammar.topics = enrichTopicsWithMastery(grammar.topics ?? [], topicMasteryRecords)
+  vocabulary.topics = enrichTopicsWithMastery(vocabulary.topics ?? [], topicMasteryRecords)
+
   const allTopics = [
     ...grammar.topics,
     ...vocabulary.topics,
@@ -942,8 +968,8 @@ export async function recomputeStudentLanguageProfile(studentId) {
     needsReviewTopics: needsReviewTopics.length,
   }
 
-  const skillProfiles = { grammar, vocabulary, speaking, reading, listening }
-  const overall = computeOverallSkillScores(skillProfiles, levelCoverage, coverageMeta)
+  const skillProfilesForOverall = { grammar, vocabulary, speaking, reading, listening }
+  const overall = computeOverallSkillScores(skillProfilesForOverall, levelCoverage, coverageMeta)
 
   const doc = {
     _id: studentId,
@@ -961,8 +987,13 @@ export async function recomputeStudentLanguageProfile(studentId) {
     needsReviewTopics,
     levelCoverage,
     recommendations: [],
+    cefrProfile: ieltsProfile.cefrProfile,
+    grammarCefrProfile: ieltsProfile.grammarCefrProfile,
+    vocabularyCefrProfile: ieltsProfile.vocabularyCefrProfile,
+    ieltsEstimation: ieltsProfile.ieltsEstimation,
+    ieltsRecommendation: ieltsProfile.ieltsRecommendation,
     lastComputedAt: now,
-    version: 2,
+    version: 3,
   }
 
   doc.recommendations = buildRecommendations(doc)

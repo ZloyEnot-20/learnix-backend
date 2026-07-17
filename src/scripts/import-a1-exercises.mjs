@@ -71,6 +71,17 @@ const TOPIC_ALIASES = {
   "wish / if only": "wish-if-only",
   "wish if only": "wish-if-only",
   "causative have": "causative",
+  // C1
+  "advanced conditionals": "advanced-conditionals",
+  inversion: "inversion",
+  subjunctive: "subjunctive",
+  ellipsis: "ellipsis-substitution",
+  nominalisation: "nominalisation",
+  hedging: "hedging",
+  "advanced modal verbs": "advanced-modal-verbs",
+  "complex relative clauses": "complex-relative-clauses",
+  "formal academic structures": "formal-academic-structures",
+  "discourse markers": "linking-words-and-connectors",
 }
 
 const DEFAULT_TYPE_INSTRUCTIONS = {
@@ -439,6 +450,106 @@ const TOPIC_INSTRUCTIONS = {
       "multiple-choice": "Choose the correct causative form.",
       "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
       "error-correction": "Find and correct the mistake in the causative structure.",
+    },
+  },
+  "advanced-conditionals": {
+    exercise:
+      "Practise advanced conditionals and inversion with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct advanced conditional or inversion form.",
+      "multiple-choice": "Choose the correct advanced conditional form.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in the advanced conditional.",
+    },
+  },
+  inversion: {
+    exercise:
+      "Practise inversion with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct inverted form.",
+      "multiple-choice": "Choose the correct inversion.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in the inverted structure.",
+    },
+  },
+  subjunctive: {
+    exercise:
+      "Practise the subjunctive mood with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct subjunctive form.",
+      "multiple-choice": "Choose the correct subjunctive form.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in the subjunctive.",
+    },
+  },
+  "ellipsis-substitution": {
+    exercise:
+      "Practise ellipsis and substitution with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct ellipsis or substitution form.",
+      "multiple-choice": "Choose the correct ellipsis / substitution option.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake with ellipsis / substitution.",
+    },
+  },
+  nominalisation: {
+    exercise:
+      "Practise nominalisation with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct nominalised form.",
+      "multiple-choice": "Choose the correct nominalisation.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in nominalisation.",
+    },
+  },
+  hedging: {
+    exercise:
+      "Practise hedging language with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct hedging expression.",
+      "multiple-choice": "Choose the correct hedging form.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in hedging language.",
+    },
+  },
+  "advanced-modal-verbs": {
+    exercise:
+      "Practise advanced modal verbs with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct advanced modal verb.",
+      "multiple-choice": "Choose the correct advanced modal verb.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake with advanced modal verbs.",
+    },
+  },
+  "complex-relative-clauses": {
+    exercise:
+      "Practise complex relative clauses with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct complex relative clause form.",
+      "multiple-choice": "Choose the correct complex relative clause.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in the relative clause.",
+    },
+  },
+  "formal-academic-structures": {
+    exercise:
+      "Practise formal academic structures with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct formal academic structure.",
+      "multiple-choice": "Choose the correct formal academic form.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake in the formal structure.",
+    },
+  },
+  "linking-words-and-connectors": {
+    exercise:
+      "Practise discourse markers and linking words with gap-fill, multiple choice, true/false, and error correction.",
+    byType: {
+      "fill-in-the-blank": "Complete each sentence with the correct discourse marker or connector.",
+      "multiple-choice": "Choose the correct discourse marker.",
+      "true-false": "Is this sentence grammatically correct? Choose Correct or Incorrect.",
+      "error-correction": "Find and correct the mistake with discourse markers.",
     },
   },
 }

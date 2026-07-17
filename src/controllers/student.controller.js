@@ -24,6 +24,10 @@ import {
   getStudentLanguageProfileDebug,
 } from "../services/studentLanguageProfile.service.js"
 import { buildLevelCatalogue } from "../config/language-profile.js"
+import {
+  getStudentTopicMasteries as loadStudentTopicMasteries,
+  getTopicCatalogue,
+} from "../services/ieltsLanguageProfile.service.js"
 import { recomputeStudentLanguageProfileNow } from "../services/languageProfileQueue.js"
 import { getProfileScoreHistory } from "../services/languageProfileSnapshot.service.js"
 import {
@@ -588,6 +592,44 @@ export const getLanguageProfileScoreDistribution = asyncHandler(async (req, res)
 /** Learnix level scale with grammar topics per level (admin roadmap). */
 export const getLanguageProfileLevelCatalogue = asyncHandler(async (req, res) => {
   res.json(buildLevelCatalogue())
+})
+
+/** IELTS topic catalogue (CEFR levels, band ranges, weights). */
+export const getIeltsTopicCatalogue = asyncHandler(async (req, res) => {
+  res.json(getTopicCatalogue())
+})
+
+/** Per-topic mastery records for a student. */
+export const getStudentTopicMasteries = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const category = req.query.category ? String(req.query.category) : undefined
+  const masteries = await loadStudentTopicMasteries(student._id, { category })
+  res.json(masteries)
+})
+
+/** IELTS estimation + recommendations (from persisted profile). */
+export const getIeltsEstimation = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (req.user.type === "student" && req.user.id !== student._id) {
+    throw ApiError.forbidden()
+  }
+  const force = req.query.force === "true" || req.query.force === "1"
+  const profile = await getStudentLanguageProfile(student._id, { force })
+  if (!profile) throw ApiError.notFound("Profile not found")
+  res.json({
+    studentId: profile.studentId,
+    cefrProfile: profile.cefrProfile ?? {},
+    grammarCefrProfile: profile.grammarCefrProfile ?? {},
+    vocabularyCefrProfile: profile.vocabularyCefrProfile ?? {},
+    ieltsEstimation: profile.ieltsEstimation ?? {},
+    ieltsRecommendation: profile.ieltsRecommendation ?? {},
+    lastComputedAt: profile.lastComputedAt,
+  })
 })
 
 /** Staff: force immediate profile recompute. */

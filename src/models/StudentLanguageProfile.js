@@ -14,6 +14,13 @@ const topicStatSchema = new mongoose.Schema(
     weightedAccuracy: { type: Number, default: 0 },
     confidence: { type: Number, default: 0 },
     learnixLevel: { type: Number, min: 1, max: 9 },
+    /** 0–100 composite mastery (Topic Mastery model). */
+    masteryScore: { type: Number, default: 0, min: 0, max: 100 },
+    masteryStatus: {
+      type: String,
+      enum: ["mastered", "partial", "not_mastered"],
+      default: "not_mastered",
+    },
     mastered: { type: Boolean, default: false },
     needsReview: { type: Boolean, default: false },
   },
@@ -97,13 +104,57 @@ const studentLanguageProfileSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    /** CEFR mastery % per level — Topic Mastery → CEFR model. */
+    cefrProfile: {
+      type: mongoose.Schema.Types.Mixed,
+      default: () => ({ A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 }),
+    },
+    grammarCefrProfile: {
+      type: mongoose.Schema.Types.Mixed,
+      default: () => ({ A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 }),
+    },
+    vocabularyCefrProfile: {
+      type: mongoose.Schema.Types.Mixed,
+      default: () => ({ A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 }),
+    },
+    /** IELTS band estimation with ceiling logic. */
+    ieltsEstimation: {
+      type: new mongoose.Schema(
+        {
+          estimatedBand: { type: Number, default: 0 },
+          potentialBand: { type: Number, default: 0 },
+          confidence: { type: Number, default: 0 },
+          strengths: { type: [String], default: [] },
+          weaknesses: { type: [String], default: [] },
+          limitingFactors: { type: [String], default: [] },
+          componentBands: { type: mongoose.Schema.Types.Mixed, default: {} },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
+    /** Next-band recommendation engine output. */
+    ieltsRecommendation: {
+      type: new mongoose.Schema(
+        {
+          nextBandTarget: { type: Number },
+          missingTopics: { type: [mongoose.Schema.Types.Mixed], default: [] },
+          recommendedTopics: { type: [mongoose.Schema.Types.Mixed], default: [] },
+          estimatedStudyHours: { type: Number, default: 0 },
+          explanation: { type: String },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
     lastComputedAt: { type: Date },
-    version: { type: Number, default: 1 },
+    version: { type: Number, default: 3 },
   },
   { _id: false, timestamps: true },
 )
 
 studentLanguageProfileSchema.index({ orgId: 1, "overall.level": -1 })
+studentLanguageProfileSchema.index({ orgId: 1, "ieltsEstimation.estimatedBand": -1 })
 
 studentLanguageProfileSchema.methods.toJSON = function toJSON() {
   return {
@@ -112,15 +163,20 @@ studentLanguageProfileSchema.methods.toJSON = function toJSON() {
     grammar: this.grammar,
     vocabulary: this.vocabulary,
     speaking: this.speaking,
-    reading: { ...this.reading, hasData: false },
-    listening: { ...this.listening, hasData: false },
-    writing: { ...this.writing, hasData: false },
+    reading: this.reading,
+    listening: this.listening,
+    writing: this.writing,
     overall: this.overall,
     coverage: this.coverage,
     masteredTopics: this.masteredTopics,
     needsReviewTopics: this.needsReviewTopics,
     levelCoverage: this.levelCoverage ?? {},
     recommendations: this.recommendations ?? [],
+    cefrProfile: this.cefrProfile ?? {},
+    grammarCefrProfile: this.grammarCefrProfile ?? {},
+    vocabularyCefrProfile: this.vocabularyCefrProfile ?? {},
+    ieltsEstimation: this.ieltsEstimation ?? {},
+    ieltsRecommendation: this.ieltsRecommendation ?? {},
     lastComputedAt: this.lastComputedAt,
     version: this.version,
     updatedAt: this.updatedAt,

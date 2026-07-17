@@ -1,4 +1,11 @@
 import { StudentLanguageProfileSnapshot } from "../models/StudentLanguageProfileSnapshot.js"
+import { learnixScoreToIeltsBand } from "./ieltsEstimation.service.js"
+
+function skillBand(profile, skill) {
+  const p = profile[skill]
+  if (!p?.hasData || !(p.score > 0)) return null
+  return learnixScoreToIeltsBand(p.score)
+}
 
 export const SNAPSHOT_SCORE_THRESHOLD = 5
 export const SNAPSHOT_MIN_DAYS = 7
@@ -48,6 +55,13 @@ export async function maybeSaveProfileSnapshot(studentId, orgId, profile) {
     grammarLevel: profile.grammar?.level ?? 1,
     vocabularyLevel: profile.vocabulary?.level ?? 1,
     speakingLevel: profile.speaking?.level ?? 1,
+    grammarBand: skillBand(profile, "grammar"),
+    vocabularyBand: skillBand(profile, "vocabulary"),
+    speakingBand: skillBand(profile, "speaking"),
+    readingBand: skillBand(profile, "reading"),
+    listeningBand: skillBand(profile, "listening"),
+    overallBand: profile.overall?.score ? learnixScoreToIeltsBand(profile.overall.score) : null,
+    estimatedBand: profile.ieltsEstimation?.estimatedBand ?? null,
     createdAt: new Date(),
   })
 }
@@ -62,15 +76,39 @@ export async function getProfileScoreHistory(studentId, limit = 52) {
   const grammar = []
   const vocabulary = []
   const speaking = []
+  const reading = []
+  const listening = []
   const overall = []
 
   for (const s of snapshots) {
-    const point = { date: s.createdAt, score: 0, level: 1 }
-    grammar.push({ ...point, score: s.grammarScore, level: s.grammarLevel })
-    vocabulary.push({ ...point, score: s.vocabularyScore, level: s.vocabularyLevel })
-    speaking.push({ ...point, score: s.speakingScore, level: s.speakingLevel })
-    overall.push({ ...point, score: s.overallScore, level: s.learnixLevel ?? 1 })
+    const point = { date: s.createdAt, score: 0, level: 1, band: null }
+    grammar.push({
+      ...point,
+      score: s.grammarScore,
+      level: s.grammarLevel,
+      band: s.grammarBand ?? null,
+    })
+    vocabulary.push({
+      ...point,
+      score: s.vocabularyScore,
+      level: s.vocabularyLevel,
+      band: s.vocabularyBand ?? null,
+    })
+    speaking.push({
+      ...point,
+      score: s.speakingScore,
+      level: s.speakingLevel,
+      band: s.speakingBand ?? null,
+    })
+    reading.push({ ...point, band: s.readingBand ?? null })
+    listening.push({ ...point, band: s.listeningBand ?? null })
+    overall.push({
+      ...point,
+      score: s.overallScore,
+      level: s.learnixLevel ?? 1,
+      band: s.estimatedBand ?? s.overallBand ?? null,
+    })
   }
 
-  return { grammar, vocabulary, speaking, overall }
+  return { grammar, vocabulary, speaking, reading, listening, overall }
 }
