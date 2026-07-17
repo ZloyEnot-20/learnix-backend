@@ -13,6 +13,8 @@ const ieltsReadingSchema = new mongoose.Schema(
     totalTimeMinutes: { type: Number, default: 20, min: 0 },
     questionCount: { type: Number, default: 0, min: 0 },
     questionTypes: { type: [String], default: [] },
+    /** CEFR band (A1–B1). Empty string = IELTS catalogue. */
+    level: { type: String, default: "", index: true },
     /** Full `IeltsReadingTest` payload returned verbatim to the client. */
     data: { type: mongoose.Schema.Types.Mixed, required: true },
     order: { type: Number, default: 0 },

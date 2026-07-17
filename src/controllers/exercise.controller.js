@@ -121,7 +121,7 @@ export const listExerciseSummaries = asyncHandler(async (req, res) => {
   if (req.query.category) filter.category = req.query.category
   const docs = await Exercise.find(filter)
     .select(
-      "slug title topic subtopic category level type estimatedTime totalQuestions data.passingScore",
+      "slug title topic subtopic category level type estimatedTime totalQuestions data.passingScore data.questionTypes",
     )
     .sort({ topic: 1, slug: 1 })
     .lean()
@@ -134,6 +134,7 @@ export const listExerciseSummaries = asyncHandler(async (req, res) => {
       category: doc.category ?? "grammar",
       level: doc.level ?? "",
       type: doc.type,
+      questionTypes: doc.data?.questionTypes ?? [],
       estimatedTime: doc.estimatedTime ?? 0,
       totalQuestions: doc.totalQuestions ?? 0,
       passingScore: doc.data?.passingScore ?? 0,

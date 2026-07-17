@@ -10,7 +10,7 @@ import {
 
 export const listReadingSummaries = asyncHandler(async (_req, res) => {
   const docs = await IeltsReading.find()
-    .select("slug title subtitle totalTimeMinutes questionCount order questionTypes data")
+    .select("slug title subtitle totalTimeMinutes questionCount order questionTypes level data")
     .sort({ order: 1, title: 1 })
   res.json(docs.map(serializeReadingSummary))
 })
@@ -45,6 +45,7 @@ export const importReadings = asyncHandler(async (req, res) => {
               totalTimeMinutes: item.totalTimeMinutes,
               questionCount: item.questionCount,
               questionTypes: item.questionTypes,
+              level: item.level ?? "",
               data: item.data,
               order: item.order,
             },

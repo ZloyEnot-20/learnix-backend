@@ -8,9 +8,16 @@ export function slugifyReading(value) {
     .slice(0, 80)
 }
 
+function countPartQuestions(part) {
+  if (part.sections?.length) {
+    return part.sections.reduce((sum, section) => sum + (section.questions?.length ?? 0), 0)
+  }
+  return part.questions?.length ?? 0
+}
+
 export function countReadingQuestions(data) {
   if (!data?.parts?.length) return 0
-  return data.parts.reduce((sum, part) => sum + (part.questions?.length ?? 0), 0)
+  return data.parts.reduce((sum, part) => sum + countPartQuestions(part), 0)
 }
 
 const KNOWN_TYPES = new Set([
@@ -234,6 +241,7 @@ export function serializeReadingSummary(doc) {
     totalTimeMinutes: doc.totalTimeMinutes ?? data.totalTimeMinutes ?? 20,
     questionCount,
     questionTypes,
+    level: doc.level ?? "",
     order: doc.order ?? 0,
   }
 }
@@ -264,6 +272,7 @@ export function normalizeReadingInput(raw, idx = 0) {
     slug,
     title: raw.title ?? data.title ?? slug,
     subtitle: raw.subtitle ?? "",
+    level: String(raw.level ?? data.level ?? "").trim(),
     totalTimeMinutes: raw.totalTimeMinutes ?? data.totalTimeMinutes ?? 20,
     questionCount,
     questionTypes,

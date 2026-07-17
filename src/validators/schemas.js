@@ -264,6 +264,13 @@ export const recordAttemptSchema = {
   }),
 }
 
+export const saveHomeworkProgressSchema = {
+  body: z.object({
+    homeworkId: z.string().min(1),
+    attempt: recordAttemptSchema.body.shape.attempt,
+  }),
+}
+
 export const startHomeworkSchema = {
   body: z.object({
     homeworkId: z.string().min(1),
@@ -761,7 +768,8 @@ const readingPartInput = z.object({
   questionInstruction: z.string().max(4000).optional(),
   passage: z.string().min(1),
   totalQuestions: z.number().int().nonnegative().optional(),
-  questions: z.array(z.record(z.unknown())).min(1).max(100),
+  sections: z.array(z.record(z.unknown())).max(20).optional(),
+  questions: z.array(z.record(z.unknown())).max(100).optional().default([]),
 })
 
 const readingTestDataInput = z.object({
@@ -777,6 +785,7 @@ const readingInput = z.object({
   totalTimeMinutes: z.number().nonnegative().optional(),
   questionCount: z.number().int().nonnegative().optional(),
   subtitle: z.string().max(500).optional(),
+  level: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional(),
   order: z.number().int().optional(),
   data: readingTestDataInput.optional(),
   parts: z.array(readingPartInput).min(1).max(10).optional(),

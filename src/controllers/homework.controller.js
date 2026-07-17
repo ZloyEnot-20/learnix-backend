@@ -784,6 +784,29 @@ export const pauseHomework = asyncHandler(async (req, res) => {
   return res.json({ action: "paused", submission: sub, pauseUsed: true })
 })
 
+/** Persist in-progress answers without submitting (pause/resume checkpoint). */
+export const saveHomeworkProgress = asyncHandler(async (req, res) => {
+  const studentId = req.user.id
+  const { homeworkId, attempt } = req.body
+
+  const sub = await Submission.findOne({ homeworkId, studentId })
+  if (!sub) throw ApiError.notFound("Submission not found")
+
+  if (sub.integrityStatus === "cheating_detected" || sub.attempt?.failedDueToCheating) {
+    return res.json(sub)
+  }
+  if (["submitted", "graded"].includes(sub.status)) {
+    return res.json(sub)
+  }
+
+  sub.attempt = {
+    ...attempt,
+    durationSeconds: attempt.durationSeconds ?? sub.elapsedSeconds ?? 0,
+  }
+  await sub.save()
+  res.json(sub)
+})
+
 export const reportViolation = asyncHandler(async (req, res) => {
   const studentId = req.user.id
   const { homeworkId, reason } = req.body

@@ -8,6 +8,7 @@ import {
   gradeSubmissionSchema,
   recordAttemptSchema,
   reportViolationSchema,
+  saveHomeworkProgressSchema,
   startHomeworkSchema,
   recordHomeworkEntrySchema,
   idParamSchema,
@@ -23,6 +24,7 @@ router.get("/mine/summary", ctrl.myHomeworkSummary)
 router.post("/entry", validate(recordHomeworkEntrySchema), ctrl.recordHomeworkEntry)
 router.post("/start", validate(startHomeworkSchema), ctrl.startHomework)
 router.post("/pause", validate(startHomeworkSchema), ctrl.pauseHomework)
+router.post("/progress", validate(saveHomeworkProgressSchema), ctrl.saveHomeworkProgress)
 router.post("/violation", validate(reportViolationSchema), ctrl.reportViolation)
 router.post("/attempt", validate(recordAttemptSchema), ctrl.recordAttempt)
 
