@@ -16,6 +16,8 @@ const studentWordProgressSchema = new mongoose.Schema(
     /** Consecutive correct answers (streak). Resets on incorrect. */
     consecutiveCorrect: { type: Number, default: 0 },
     masteredAt: { type: Date, default: null },
+    /** Passed 45-day maintenance review — never show again. */
+    permanentlyMastered: { type: Boolean, default: false },
     wantToLearn: { type: Boolean, default: false },
     lastReviewedAt: { type: Date, default: null },
   },

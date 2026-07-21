@@ -3,10 +3,21 @@ import { StudentDeckProgress } from "../models/StudentDeckProgress.js"
 import { WordAnswerEvent } from "../models/WordAnswerEvent.js"
 import { StudentActivity } from "../models/StudentActivity.js"
 import { User } from "../models/User.js"
-import { MASTERY_CORRECT_THRESHOLD, POINTS } from "../config/level-thresholds.js"
+import { MASTERY_CORRECT_THRESHOLD, MASTERED_MAINTENANCE_DAYS, POINTS } from "../config/level-thresholds.js"
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
+}
+
+function daysSince(date, now = new Date()) {
+  if (!date) return 0
+  return (now.getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24)
+}
+
+function isDueForMaintenanceReview(word, now = new Date()) {
+  if (!word.masteredAt || word.permanentlyMastered) return false
+  if ((word.correctCount ?? 0) < MASTERY_CORRECT_THRESHOLD) return false
+  return daysSince(word.masteredAt, now) >= MASTERED_MAINTENANCE_DAYS
 }
 
 async function resolveOrgId(studentId, orgId) {
@@ -59,12 +70,51 @@ export async function recordWordAnswer({
   const existing = await StudentWordProgress.findOne({ studentId, deckSlug, term })
 
   if (existing) {
+    const isMaintenance = isDueForMaintenanceReview(existing, now)
+
+    if (isMaintenance) {
+      existing.totalAttempts += 1
+      existing.lastReviewedAt = now
+
+      if (correct) {
+        existing.permanentlyMastered = true
+        existing.correctCount += 1
+        existing.consecutiveCorrect = (existing.consecutiveCorrect ?? 0) + 1
+        existing.accuracy = pct(existing.correctCount, existing.totalAttempts)
+        await existing.save()
+
+        await applyLearnPointsDelta(
+          studentId,
+          learnPointsDeltaForWordAnswer({ correct, source, newlyMastered: false }),
+        )
+
+        return { word: existing.toObject(), newlyMastered: false, permanentlyRetired: true }
+      }
+
+      existing.incorrectCount += 1
+      existing.consecutiveCorrect = 0
+      existing.correctCount = 0
+      existing.masteredAt = null
+      existing.wantToLearn = true
+      existing.accuracy = pct(existing.correctCount, existing.totalAttempts)
+      await existing.save()
+
+      await StudentDeckProgress.updateOne(
+        { studentId, deckSlug },
+        { $inc: { wordsMastered: -1 } },
+      )
+
+      await applyLearnPointsDelta(studentId, 0)
+
+      return { word: existing.toObject(), newlyMastered: false, maintenanceFailed: true }
+    }
+
     const correctCount = existing.correctCount + (correct ? 1 : 0)
     const incorrectCount = existing.incorrectCount + (correct ? 0 : 1)
     const totalAttempts = existing.totalAttempts + 1
     const consecutiveCorrect = correct ? (existing.consecutiveCorrect ?? 0) + 1 : 0
-    const wasMastered = existing.masteredAt != null
-    const newlyMastered = !wasMastered && consecutiveCorrect >= MASTERY_CORRECT_THRESHOLD
+    const wasMastered = existing.masteredAt != null && existing.correctCount >= MASTERY_CORRECT_THRESHOLD
+    const newlyMastered = !wasMastered && correctCount >= MASTERY_CORRECT_THRESHOLD
 
     existing.correctCount = correctCount
     existing.incorrectCount = incorrectCount
@@ -93,7 +143,7 @@ export async function recordWordAnswer({
   const correctCount = correct ? 1 : 0
   const incorrectCount = correct ? 0 : 1
   const consecutiveCorrect = correct ? 1 : 0
-  const newlyMastered = consecutiveCorrect >= MASTERY_CORRECT_THRESHOLD
+  const newlyMastered = correctCount >= MASTERY_CORRECT_THRESHOLD
 
   const word = await StudentWordProgress.create({
     studentId,
@@ -106,6 +156,7 @@ export async function recordWordAnswer({
     accuracy: pct(correctCount, 1),
     consecutiveCorrect,
     masteredAt: newlyMastered ? now : null,
+    permanentlyMastered: false,
     lastReviewedAt: now,
   })
 
@@ -179,9 +230,10 @@ export async function syncLearnProgress(studentId, orgId, { studyWords = [], voc
   for (const sw of studyWords) {
     if (!sw.term || !sw.deckSlug) continue
     const correctCount = sw.correctCount ?? 0
-    const incorrectCount = Math.max(0, (sw.totalAttempts ?? correctCount) - correctCount)
+    const incorrectCount = sw.incorrectCount ?? Math.max(0, (sw.totalAttempts ?? correctCount) - correctCount)
     const totalAttempts = sw.totalAttempts ?? correctCount + incorrectCount
     const masteredAt = sw.masteredAt ? new Date(sw.masteredAt) : null
+    const permanentlyMastered = sw.permanentlyMastered ?? false
 
     await StudentWordProgress.findOneAndUpdate(
       { studentId, deckSlug: sw.deckSlug, term: sw.term },
@@ -191,8 +243,10 @@ export async function syncLearnProgress(studentId, orgId, { studyWords = [], voc
           correctCount,
           incorrectCount,
           totalAttempts,
+          consecutiveCorrect: correctCount,
           accuracy: pct(correctCount, totalAttempts),
           masteredAt,
+          permanentlyMastered,
           wantToLearn: sw.wantToLearn ?? false,
           lastReviewedAt: sw.lastReviewedAt ? new Date(sw.lastReviewedAt) : null,
         },
@@ -245,7 +299,9 @@ export async function getStudentLearnProgress(studentId) {
     StudentDeckProgress.find({ studentId }).sort({ quizAttempts: -1 }).lean(),
   ])
 
-  const wordsMastered = words.filter((w) => w.masteredAt != null).length
+  const wordsMastered = words.filter(
+    (w) => w.masteredAt != null && w.correctCount >= MASTERY_CORRECT_THRESHOLD,
+  ).length
 
   return {
     wordsMastered,
@@ -258,6 +314,7 @@ export async function getStudentLearnProgress(studentId) {
       totalAttempts: w.totalAttempts,
       accuracy: w.accuracy,
       masteredAt: w.masteredAt,
+      permanentlyMastered: w.permanentlyMastered ?? false,
       wantToLearn: w.wantToLearn,
       lastReviewedAt: w.lastReviewedAt,
     })),

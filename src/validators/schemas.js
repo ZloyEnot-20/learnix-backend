@@ -565,8 +565,10 @@ export const syncLearnSchema = {
           correctCount: z.number().int().nonnegative().optional(),
           totalAttempts: z.number().int().nonnegative().optional(),
           masteredAt: z.string().optional(),
+          permanentlyMastered: z.boolean().optional(),
           wantToLearn: z.boolean().optional(),
           lastReviewedAt: z.string().optional(),
+          incorrectCount: z.number().int().nonnegative().optional(),
         }),
       )
       .optional()

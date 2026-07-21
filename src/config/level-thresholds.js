@@ -69,6 +69,9 @@ export const LEVEL_THRESHOLDS = buildThresholds()
 
 export const MASTERY_CORRECT_THRESHOLD = 5
 
+/** Days after mastery before a word appears in maintenance review. */
+export const MASTERED_MAINTENANCE_DAYS = 45
+
 /**
  * @param {number} totalPoints
  * @returns {{ level: number, isMaxLevel: boolean, pointsIntoLevel: number, pointsForNextLevel: number, pointsToNextLevel: number }}
