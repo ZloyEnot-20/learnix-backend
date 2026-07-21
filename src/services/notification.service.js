@@ -1,11 +1,19 @@
 import { Notification } from "../models/Notification.js"
 import { User } from "../models/User.js"
 import { deliverPushNotification } from "./fcm.service.js"
+import { deliverNotification } from "./telegram.service.js"
 
 function pushToMobile(note) {
   if (!note) return
   deliverPushNotification(note).catch((err) =>
     console.error("[notify] fcm push error:", err.message),
+  )
+}
+
+function pushToTelegram(note) {
+  if (!note) return
+  deliverNotification(note).catch((err) =>
+    console.error("[notify] telegram error:", err.message),
   )
 }
 
@@ -26,6 +34,7 @@ export async function notify(studentId, { type, title, message, data = {} }) {
     data,
   })
   pushToMobile(note)
+  pushToTelegram(note)
   return note
 }
 
@@ -46,5 +55,6 @@ export async function notifyMany(studentIds, { type, title, message, data = {} }
   const created = await Notification.insertMany(docs, { ordered: false }).catch(() => [])
   for (const note of created) {
     pushToMobile(note)
+    pushToTelegram(note)
   }
 }

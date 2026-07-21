@@ -381,7 +381,13 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 
   Object.assign(sub, patch)
   const hasRecordingGrades = recordingGrades?.some(
-    (g) => g.score != null || (g.feedback && g.feedback.trim()),
+    (g) =>
+      g.score != null ||
+      g.grammarScore != null ||
+      g.vocabularyScore != null ||
+      g.fluencyScore != null ||
+      g.pronunciationScore != null ||
+      (g.feedback && g.feedback.trim()),
   )
   if (patch.score != null || patch.feedback || hasRecordingGrades) {
     appendSubmissionEvent(sub, {

@@ -354,16 +354,71 @@ async function deliverToChat(chatId, childName, note) {
 }
 
 /**
- * Parent Telegram delivery is disabled — notifications are delivered to students
- * via the mobile app only.
+ * Yangi bildirishnomani shu o'quvchini kuzatayotgan barcha ota-ona chatlariga
+ * darhol yuboradi (notify() dan chaqiriladi).
  */
-export async function deliverNotification(_note) {
-  return
+export async function deliverNotification(note) {
+  if (!env.telegram.botToken || !note?.studentId) return
+
+  const [student, links] = await Promise.all([
+    User.findById(note.studentId).select("name").lean(),
+    ParentLink.find({ studentId: note.studentId }).lean(),
+  ])
+  if (links.length === 0) return
+
+  const childName = student?.name ?? "O'quvchi"
+  const notifiedAt = note.createdAt ?? new Date()
+
+  await Promise.all(
+    links.map(async (link) => {
+      try {
+        await deliverToChat(link.chatId, childName, note)
+        await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: notifiedAt })
+      } catch (err) {
+        console.error(`[tg] deliver ${note._id} to ${link.chatId}:`, err.message)
+      }
+    }),
+  )
 }
 
-/** Disabled while parent Telegram notifications are off. */
-export async function reconcilePending(_limitPerLink = 20) {
-  return
+/**
+ * Yuborilmagan bildirishnomalarni qayta urinish (zaxira reconcile).
+ * Har bir ParentLink uchun `lastNotifiedAt` dan keyingi, shu chatga hali
+ * yetkazilmagan xabarlarni ketma-ket yuboradi.
+ */
+export async function reconcilePending(limitPerLink = 20) {
+  if (!env.telegram.botToken || reconcileRunning) return
+  reconcileRunning = true
+  try {
+    const links = await ParentLink.find({}).lean()
+    for (const link of links) {
+      const notes = await Notification.find({
+        studentId: link.studentId,
+        createdAt: { $gt: link.lastNotifiedAt },
+        deliveredChatIds: { $ne: link.chatId },
+      })
+        .sort({ createdAt: 1 })
+        .limit(limitPerLink)
+        .lean()
+
+      if (notes.length === 0) continue
+
+      const student = await User.findById(link.studentId).select("name").lean()
+      const childName = student?.name ?? "O'quvchi"
+
+      for (const note of notes) {
+        try {
+          await deliverToChat(link.chatId, childName, note)
+          await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: note.createdAt })
+        } catch (err) {
+          console.error(`[tg] reconcile ${note._id} to ${link.chatId}:`, err.message)
+          break
+        }
+      }
+    }
+  } finally {
+    reconcileRunning = false
+  }
 }
 
 /** Zaxira reconcile — faqat backend jarayonida (webhook rejimida). */
