@@ -7,6 +7,7 @@ import { Submission } from "../models/Submission.js"
 import { findStudentIdsInGroup } from "./group.service.js"
 import { notifyMany } from "./notification.service.js"
 import { resolveSubmissionTopicFields } from "./submissionTopic.service.js"
+import { assignHomeworkDeckToReview } from "./vocabulary-progress.service.js"
 
 const DUE_DAYS = 7
 const VOCAB_PREFIX = "vocab:"
@@ -82,6 +83,13 @@ export async function assignUnitVocabHomework(session) {
       events: [{ at: assignedAt, type: "assigned" }],
     }))
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
+    await assignHomeworkDeckToReview({
+      studentIds,
+      orgId,
+      exerciseSlug,
+    }).catch((err) => {
+      console.error("[vocab-progress] unit vocab homework review assignment failed", err)
+    })
     await notifyMany(studentIds, {
       type: "homework",
       title: `New homework: ${hw.title}`,

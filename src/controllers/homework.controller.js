@@ -11,6 +11,7 @@ import { recordAudit } from "../services/audit.service.js"
 import {
   recordVocabActivity,
 } from "../services/activity.service.js"
+import { assignHomeworkDeckToReview } from "../services/vocabulary-progress.service.js"
 import { appendSubmissionEvent, isCheatingSubmission } from "../services/submission.service.js"
 import { recomputeHomeworkGamification } from "../services/gamification.service.js"
 import {
@@ -284,6 +285,15 @@ export const createHomework = asyncHandler(async (req, res) => {
     }))
     // Ignore duplicates (unique index on homeworkId+studentId).
     await Submission.insertMany(docs, { ordered: false }).catch(() => {})
+    if (hw.subject === "vocabulary" && hw.exerciseSlug) {
+      await assignHomeworkDeckToReview({
+        studentIds,
+        orgId: group.orgId,
+        exerciseSlug: hw.exerciseSlug,
+      }).catch((err) => {
+        console.error("[vocab-progress] homework deck review assignment failed", err)
+      })
+    }
     await notifyMany(studentIds, {
       type: "homework",
       title: `New homework: ${hw.title}`,

@@ -3,7 +3,15 @@ import { StudentDeckProgress } from "../models/StudentDeckProgress.js"
 import { WordAnswerEvent } from "../models/WordAnswerEvent.js"
 import { StudentActivity } from "../models/StudentActivity.js"
 import { User } from "../models/User.js"
+import { VocabDeck } from "../models/VocabDeck.js"
 import { MASTERY_CORRECT_THRESHOLD, MASTERED_MAINTENANCE_DAYS, POINTS } from "../config/level-thresholds.js"
+
+const VOCAB_HOMEWORK_PREFIX = "vocab:"
+
+function parseVocabHomeworkSlug(exerciseSlug) {
+  if (!exerciseSlug?.startsWith(VOCAB_HOMEWORK_PREFIX)) return null
+  return exerciseSlug.slice(VOCAB_HOMEWORK_PREFIX.length)
+}
 
 function pct(correct, total) {
   return total > 0 ? Math.round((correct / total) * 100) : null
@@ -290,6 +298,55 @@ export async function syncLearnProgress(studentId, orgId, { studyWords = [], voc
   }
 
   return { wordsUpserted, decksUpserted }
+}
+
+/**
+ * When vocabulary homework is assigned, queue all deck words for daily review.
+ */
+export async function assignHomeworkDeckToReview({ studentIds, orgId, exerciseSlug }) {
+  const deckSlug = parseVocabHomeworkSlug(exerciseSlug)
+  if (!deckSlug || !studentIds?.length) return { wordsAssigned: 0, students: 0 }
+
+  const deck = await VocabDeck.findById(deckSlug).select("words slug").lean()
+  if (!deck?.words?.length) return { wordsAssigned: 0, students: 0 }
+
+  let wordsAssigned = 0
+  for (const studentId of studentIds) {
+    for (const word of deck.words) {
+      const term = word.term
+      if (!term) continue
+
+      const existing = await StudentWordProgress.findOne({ studentId, deckSlug, term }).lean()
+      if (existing?.permanentlyMastered) continue
+      if (
+        existing?.masteredAt &&
+        (existing.correctCount ?? 0) >= MASTERY_CORRECT_THRESHOLD
+      ) {
+        continue
+      }
+
+      await StudentWordProgress.findOneAndUpdate(
+        { studentId, deckSlug, term },
+        {
+          $set: { orgId, wantToLearn: true },
+          $setOnInsert: {
+            studentId,
+            deckSlug,
+            term,
+            correctCount: 0,
+            incorrectCount: 0,
+            totalAttempts: 0,
+            consecutiveCorrect: 0,
+            permanentlyMastered: false,
+          },
+        },
+        { upsert: true },
+      )
+      wordsAssigned += 1
+    }
+  }
+
+  return { wordsAssigned, students: studentIds.length }
 }
 
 /** Full learn progress for a student. */
