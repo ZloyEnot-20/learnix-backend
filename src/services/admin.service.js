@@ -52,6 +52,7 @@ export async function getDashboardStats(orgFilter) {
     onlineByLogin,
     activeStudentIds,
     pendingHomeworkReview,
+    homeworkCompletedToday,
     newRegistrationsToday,
   ] = await Promise.all([
     User.countDocuments({ ...orgFilter, type: USER_TYPES.STUDENT, ...ACTIVE_STUDENT_FILTER }),
@@ -71,6 +72,11 @@ export async function getDashboardStats(orgFilter) {
       at: { $gte: onlineSince },
     }),
     pendingReviewSubmissionIds(orgFilter, homeworkById),
+    Submission.countDocuments({
+      ...orgFilter,
+      status: { $in: ["submitted", "graded"] },
+      submittedAt: { $gte: today },
+    }),
     User.countDocuments({
       ...orgFilter,
       type: USER_TYPES.STUDENT,
@@ -97,6 +103,7 @@ export async function getDashboardStats(orgFilter) {
     activeUsersToday: activeToday,
     usersOnlineNow,
     pendingHomeworkReview,
+    homeworkCompletedToday,
     newRegistrationsToday,
   }
 }
