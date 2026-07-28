@@ -13,6 +13,7 @@ import {
   findStudentById,
   createStudentClaim,
   softDeleteStudent,
+  reactivateStudent,
   isStudentActive,
 } from "../services/student.service.js"
 import { suggestLogins, generatePassword, normalizeLogin } from "../utils/login.js"
@@ -39,6 +40,7 @@ import {
   assertOrgGroup,
   assertStudentInOrg,
   resolveOrgId,
+  tenantFilter,
   withOrgId,
 } from "../services/tenantScope.service.js"
 import { assertCanAddStudent } from "../services/orgLimits.service.js"
@@ -328,6 +330,81 @@ export const deleteStudent = asyncHandler(async (req, res) => {
   })
 
   res.json({ ok: true })
+})
+
+/** Staff: block (deactivate) a student account without deleting data. */
+export const blockStudent = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (!isStudentActive(student)) {
+    throw ApiError.badRequest("Account is already blocked")
+  }
+  await softDeleteStudent(student)
+  await recordAudit({
+    req,
+    action: "block",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+  })
+  res.json(student.toStudentJSON())
+})
+
+/** Staff: unblock a previously deactivated student account. */
+export const unblockStudent = asyncHandler(async (req, res) => {
+  const student = await User.findOne({
+    _id: req.params.id,
+    type: "student",
+    ...tenantFilter(req),
+  })
+  if (!student) throw ApiError.notFound("Student not found")
+  if (isStudentActive(student)) {
+    throw ApiError.badRequest("Account is already active")
+  }
+  await reactivateStudent(student)
+  await recordAudit({
+    req,
+    action: "unblock",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+  })
+  res.json(student.toStudentJSON())
+})
+
+/** Staff: reset a student's password and return a new claim code. */
+export const resetStudentPassword = asyncHandler(async (req, res) => {
+  const student = await assertStudentInOrg(req.params.id, req)
+  if (!student) throw ApiError.notFound("Student not found")
+  if (!isStudentActive(student)) {
+    throw ApiError.badRequest("Cannot reset password for a blocked account")
+  }
+
+  const plainPassword = generatePassword()
+  student.passwordHash = await hashPassword(plainPassword)
+  await student.save()
+  const claim = await createStudentClaim(student._id, plainPassword)
+
+  await recordAudit({
+    req,
+    action: "reset_password",
+    category: "students",
+    targetType: "student",
+    targetId: student._id,
+    targetLabel: student.name,
+  })
+
+  res.json({
+    login: student.login ?? student.email ?? "",
+    password: plainPassword,
+    confirmation: {
+      login: student.login ?? student.email ?? "",
+      code: claim.code,
+      expiresAt: claim.expiresAt,
+    },
+  })
 })
 
 /** Student: soft-delete own account (sets deletedAt, marks inactive). */

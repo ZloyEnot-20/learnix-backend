@@ -155,19 +155,44 @@ function groupToObject(group) {
   return o
 }
 
+/** Batch-load teacher display names for group serialization. */
+async function loadTeacherNamesById(teacherIds) {
+  const ids = [...new Set(teacherIds.filter(Boolean).map(String))]
+  if (ids.length === 0) return new Map()
+
+  const teachers = await User.find({
+    _id: { $in: ids },
+    type: USER_TYPES.TEACHER,
+  }).select("_id name")
+
+  return new Map(teachers.map((teacher) => [String(teacher._id), teacher.name]))
+}
+
 /** API shape: group fields + studentIds resolved from User.groupId. */
-export function serializeGroup(group, studentIds = []) {
-  return { ...groupToObject(group), studentIds }
+export function serializeGroup(group, studentIds = [], teacherName = null) {
+  return { ...groupToObject(group), studentIds, teacherName }
 }
 
 export async function serializeGroupDoc(group) {
   if (!group) return null
   const studentIds = await findStudentIdsInGroup(group._id, group.orgId)
-  return serializeGroup(group, studentIds)
+  let teacherName = null
+  if (group.teacherId) {
+    const teacher = await User.findById(group.teacherId).select("name")
+    teacherName = teacher?.name ?? null
+  }
+  return serializeGroup(group, studentIds, teacherName)
 }
 
 export async function serializeGroups(groups) {
   if (groups.length === 0) return []
   const memberMap = await loadMemberIdsByGroupIds(groups.map((g) => g._id))
-  return groups.map((g) => serializeGroup(g, memberMap.get(g._id) ?? []))
+  const teacherNameMap = await loadTeacherNamesById(groups.map((g) => g.teacherId))
+  return groups.map((g) =>
+    serializeGroup(
+      g,
+      memberMap.get(g._id) ?? [],
+      g.teacherId ? teacherNameMap.get(String(g.teacherId)) ?? null : null,
+    ),
+  )
 }

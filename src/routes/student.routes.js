@@ -48,6 +48,9 @@ router.post(
   ctrl.sendStudentNotification,
 )
 router.post("/:id/claim", isStaff, validate(idParamSchema), ctrl.regenerateClaim)
+router.post("/:id/block", isStaff, validate(idParamSchema), ctrl.blockStudent)
+router.post("/:id/unblock", isStaff, validate(idParamSchema), ctrl.unblockStudent)
+router.post("/:id/reset-password", isStaff, validate(idParamSchema), ctrl.resetStudentPassword)
 router.post("/:id/delete-account", validate(idParamSchema), ctrl.deleteMyAccount)
 router.post("/:id/push-token", validate(pushTokenRegisterSchema), ctrl.registerPushToken)
 router.delete("/:id/push-token", validate(pushTokenUnregisterSchema), ctrl.unregisterPushToken)

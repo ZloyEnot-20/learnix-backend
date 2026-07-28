@@ -974,3 +974,31 @@ export const speechTestSchema = {
     url: z.string().url(),
   }),
 }
+
+// ---------- Admin panel ----------
+export const adminBroadcastSchema = {
+  body: z.object({
+    audience: z.enum(["all", "group", "student"]),
+    audienceId: z.string().min(1).optional(),
+    title: z.string().min(1).max(120),
+    message: z.string().min(1).max(1000),
+  }).superRefine((data, ctx) => {
+    if (data.audience !== "all" && !data.audienceId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "audienceId is required for group and student audiences",
+        path: ["audienceId"],
+      })
+    }
+  }),
+}
+
+export const adminAlertReadSchema = {
+  body: z.object({ alertKey: z.string().min(1).max(200) }),
+}
+
+export const adminReadAllAlertsSchema = {
+  body: z.object({
+    alertKeys: z.array(z.string().min(1).max(200)),
+  }),
+}

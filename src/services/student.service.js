@@ -105,3 +105,14 @@ export async function softDeleteStudent(student) {
   await student.save()
   return student
 }
+
+/** Reactivate a previously soft-deleted student (admin action). */
+export async function reactivateStudent(student) {
+  if (!student || student.type !== "student") {
+    throw new Error("Student not found")
+  }
+  if (!student.deletedAt) return student
+  student.deletedAt = undefined
+  await student.save()
+  return student
+}

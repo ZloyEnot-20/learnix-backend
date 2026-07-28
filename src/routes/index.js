@@ -19,6 +19,7 @@ import speechRoutes from "./speech.routes.js"
 import lessonRoutes from "./lesson.routes.js"
 import liveLessonRoutes from "./live-lesson.routes.js"
 import issueReportRoutes from "./issueReport.routes.js"
+import adminRoutes from "./admin.routes.js"
 import debugRoutes from "./debug.routes.js"
 
 const router = Router()
@@ -43,6 +44,7 @@ router.use("/speech", speechRoutes)
 router.use("/lessons", lessonRoutes)
 router.use("/live-lessons", liveLessonRoutes)
 router.use("/issue-reports", issueReportRoutes)
+router.use("/admin", adminRoutes)
 router.use("/debug", debugRoutes)
 
 export default router
