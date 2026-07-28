@@ -327,6 +327,15 @@ async function composeMessage(childName, note) {
   return `${base}\n\n${remaining}`
 }
 
+/** Staff manual push and org broadcasts — app + FCM only, not parents' Telegram. */
+export function shouldDeliverTelegram(note) {
+  if (!note) return false
+  const d = note.data ?? {}
+  if (d.sentBy) return false
+  if (d.broadcast) return false
+  return true
+}
+
 // ─── Yetkazib berish (idempotent) ────────────────────────────────────────────
 /**
  * Bitta chatga bitta bildirishnomani ATIGA BIR MARTA yuboradi.
@@ -359,6 +368,7 @@ async function deliverToChat(chatId, childName, note) {
  */
 export async function deliverNotification(note) {
   if (!env.telegram.botToken || !note?.studentId) return
+  if (!shouldDeliverTelegram(note)) return
 
   const [student, links] = await Promise.all([
     User.findById(note.studentId).select("name").lean(),
@@ -407,6 +417,14 @@ export async function reconcilePending(limitPerLink = 20) {
       const childName = student?.name ?? "O'quvchi"
 
       for (const note of notes) {
+        if (!shouldDeliverTelegram(note)) {
+          await Notification.updateOne(
+            { _id: note._id },
+            { $addToSet: { deliveredChatIds: link.chatId } },
+          )
+          await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: note.createdAt })
+          continue
+        }
         try {
           await deliverToChat(link.chatId, childName, note)
           await ParentLink.updateOne({ _id: link._id }, { lastNotifiedAt: note.createdAt })

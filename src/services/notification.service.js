@@ -1,7 +1,7 @@
 import { Notification } from "../models/Notification.js"
 import { User } from "../models/User.js"
 import { deliverPushNotification } from "./fcm.service.js"
-import { deliverNotification } from "./telegram.service.js"
+import { deliverNotification, shouldDeliverTelegram } from "./telegram.service.js"
 
 /** Stored in DB + Telegram only — never FCM / mobile push. */
 const TELEGRAM_ONLY_NOTIFICATION_TYPES = new Set(["attendance"])
@@ -16,6 +16,7 @@ function pushToMobile(note) {
 
 function pushToTelegram(note) {
   if (!note) return
+  if (!shouldDeliverTelegram(note)) return
   deliverNotification(note).catch((err) =>
     console.error("[notify] telegram error:", err.message),
   )
