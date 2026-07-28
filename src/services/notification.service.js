@@ -3,8 +3,12 @@ import { User } from "../models/User.js"
 import { deliverPushNotification } from "./fcm.service.js"
 import { deliverNotification } from "./telegram.service.js"
 
+/** Stored in DB + Telegram only — never FCM / mobile push. */
+const TELEGRAM_ONLY_NOTIFICATION_TYPES = new Set(["attendance"])
+
 function pushToMobile(note) {
   if (!note) return
+  if (TELEGRAM_ONLY_NOTIFICATION_TYPES.has(note.type)) return
   deliverPushNotification(note).catch((err) =>
     console.error("[notify] fcm push error:", err.message),
   )
