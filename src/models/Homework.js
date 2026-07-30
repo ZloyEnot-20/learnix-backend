@@ -18,6 +18,13 @@ const homeworkSchema = new mongoose.Schema(
     createdBy: { type: String, default: "System" },
     exerciseSlug: { type: String },
     timeLimitMinutes: { type: Number, min: 0 },
+    /**
+     * When true (grammar/vocabulary), student must reach requiredAccuracy
+     * via retries before the submission is considered completed.
+     */
+    masteryMode: { type: Boolean, default: false },
+    /** Fraction 0–1; default 0.9 (90%). Only used when masteryMode is true. */
+    requiredAccuracy: { type: Number, min: 0, max: 1, default: 0.9 },
     createdAt: { type: Date, default: Date.now },
   },
   { _id: false },

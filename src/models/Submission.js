@@ -23,6 +23,15 @@ const mistakeSchema = new mongoose.Schema(
   { _id: false },
 )
 
+const attemptItemSchema = new mongoose.Schema(
+  {
+    questionId: Number,
+    prompt: String,
+    isCorrect: Boolean,
+  },
+  { _id: false },
+)
+
 const listeningSeekSchema = new mongoose.Schema(
   {
     fromSeconds: Number,
@@ -80,6 +89,12 @@ const attemptSchema = new mongoose.Schema(
       ],
       default: undefined,
     },
+    /** full = entire exercise; mistakes_only = remediating prior wrong items. */
+    mode: { type: String, enum: ["full", "mistakes_only"], default: "full" },
+    /** Whether this attempt met the homework mastery threshold. */
+    passed: { type: Boolean, default: false },
+    /** History-safe per-question outcome (no answers). */
+    items: { type: [attemptItemSchema], default: [] },
   },
   { _id: false },
 )
@@ -99,6 +114,7 @@ const submissionEventSchema = new mongoose.Schema(
         "submit",
         "graded",
         "retry",
+        "mastery_attempt",
       ],
       required: true,
     },
@@ -136,6 +152,8 @@ const submissionSchema = new mongoose.Schema(
       index: true,
     },
     homeworkTitle: { type: String },
+    /** Denormalized mastery flag from Homework at assign / first submit time. */
+    masteryMode: { type: Boolean, default: false },
     assignedAt: { type: Date, default: Date.now },
     /** Last time the student opened this homework (mobile entry counter). */
     lastEntryAt: { type: Date },
@@ -145,7 +163,7 @@ const submissionSchema = new mongoose.Schema(
     entryCount: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "paused", "submitted", "graded"],
+      enum: ["pending", "in_progress", "paused", "needs_retry", "submitted", "graded"],
       default: "pending",
     },
     integrityStatus: {
@@ -165,7 +183,10 @@ const submissionSchema = new mongoose.Schema(
     pausedAt: { type: Date },
     submittedAt: { type: Date },
     feedback: { type: String },
+    /** Latest attempt (completed or in-progress draft). */
     attempt: { type: attemptSchema },
+    /** Completed attempt history (mastery mode). Legacy docs may omit this. */
+    attempts: { type: [attemptSchema], default: undefined },
   },
   { _id: false },
 )

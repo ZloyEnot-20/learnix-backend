@@ -177,6 +177,8 @@ export const createHomeworkSchema = {
     createdBy: z.string().max(120).optional(),
     exerciseSlug: z.string().max(200).optional(),
     timeLimitMinutes: z.number().int().positive().optional(),
+    masteryMode: z.boolean().optional(),
+    requiredAccuracy: z.number().min(0).max(1).optional(),
   }),
 }
 
@@ -195,79 +197,91 @@ export const gradeSubmissionSchema = {
   body: z.object({
     score: z.number().min(0).max(9).optional(),
     feedback: z.string().max(2000).optional(),
-    status: z.enum(["pending", "in_progress", "paused", "submitted", "graded"]).optional(),
+    status: z
+      .enum(["pending", "in_progress", "paused", "needs_retry", "submitted", "graded"])
+      .optional(),
     /** Per-question speaking grades — merged into attempt.mistakes by questionId. */
     recordingGrades: z.array(speakingRecordingGradeSchema).optional(),
   }),
 }
 
-export const recordAttemptSchema = {
-  body: z.object({
-    homeworkId: z.string().min(1),
-    attempt: z.object({
-      totalQuestions: z.number().int().nonnegative(),
-      correctCount: z.number().int().nonnegative(),
-      durationSeconds: z.number().int().nonnegative().optional(),
-      timedOut: z.boolean().optional(),
-      answeredCount: z.number().int().nonnegative().optional(),
-      mistakes: z
+const attemptItemSchema = z.object({
+  questionId: z.number(),
+  prompt: z.string().optional().default(""),
+  isCorrect: z.boolean(),
+})
+
+const attemptBodySchema = z.object({
+  totalQuestions: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+  durationSeconds: z.number().int().nonnegative().optional(),
+  timedOut: z.boolean().optional(),
+  answeredCount: z.number().int().nonnegative().optional(),
+  mode: z.enum(["full", "mistakes_only"]).optional(),
+  items: z.array(attemptItemSchema).optional(),
+  mistakes: z
+    .array(
+      z.object({
+        questionId: z.number(),
+        prompt: z.string(),
+        userAnswer: z.string(),
+        correctAnswer: z.string(),
+        explanation: z.string().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+  listeningStats: z
+    .object({
+      totalListenSeconds: z.number().nonnegative(),
+      seekCount: z.number().int().nonnegative(),
+      rewindCount: z.number().int().nonnegative(),
+      forwardCount: z.number().int().nonnegative(),
+      seeks: z
         .array(
           z.object({
-            questionId: z.number(),
-            prompt: z.string(),
-            userAnswer: z.string(),
-            correctAnswer: z.string(),
-            explanation: z.string().optional(),
+            fromSeconds: z.number().nonnegative(),
+            toSeconds: z.number().nonnegative(),
+            atMs: z.number().nonnegative(),
           }),
         )
         .optional()
         .default([]),
-      listeningStats: z
-        .object({
-          totalListenSeconds: z.number().nonnegative(),
-          seekCount: z.number().int().nonnegative(),
-          rewindCount: z.number().int().nonnegative(),
-          forwardCount: z.number().int().nonnegative(),
-          seeks: z
-            .array(
-              z.object({
-                fromSeconds: z.number().nonnegative(),
-                toSeconds: z.number().nonnegative(),
-                atMs: z.number().nonnegative(),
-              }),
-            )
-            .optional()
-            .default([]),
-          listenedSegments: z
-            .array(
-              z.object({
-                startSeconds: z.number().nonnegative(),
-                endSeconds: z.number().nonnegative(),
-              }),
-            )
-            .optional()
-            .default([]),
-          podcastDurationSeconds: z.number().nonnegative(),
-          completedListening: z.boolean(),
-          wordsReviewed: z.number().int().nonnegative(),
-        })
-        .optional(),
-      readingAnswers: z
+      listenedSegments: z
         .array(
           z.object({
-            questionId: z.number(),
-            userAnswer: z.string(),
+            startSeconds: z.number().nonnegative(),
+            endSeconds: z.number().nonnegative(),
           }),
         )
-        .optional(),
-    }),
+        .optional()
+        .default([]),
+      podcastDurationSeconds: z.number().nonnegative(),
+      completedListening: z.boolean(),
+      wordsReviewed: z.number().int().nonnegative(),
+    })
+    .optional(),
+  readingAnswers: z
+    .array(
+      z.object({
+        questionId: z.number(),
+        userAnswer: z.string(),
+      }),
+    )
+    .optional(),
+})
+
+export const recordAttemptSchema = {
+  body: z.object({
+    homeworkId: z.string().min(1),
+    attempt: attemptBodySchema,
   }),
 }
 
 export const saveHomeworkProgressSchema = {
   body: z.object({
     homeworkId: z.string().min(1),
-    attempt: recordAttemptSchema.body.shape.attempt,
+    attempt: attemptBodySchema,
   }),
 }
 

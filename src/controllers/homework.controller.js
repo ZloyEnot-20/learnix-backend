@@ -33,6 +33,16 @@ import {
 import { scheduleRecomputeStudentLanguageProfile } from "../services/languageProfileQueue.js"
 import { getOrgSettings } from "../services/orgSettings.service.js"
 import { cambridgeBandFromAttempt } from "../config/ielts-band-tables.js"
+import {
+  attemptPassed,
+  finalizeAttemptRecord,
+  isMasteryEligibleSubject,
+  isMasteryHomework,
+  mergeMistakesOnlyAttempt,
+  projectSubmissionForClient,
+  requiredAccuracyOf,
+  submissionAttemptsList,
+} from "../services/homeworkMastery.service.js"
 
 /** Max time a student may stay paused before resume counts as cheating. */
 const PAUSE_MAX_SECONDS = 30 * 60
@@ -64,6 +74,7 @@ function leanListeningStats(stats) {
 
 function leanHomeworkListSubmission(sub) {
   const attempt = sub.attempt
+  const attempts = submissionAttemptsList(sub)
   return {
     id: sub._id,
     homeworkId: sub.homeworkId,
@@ -77,12 +88,16 @@ function leanHomeworkListSubmission(sub) {
     elapsedSeconds: sub.elapsedSeconds,
     sessionStartedAt: sub.sessionStartedAt,
     startedAt: sub.startedAt,
+    masteryMode: sub.masteryMode ?? false,
+    attemptsCount: attempts.length,
     attempt: attempt
       ? {
           correctCount: attempt.correctCount,
           totalQuestions: attempt.totalQuestions,
           failedDueToCheating: attempt.failedDueToCheating,
           answeredCount: attempt.answeredCount,
+          passed: attempt.passed,
+          mode: attempt.mode,
           listeningStats: leanListeningStats(attempt.listeningStats),
         }
       : undefined,
@@ -99,7 +114,20 @@ function leanHomeworkDoc(hw) {
     createdAt: hw.createdAt,
     exerciseSlug: hw.exerciseSlug,
     timeLimitMinutes: hw.timeLimitMinutes,
+    masteryMode: hw.masteryMode ?? false,
+    requiredAccuracy: hw.requiredAccuracy ?? 0.9,
   }
+}
+
+function resolveMasteryModeForCreate(body) {
+  if (typeof body.masteryMode === "boolean") return body.masteryMode
+  return isMasteryEligibleSubject(body.subject)
+}
+
+function respondSubmission(sub, hw) {
+  return projectSubmissionForClient(sub, {
+    masteryMode: hw ? isMasteryHomework(hw) : sub.masteryMode === true,
+  })
 }
 
 function homeworkTopic(hw) {
@@ -117,7 +145,9 @@ async function submissionTopicDefaults(hw) {
 }
 
 function shouldCountHomeworkEntry(sub, now) {
-  if (sub.status === "pending" || sub.status === "paused") return true
+  if (sub.status === "pending" || sub.status === "paused" || sub.status === "needs_retry") {
+    return true
+  }
   if (sub.status !== "in_progress") return false
   const lastStart = sub.sessionStartedAt?.getTime() ?? 0
   if (!lastStart) return true
@@ -253,15 +283,21 @@ export const getHomeworkDetails = asyncHandler(async (req, res) => {
     homework,
     group: await serializeGroupDoc(group),
     students: students.map((s) => s.toStudentJSON()),
-    submissions,
+    submissions: submissions.map((sub) => respondSubmission(sub, homework)),
   })
 })
 
 export const createHomework = asyncHandler(async (req, res) => {
   const group = assertSelectableGroup(await assertOrgGroup(req.body.groupId, req))
+  const masteryMode = resolveMasteryModeForCreate(req.body)
+  const requiredAccuracy =
+    typeof req.body.requiredAccuracy === "number" ? req.body.requiredAccuracy : 0.9
   const hw = await Homework.create(
     withOrgId(req, {
       ...req.body,
+      // Mastery retries only for grammar/vocabulary — never IELTS, speaking, podcast.
+      masteryMode: masteryMode && isMasteryEligibleSubject(req.body.subject),
+      requiredAccuracy,
       createdBy: req.body.createdBy ?? req.user.name,
     }),
   )
@@ -277,6 +313,7 @@ export const createHomework = asyncHandler(async (req, res) => {
       homeworkId: hw._id,
       studentId,
       ...topicDefaults,
+      masteryMode: hw.masteryMode === true,
       assignedAt,
       entryCount: 0,
       status: "pending",
@@ -348,7 +385,16 @@ export const listSubmissions = asyncHandler(async (req, res) => {
   if (req.query.homeworkId) filter.homeworkId = req.query.homeworkId
   if (req.query.studentId) filter.studentId = req.query.studentId
   const subs = await Submission.find(filter)
-  res.json(subs)
+  const hwIds = [...new Set(subs.map((s) => s.homeworkId).filter(Boolean))]
+  const homeworks = hwIds.length
+    ? await Homework.find({ _id: { $in: hwIds } }).lean()
+    : []
+  const hwById = new Map(homeworks.map((h) => [h._id, h]))
+  res.json(
+    subs.map((sub) =>
+      respondSubmission(sub, hwById.get(sub.homeworkId) ?? { masteryMode: sub.masteryMode }),
+    ),
+  )
 })
 
 /** Homework check dashboard — assignments + all student records from Submission. */
@@ -358,7 +404,13 @@ export const homeworkCheck = asyncHandler(async (req, res) => {
     Homework.find(filter).sort({ createdAt: -1 }),
     Submission.find(filter).sort({ assignedAt: -1 }),
   ])
-  res.json({ assignments, records })
+  const hwById = new Map(assignments.map((h) => [h._id, h]))
+  res.json({
+    assignments,
+    records: records.map((sub) =>
+      respondSubmission(sub, hwById.get(sub.homeworkId) ?? { masteryMode: sub.masteryMode }),
+    ),
+  })
 })
 
 /** Teacher/admin grades or updates a submission. */
@@ -443,6 +495,7 @@ export const retrySubmission = asyncHandler(async (req, res) => {
   const hasProgress =
     sub.status !== "pending" ||
     !!sub.attempt ||
+    (Array.isArray(sub.attempts) && sub.attempts.length > 0) ||
     !!sub.startedAt ||
     (sub.entryCount ?? 0) > 0
   if (!hasProgress) {
@@ -460,6 +513,7 @@ export const retrySubmission = asyncHandler(async (req, res) => {
         integrityStatus: sub.integrityStatus,
       }
     : undefined
+  const previousAttemptsCount = submissionAttemptsList(sub).length
 
   sub.status = "pending"
   sub.integrityStatus = "ok"
@@ -471,6 +525,7 @@ export const retrySubmission = asyncHandler(async (req, res) => {
     "score",
     "feedback",
     "attempt",
+    "attempts",
     "startedAt",
     "sessionStartedAt",
     "pausedAt",
@@ -486,6 +541,7 @@ export const retrySubmission = asyncHandler(async (req, res) => {
       previousStatus,
       previousScore,
       previousAttempt,
+      previousAttemptsCount,
       resetBy: req.user.name,
     },
   })
@@ -519,7 +575,7 @@ export const retrySubmission = asyncHandler(async (req, res) => {
     },
   })
 
-  res.json(sub)
+  res.json(respondSubmission(sub, hw))
 })
 
 /** Staff: (re)run Whisper transcription for a speaking submission. */
@@ -706,6 +762,7 @@ export const startHomework = asyncHandler(async (req, res) => {
   let sub = await Submission.findOne({ homeworkId, studentId })
 
   const hw = await Homework.findById(homeworkId)
+  const mastery = isMasteryHomework(hw)
 
   if (!sub) {
     const orgId = resolveOrgId(req)
@@ -716,6 +773,7 @@ export const startHomework = asyncHandler(async (req, res) => {
       homeworkId,
       studentId,
       ...defaults,
+      masteryMode: mastery,
       assignedAt: now,
       entryCount: skipEntryCount ? 0 : 1,
       status: "in_progress",
@@ -725,7 +783,7 @@ export const startHomework = asyncHandler(async (req, res) => {
       pauseUsed: false,
       events: [{ at: now, type: "start", entryCount: skipEntryCount ? 0 : 1 }],
     })
-    return res.json(sub)
+    return res.json(respondSubmission(sub, hw))
   }
 
   if (
@@ -733,14 +791,14 @@ export const startHomework = asyncHandler(async (req, res) => {
     sub.attempt?.failedDueToCheating ||
     ["submitted", "graded"].includes(sub.status)
   ) {
-    return res.json(sub)
+    return res.json(respondSubmission(sub, hw))
   }
 
   if (sub.status === "paused" && sub.pausedAt) {
     const pausedFor = Math.floor((now.getTime() - sub.pausedAt.getTime()) / 1000)
     if (pausedFor > PAUSE_MAX_SECONDS) {
       await failForCheating(sub, homeworkId, studentId, "pause_expired", now)
-      return res.json(sub)
+      return res.json(respondSubmission(sub, hw))
     }
   }
 
@@ -749,27 +807,42 @@ export const startHomework = asyncHandler(async (req, res) => {
     sub.homeworkTitle = hw.title
     sub.subject = hw.subject
   }
+  if (mastery) sub.masteryMode = true
 
-  if (!skipEntryCount && shouldCountHomeworkEntry(sub, now)) {
+  const startingFreshMasteryAttempt = mastery && sub.status === "needs_retry"
+
+  if (startingFreshMasteryAttempt) {
+    // New attempt: reset session counters; keep attempts[] history.
+    sub.elapsedSeconds = 0
+    sub.pauseUsed = false
+    sub.violationCount = 0
+    sub.entryCount = skipEntryCount ? 0 : 1
+    sub.integrityStatus = "ok"
+    sub.set("attempt", undefined)
+    sub.set("pausedAt", undefined)
+    sub.set("sessionStartedAt", undefined)
+  }
+
+  if (!startingFreshMasteryAttempt && !skipEntryCount && shouldCountHomeworkEntry(sub, now)) {
     sub.entryCount = (sub.entryCount ?? 0) + 1
     if (sub.entryCount > MAX_HOMEWORK_ENTRIES) {
       await failForCheating(sub, homeworkId, studentId, "excessive_entries", now)
-      return res.json(sub)
+      return res.json(respondSubmission(sub, hw))
     }
   }
 
   // Orphan active segment — fold into elapsed before starting a new one.
-  if (sub.sessionStartedAt) {
+  if (!startingFreshMasteryAttempt && sub.sessionStartedAt) {
     freezeActiveTime(sub, now)
   }
 
   sub.status = "in_progress"
-  sub.startedAt = sub.startedAt ?? now
+  sub.startedAt = startingFreshMasteryAttempt ? now : (sub.startedAt ?? now)
   sub.sessionStartedAt = now
   sub.pausedAt = undefined
   appendSubmissionEvent(sub, { type: "start", entryCount: sub.entryCount ?? 0 })
   await sub.save()
-  res.json(sub)
+  res.json(respondSubmission(sub, hw))
 })
 
 export const pauseHomework = asyncHandler(async (req, res) => {
@@ -812,6 +885,9 @@ export const saveHomeworkProgress = asyncHandler(async (req, res) => {
     return res.json(sub)
   }
   if (["submitted", "graded"].includes(sub.status)) {
+    return res.json(sub)
+  }
+  if (sub.status === "needs_retry") {
     return res.json(sub)
   }
 
@@ -907,7 +983,7 @@ export const reportViolation = asyncHandler(async (req, res) => {
 
 export const recordAttempt = asyncHandler(async (req, res) => {
   const studentId = req.user.id
-  const { homeworkId, attempt } = req.body
+  const { homeworkId, attempt: rawAttempt } = req.body
   const now = new Date()
 
   const existing = await Submission.findOne({ homeworkId, studentId })
@@ -915,73 +991,165 @@ export const recordAttempt = asyncHandler(async (req, res) => {
   // (avoids duplicate Telegram messages on re-submit or a double request).
   const alreadyDone = !!existing && ["submitted", "graded"].includes(existing.status)
   const hw = await Homework.findById(homeworkId)
+  const mastery = isMasteryHomework(hw)
+  const requiredAccuracy = requiredAccuracyOf(hw)
   const isSpeaking = hw?.subject === "speaking"
   const isListening = hw?.subject === "listening"
   const isPodcastListening = isListening && !!parsePodcastHomeworkSlug(hw?.exerciseSlug)
   const topicDefaults = await submissionTopicDefaults(hw)
+
+  let attempt = {
+    ...rawAttempt,
+    durationSeconds: rawAttempt.durationSeconds,
+    mode: rawAttempt.mode ?? "full",
+  }
+
+  if (mastery && attempt.mode === "mistakes_only") {
+    const history = submissionAttemptsList(existing)
+    const baseAttempt = history[history.length - 1] ?? existing?.attempt
+    if (!baseAttempt) {
+      throw ApiError.badRequest("No previous attempt to remediate")
+    }
+    try {
+      attempt = mergeMistakesOnlyAttempt(baseAttempt, attempt)
+    } catch (err) {
+      if (err.status === 400) throw ApiError.badRequest(err.message)
+      throw err
+    }
+  }
+
+  const passed = mastery ? attemptPassed(attempt, requiredAccuracy) : true
+  attempt = finalizeAttemptRecord(attempt, {
+    passed: mastery ? passed : undefined,
+    mode: attempt.mode ?? "full",
+  })
+  if (!mastery) {
+    delete attempt.passed
+  }
+
   const score = scoreFromHomeworkAttempt(hw, attempt)
+  const durationSeconds = attempt.durationSeconds ?? existing?.elapsedSeconds ?? 0
+  attempt = { ...attempt, durationSeconds }
+
   let result
   if (!existing) {
     const orgId = resolveOrgId(req)
     if (!orgId) throw ApiError.forbidden("Organization context required")
+    const status = mastery && !passed ? "needs_retry" : "submitted"
+    const attempts = mastery ? [attempt] : undefined
     result = await Submission.create({
       orgId,
       homeworkId,
       studentId,
       ...topicDefaults,
+      masteryMode: mastery,
       assignedAt: now,
       entryCount: 1,
-      status: "submitted",
-      score,
+      status,
+      score: mastery && !passed ? undefined : score,
       startedAt: now,
-      submittedAt: now,
+      submittedAt: status === "submitted" ? now : undefined,
       attempt,
+      attempts,
       events: [
         {
           at: now,
+          type: mastery && !passed ? "mastery_attempt" : "submit",
+          metadata: {
+            correctCount: attempt.correctCount,
+            totalQuestions: attempt.totalQuestions,
+            score: status === "submitted" ? score : undefined,
+            mode: attempt.mode,
+            passed: mastery ? passed : undefined,
+          },
+        },
+      ],
+    })
+  } else if (alreadyDone) {
+    // Ignore duplicate submits after completion.
+    return res.json(respondSubmission(existing, hw))
+  } else {
+    freezeActiveTime(existing, now)
+    if (mastery) existing.masteryMode = true
+
+    if (mastery) {
+      const prev = Array.isArray(existing.attempts) ? [...existing.attempts] : []
+      // If legacy doc only has attempt, seed history once.
+      if (prev.length === 0 && existing.attempt && existing.status === "needs_retry") {
+        // attempt already counted in a prior mastery_attempt — don't double-push stale draft
+      }
+      prev.push(attempt)
+      existing.attempts = prev
+      existing.attempt = attempt
+      existing.score = passed ? score : existing.score
+      if (passed) {
+        existing.status = "submitted"
+        existing.submittedAt = now
+        appendSubmissionEvent(existing, {
           type: "submit",
           metadata: {
             correctCount: attempt.correctCount,
             totalQuestions: attempt.totalQuestions,
             score,
+            mode: attempt.mode,
+            passed: true,
+            attemptNumber: prev.length,
           },
+        })
+      } else {
+        existing.status = "needs_retry"
+        existing.submittedAt = undefined
+        existing.elapsedSeconds = 0
+        existing.pauseUsed = false
+        existing.sessionStartedAt = null
+        appendSubmissionEvent(existing, {
+          type: "mastery_attempt",
+          metadata: {
+            correctCount: attempt.correctCount,
+            totalQuestions: attempt.totalQuestions,
+            mode: attempt.mode,
+            passed: false,
+            attemptNumber: prev.length,
+          },
+        })
+      }
+    } else {
+      existing.status = "submitted"
+      existing.score = score
+      existing.submittedAt = now
+      existing.attempt = attempt
+      appendSubmissionEvent(existing, {
+        type: "submit",
+        metadata: {
+          correctCount: attempt.correctCount,
+          totalQuestions: attempt.totalQuestions,
+          score,
         },
-      ],
-    })
-  } else {
-    freezeActiveTime(existing, now)
-    existing.status = "submitted"
-    existing.score = score
-    existing.startedAt = existing.startedAt ?? now
-    existing.submittedAt = now
-    existing.attempt = {
-      ...attempt,
-      durationSeconds: attempt.durationSeconds ?? existing.elapsedSeconds ?? 0,
+      })
     }
+
+    existing.startedAt = existing.startedAt ?? now
     if (!existing.subject && hw) existing.subject = hw.subject
     applySubmissionTopicFields(existing, topicDefaults)
-    appendSubmissionEvent(existing, {
-      type: "submit",
-      metadata: {
-        correctCount: attempt.correctCount,
-        totalQuestions: attempt.totalQuestions,
-        score,
-      },
-    })
     await existing.save()
     result = existing
   }
 
-  if (!isCheatingSubmission(result)) {
+  const completedNow =
+    result.status === "submitted" &&
+    !alreadyDone &&
+    !(mastery && !passed)
+
+  if (completedNow && !isCheatingSubmission(result)) {
     await recomputeHomeworkGamification(studentId).catch((err) => {
       console.error("[gamification] homework recompute failed", err)
     })
     scheduleRecomputeStudentLanguageProfile(studentId)
   }
 
-  if (alreadyDone) return res.json(result)
+  if (alreadyDone) return res.json(respondSubmission(result, hw))
 
-  if (hw?.subject === "vocabulary") {
+  if (completedNow && hw?.subject === "vocabulary") {
     await recordVocabActivity({
       studentId,
       deckSlug: hw.exerciseSlug ?? hw._id,
@@ -992,42 +1160,44 @@ export const recordAttempt = asyncHandler(async (req, res) => {
     })
   }
 
-  // Notify (the student and, via the Telegram bot, their parents) that a task
-  // was completed — this is one of the activities parents subscribe to.
-  const listenStats = attempt.listeningStats
-  const podcastMessage = listenStats
-    ? `Podcast completed. Listened ${Math.round(listenStats.totalListenSeconds)}s` +
-      (listenStats.seekCount > 0 ? `, ${listenStats.seekCount} seeks` : "") +
-      (listenStats.wordsReviewed > 0 ? `, ${listenStats.wordsReviewed} words reviewed` : "") +
-      "."
-    : "Podcast listening homework submitted."
+  if (completedNow) {
+    // Notify (the student and, via the Telegram bot, their parents) that a task
+    // was completed — this is one of the activities parents subscribe to.
+    const listenStats = attempt.listeningStats
+    const podcastMessage = listenStats
+      ? `Podcast completed. Listened ${Math.round(listenStats.totalListenSeconds)}s` +
+        (listenStats.seekCount > 0 ? `, ${listenStats.seekCount} seeks` : "") +
+        (listenStats.wordsReviewed > 0 ? `, ${listenStats.wordsReviewed} words reviewed` : "") +
+        "."
+      : "Podcast listening homework submitted."
 
-  await notify(studentId, {
-    type: "result",
-    title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
-    message: isSpeaking
-      ? `Speaking homework submitted (${attempt.answeredCount ?? attempt.correctCount}/${attempt.totalQuestions} recordings). Awaiting teacher review.`
-      : isPodcastListening
-        ? podcastMessage
-        : typeof score === "number"
-          ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
-          : "Homework submitted.",
-    data: {
-      homeworkTitle: hw?.title,
-      subject: hw?.subject,
-      dueAt: hw?.dueAt,
-      status: "submitted",
-      correctCount: attempt.correctCount,
-      totalQuestions: attempt.totalQuestions,
-      score: typeof score === "number" ? score : undefined,
-    },
-  }).catch(() => {})
+    await notify(studentId, {
+      type: "result",
+      title: hw ? `Homework completed: ${hw.title}` : "Homework completed",
+      message: isSpeaking
+        ? `Speaking homework submitted (${attempt.answeredCount ?? attempt.correctCount}/${attempt.totalQuestions} recordings). Awaiting teacher review.`
+        : isPodcastListening
+          ? podcastMessage
+          : typeof score === "number"
+            ? `Completed with ${attempt.correctCount}/${attempt.totalQuestions} correct (band ${score.toFixed(1)}).`
+            : "Homework submitted.",
+      data: {
+        homeworkTitle: hw?.title,
+        subject: hw?.subject,
+        dueAt: hw?.dueAt,
+        status: "submitted",
+        correctCount: attempt.correctCount,
+        totalQuestions: attempt.totalQuestions,
+        score: typeof score === "number" ? score : undefined,
+      },
+    }).catch(() => {})
 
-  if (isSpeaking && env.whisper.enabled && !alreadyDone) {
-    void transcribeHomeworkSubmission(result._id).catch((err) =>
-      console.error("[whisper] homework transcription failed:", err.message),
-    )
+    if (isSpeaking && env.whisper.enabled) {
+      void transcribeHomeworkSubmission(result._id).catch((err) =>
+        console.error("[whisper] homework transcription failed:", err.message),
+      )
+    }
   }
 
-  res.json(result)
+  res.json(respondSubmission(result, hw))
 })
